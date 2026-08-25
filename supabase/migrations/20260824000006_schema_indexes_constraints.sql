@@ -68,10 +68,10 @@ create index idx_ingredientes_estoque_alerta
 -- por metadados->>'tipoEvento' = 'casamento'). GIN é o índice correto
 -- para operadores de contenção (@>, ?, ?&, ?|) em jsonb.
 -- ---------------------------------------------------------------------
-create index idx_servicos_metadados_gin        on servicos (metadados) using gin;
-create index idx_agendamentos_metadados_gin    on agendamentos (metadados) using gin;
-create index idx_ordens_servico_metadados_gin  on ordens_servico (metadados) using gin;
-create index idx_contas_configuracoes_gin      on contas (configuracoes_gerais) using gin;
+create index idx_servicos_metadados_gin        on servicos using gin (metadados);
+create index idx_agendamentos_metadados_gin    on agendamentos using gin (metadados);
+create index idx_ordens_servico_metadados_gin  on ordens_servico using gin (metadados);
+create index idx_contas_configuracoes_gin      on contas using gin (configuracoes_gerais);
 
 -- ---------------------------------------------------------------------
 -- Galeria de fotos entregue ao cliente: busca pelo token de acesso

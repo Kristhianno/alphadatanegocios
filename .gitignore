@@ -15,6 +15,9 @@ dist-ssr
 # Cloudflare
 .wrangler
 
+# Supabase CLI local cache
+supabase/.temp
+
 # Backend
 server/node_modules
 server/dist
