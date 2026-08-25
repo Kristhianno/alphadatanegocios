@@ -15,6 +15,7 @@ import type { Cliente } from '../../config/database.config.js'
 import type { Database, Json } from '../../types/database.types.js'
 import { UsuarioRepository } from '../../repositories/UsuarioRepository.js'
 import { executarOuFalhar } from '../../utils/supabaseHelpers.js'
+import { arredondarMoeda } from '../../utils/calculadores.js'
 import { ErroNaoEncontrado, ErroValidacao } from '../../errors/AppError.js'
 import { logger } from '../../utils/logger.js'
 
@@ -293,7 +294,7 @@ export class ConfeitariaService {
     const custoPorIngrediente = new Map(ingredientes.map((i) => [i.id, Number(i.custo_unitario)]))
 
     const custo = composicao.reduce((soma, c) => soma + Number(c.quantidade_necessaria) * (custoPorIngrediente.get(c.ingrediente_id) ?? 0), 0)
-    return Math.round(custo * 100) / 100
+    return arredondarMoeda(custo)
   }
 
   /**

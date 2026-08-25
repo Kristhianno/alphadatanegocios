@@ -17,6 +17,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { z } from 'zod'
 import { ErroValidacao } from '../errors/AppError.js'
+import { validarUuid } from '../utils/validadores.js'
 
 export function validar(schema: z.ZodTypeAny, origem: 'body' | 'query' | 'params' = 'body') {
   return (req: Request, _res: Response, next: NextFunction): void => {
@@ -30,13 +31,11 @@ export function validar(schema: z.ZodTypeAny, origem: 'body' | 'query' | 'params
   }
 }
 
-const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
 /** Rejeita cedo um `:id` de rota que nem parece um UUID, antes de gastar uma consulta no banco. */
 export function validarUuidParam(nomeParametro: string) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const valor = req.params[nomeParametro]
-    if (typeof valor !== 'string' || !REGEX_UUID.test(valor)) {
+    if (!validarUuid(valor)) {
       throw new ErroValidacao(`Parâmetro de rota "${nomeParametro}" precisa ser um UUID válido.`)
     }
     next()

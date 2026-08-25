@@ -7,6 +7,7 @@ import cors from 'cors'
 import express from 'express'
 import authRoutes from './routes/auth.routes.js'
 import clientesRoutes from './routes/clientes.routes.js'
+import configRoutes from './routes/config.routes.js'
 import dashboardRoutes from './routes/dashboard.routes.js'
 import agendamentosRoutes from './routes/agendamentos.routes.js'
 import servicosRoutes from './routes/servicos.routes.js'
@@ -27,6 +28,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/auth', authRoutes)
 app.use('/clientes', clientesRoutes)
+app.use('/config', configRoutes)
 app.use('/dashboard', dashboardRoutes)
 app.use('/agendamentos', agendamentosRoutes)
 app.use('/servicos', servicosRoutes)

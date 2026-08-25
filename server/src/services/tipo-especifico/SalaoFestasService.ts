@@ -8,6 +8,7 @@ import type { Cliente } from '../../config/database.config.js'
 import type { Database, Json } from '../../types/database.types.js'
 import { UsuarioRepository } from '../../repositories/UsuarioRepository.js'
 import { executarOuFalhar } from '../../utils/supabaseHelpers.js'
+import { arredondarMoeda } from '../../utils/calculadores.js'
 import { ErroNaoEncontrado, ErroValidacao } from '../../errors/AppError.js'
 import { logger } from '../../utils/logger.js'
 
@@ -210,7 +211,7 @@ export class SalaoFestasService {
     )
 
     const lucro = lancamentos.reduce((soma, l) => soma + (l.tipo === 'receita' ? Number(l.valor) : -Number(l.valor)), 0)
-    return Math.round(lucro * 100) / 100
+    return arredondarMoeda(lucro)
   }
 
   private async buscarUsuarioOuFalhar(userId: string) {

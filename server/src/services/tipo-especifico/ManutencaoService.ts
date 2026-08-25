@@ -9,6 +9,8 @@ import type { Cliente } from '../../config/database.config.js'
 import type { Database, Json } from '../../types/database.types.js'
 import { UsuarioRepository } from '../../repositories/UsuarioRepository.js'
 import { executarOuFalhar } from '../../utils/supabaseHelpers.js'
+import { arredondarMoeda } from '../../utils/calculadores.js'
+import { formatarDataBr, paraDataSql } from '../../utils/conversores.js'
 import { ErroNaoEncontrado, ErroProibido, ErroValidacao } from '../../errors/AppError.js'
 import { logger } from '../../utils/logger.js'
 
@@ -87,7 +89,7 @@ export class ManutencaoService {
       if (tipo.data?.tempo_estimado_horas) horasEstimadas = Number(tipo.data.tempo_estimado_horas)
     }
 
-    const valorMaoObra = Math.round(horasEstimadas * VALOR_HORA_PADRAO * 100) / 100
+    const valorMaoObra = arredondarMoeda(horasEstimadas * VALOR_HORA_PADRAO)
     const itens = [{ descricao: 'Mão de obra estimada', quantidade: horasEstimadas, valorUnitario: VALOR_HORA_PADRAO }]
 
     const orcamento = await executarOuFalhar<LinhaOrcamento>(
@@ -222,7 +224,7 @@ export class ManutencaoService {
     dados: { diagnostico?: string; servicosRealizados?: string; recomendacoes?: string } = {}
   ): Promise<LinhaLaudo> {
     const ordem = await this.buscarOrdemOuFalhar(ordemId)
-    const diagnostico = dados.diagnostico?.trim() || `Serviço de manutenção executado em ${new Date().toLocaleDateString('pt-BR')}.`
+    const diagnostico = dados.diagnostico?.trim() || `Serviço de manutenção executado em ${formatarDataBr(new Date())}.`
 
     const laudo = await executarOuFalhar<LinhaLaudo>(
       'laudos_tecnicos',
@@ -262,7 +264,7 @@ export class ManutencaoService {
           conta_id: cliente.data.conta_id,
           cliente_id: clienteId,
           frequencia,
-          proxima_execucao: proximaExecucao.toISOString().slice(0, 10),
+          proxima_execucao: paraDataSql(proximaExecucao),
         })
         .select()
         .single()

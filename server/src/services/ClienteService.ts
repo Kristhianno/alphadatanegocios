@@ -12,14 +12,15 @@ import type { Cliente } from '../config/database.config.js'
 import type { ClienteFinal } from '../models/ClienteFinal.js'
 import { ClienteRepository } from '../repositories/ClienteRepository.js'
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js'
+import { validarDocumento, validarTelefoneBr } from '../utils/validadores.js'
 import { ErroNaoEncontrado } from '../errors/AppError.js'
 import { logger } from '../utils/logger.js'
 
 const schemaCriarCliente = z.object({
   nome: z.string().trim().min(2),
   email: z.string().email().optional(),
-  telefone: z.string().optional(),
-  documento: z.string().optional(),
+  telefone: z.string().refine(validarTelefoneBr, 'Telefone inválido — informe DDD + número.').optional(),
+  documento: z.string().refine(validarDocumento, 'CPF ou CNPJ inválido.').optional(),
   endereco: z.string().optional(),
   cidade: z.string().optional(),
   estado: z.string().optional(),
