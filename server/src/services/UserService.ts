@@ -12,8 +12,8 @@ import type { Cliente } from '../config/database.config.js'
 import type { Conta, TipoNegocio, Usuario } from '../models/User.js'
 import { ContaRepository } from '../repositories/ContaRepository.js'
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js'
-import { hashSenha } from '../utils/senha.js'
-import { ErroConflito, ErroNaoEncontrado, ErroProibido, ErroValidacao } from '../errors/AppError.js'
+import { hashSenha, verificarSenha } from '../utils/senha.js'
+import { ErroConflito, ErroNaoAutorizado, ErroNaoEncontrado, ErroProibido, ErroValidacao } from '../errors/AppError.js'
 import { logger } from '../utils/logger.js'
 
 const TIPOS_NEGOCIO_VALIDOS = ['confeitaria', 'salao_festas', 'fotografia_video', 'manutencao', 'outro'] as const
@@ -22,6 +22,11 @@ const schemaCriarUsuario = z.object({
   email: z.string().email('Email inválido.'),
   senha: z.string().min(8, 'A senha precisa de ao menos 8 caracteres.'),
   nomeEmpresa: z.string().trim().min(2, 'Informe o nome da empresa.'),
+})
+
+const schemaAutenticar = z.object({
+  email: z.string().email('Email inválido.'),
+  senha: z.string().min(1, 'Informe a senha.'),
 })
 
 const schemaAtualizarPerfil = z.object({
@@ -71,6 +76,40 @@ export class UserService {
 
     logger.info({ contaId: conta.id, usuarioId: usuario.id }, 'Nova conta cadastrada.')
     return { conta, usuario }
+  }
+
+  /**
+   * Confere email/senha e devolve usuário + conta prontos pra emissão
+   * do JWT (auth.middleware, Tarefa 5). Mensagem de erro deliberadamente
+   * idêntica para "email não existe" e "senha errada" — não dar pista
+   * de qual das duas está errada evita enumeração de emails cadastrados.
+   */
+  async autenticar(email: string, senha: string): Promise<{ usuario: Usuario; conta: Conta }> {
+    const dados = schemaAutenticar.parse({ email, senha })
+
+    const credenciais = await this.usuarios.buscarComCredenciaisPorEmail(dados.email)
+    if (!credenciais?.senhaHash || !(await verificarSenha(dados.senha, credenciais.senhaHash))) {
+      throw new ErroNaoAutorizado('Email ou senha inválidos.')
+    }
+    if (credenciais.status !== 'ativo') {
+      throw new ErroProibido('Este usuário está inativo ou suspenso.')
+    }
+
+    const { senhaHash: _senhaHashDescartado, ...usuario } = credenciais
+    const conta = await this.contas.buscarPorId(usuario.contaId)
+    if (!conta) throw new ErroNaoEncontrado('Conta', usuario.contaId)
+
+    await this.usuarios.atualizar(usuario.id, { ultimoLoginEm: new Date() })
+    logger.info({ usuarioId: usuario.id }, 'Login realizado.')
+    return { usuario, conta }
+  }
+
+  /** Usuário + conta do usuário logado — usado por GET /auth/me. */
+  async obterPerfilCompleto(userId: string): Promise<{ usuario: Usuario; conta: Conta }> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+    const conta = await this.contas.buscarPorId(usuario.contaId)
+    if (!conta) throw new ErroNaoEncontrado('Conta', usuario.contaId)
+    return { usuario, conta }
   }
 
   /**
