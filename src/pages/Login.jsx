@@ -11,10 +11,10 @@ import { api } from '../services/api'
 // dashboard e cadastro de clientes reais, com o menu lateral já
 // refletindo os módulos daquele vertical (ver Sidebar.jsx).
 const VERTICAIS_DEMO = [
-  { label: 'Manutenção', icone: '🔧', email: 'admin@alphadata.com', senha: 'admin123' },
-  { label: 'Confeitaria', icone: '🧁', email: 'confeitaria@alphadata.com', senha: 'admin123' },
-  { label: 'Salão de Festas', icone: '🎉', email: 'salaodefestas@alphadata.com', senha: 'admin123' },
-  { label: 'Fotografia', icone: '📷', email: 'fotografia@alphadata.com', senha: 'admin123' },
+  { label: 'Manutenção', email: 'admin@alphadata.com', senha: 'admin123' },
+  { label: 'Confeitaria', email: 'confeitaria@alphadata.com', senha: 'admin123' },
+  { label: 'Salão de Festas', email: 'salaodefestas@alphadata.com', senha: 'admin123' },
+  { label: 'Fotografia', email: 'fotografia@alphadata.com', senha: 'admin123' },
 ]
 
 const OUTROS_PAPEIS_DEMO = [
@@ -199,9 +199,8 @@ export default function Login() {
                           key={v.email}
                           type="button"
                           onClick={() => preencherDemo(v)}
-                          className="flex items-center justify-center gap-1.5 rounded-btn border border-muted-dark py-2 text-label text-[#333] hover:bg-primary-light hover:border-primary"
+                          className="flex items-center justify-center rounded-btn border border-muted-dark py-2 text-label text-[#333] hover:bg-primary-light hover:border-primary"
                         >
-                          <span className="text-base leading-none">{v.icone}</span>
                           {v.label}
                         </button>
                       ))}

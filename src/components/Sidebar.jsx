@@ -37,7 +37,13 @@ const MENUS = {
 // própria (Receitas, Eventos, Sessões...) caem em /admin/em-construcao,
 // em vez de link quebrado ou de mostrar uma tela que não bate com o
 // vertical.
-const ROTAS_REAIS_POR_ID = { dashboard: '/admin/dashboard', clientes: '/admin/clientes' }
+const ROTAS_REAIS_POR_ID = {
+  dashboard: '/admin/dashboard',
+  clientes: '/admin/clientes',
+  pedidos: '/admin/confeitaria/pedidos',
+  eventos: '/admin/salao-festas/eventos',
+  sessoes: '/admin/fotografia/sessoes',
+}
 const ICONE_PADRAO = IconApps
 
 export default function Sidebar({ userType, aberta, onClose }) {

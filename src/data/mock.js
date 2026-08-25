@@ -225,3 +225,226 @@ export const RECEITA_MENSAL = Array.from({ length: 12 }, (_, i) => {
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
   return { mes: meses[i], valor: randInt(15000, 45000) }
 })
+
+// =====================================================================
+// CONFEITARIA E SALGADOS — dados mockados
+// =====================================================================
+const NOMES_CLIENTES_CONFEITARIA = [
+  'Buffet Doce Encanto', 'Maria Fernandes', 'Condomínio Vila Nova', 'Ana Beatriz Costa',
+  'Escritório Almeida & Souza', 'Igreja Comunidade Viva', 'Academia Corpo em Forma', 'Juliana Ramos',
+  'Padaria Pão Dourado', 'Roberto Nunes', 'Creche Mundo Encantado', 'Camila Santos',
+  'Clínica Vida Nova', 'Fernando Alves', 'Petshop Amigo Fiel', 'Beatriz Lima',
+  'Salão Beleza Pura', 'Marcos Vinícius', 'Empresa TechSoft', 'Patrícia Gomes',
+]
+
+export const CLIENTES_CONFEITARIA = NOMES_CLIENTES_CONFEITARIA.map((nome, i) => {
+  const [cidade, uf] = pick(CIDADES_UF)
+  return {
+    id: `CLI-CF-${pad(i + 1, 2)}`,
+    nome,
+    telefone: gerarTelefone(),
+    email: `contato@${slugEmail(nome)}.com.br`,
+    cidade,
+    estado: uf,
+  }
+})
+
+const CATEGORIAS_RECEITA = ['Bolos', 'Doces', 'Salgados', 'Tortas', 'Sobremesas']
+const NOMES_RECEITAS = [
+  'Bolo de Chocolate com Ganache', 'Brigadeiro Gourmet', 'Coxinha de Frango', 'Torta de Limão',
+  'Pudim de Leite Condensado', 'Bolo Red Velvet', 'Empada de Palmito', 'Bolo de Cenoura com Cobertura',
+  'Beijinho', 'Quiche de Alho-poró', 'Torta Holandesa', 'Bolo Naked Cake',
+]
+export const RECEITAS_CONFEITARIA = NOMES_RECEITAS.map((nome, i) => ({
+  id: `REC-${pad(i + 1, 2)}`,
+  nome,
+  categoria: pick(CATEGORIAS_RECEITA),
+  tempoPreparoMinutos: randInt(30, 180),
+  rendimento: `${randInt(10, 50)} unidades`,
+}))
+
+const CATALOGO_PRODUTOS_CONFEITARIA = [
+  { nome: 'Bolo de Chocolate 20cm', preco: 120 }, { nome: 'Cento de Brigadeiros', preco: 90 },
+  { nome: 'Cento de Coxinhas', preco: 110 }, { nome: 'Torta de Limão Grande', preco: 85 },
+  { nome: 'Kit Festa Infantil (50 pessoas)', preco: 450 }, { nome: 'Bolo de Casamento 3 Andares', preco: 1200 },
+  { nome: 'Cento de Empadas', preco: 130 }, { nome: 'Bolo Red Velvet 25cm', preco: 160 },
+  { nome: 'Mesa de Doces Completa', preco: 680 }, { nome: 'Bolo Naked Cake', preco: 220 },
+]
+export const PRODUTOS_CONFEITARIA = CATALOGO_PRODUTOS_CONFEITARIA.map((p, i) => ({
+  id: `PRD-${pad(i + 1, 2)}`,
+  nome: p.nome,
+  precoVenda: p.preco,
+  categoria: pick(CATEGORIAS_RECEITA),
+  ativo: rand() > 0.1,
+}))
+
+export const STATUS_PEDIDO_CONFEITARIA = ['Novo', 'Confirmado', 'Em Produção', 'Pronto', 'Entregue', 'Cancelado']
+export const STATUS_PEDIDO_CONFEITARIA_CORES = {
+  Novo: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  Confirmado: { bg: 'bg-cyan-100', text: 'text-cyan-700', dot: 'bg-cyan-500' },
+  'Em Produção': { bg: 'bg-yellow-100', text: 'text-yellow-700', dot: 'bg-yellow-500' },
+  Pronto: { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
+  Entregue: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+  Cancelado: { bg: 'bg-gray-200', text: 'text-gray-600', dot: 'bg-gray-400' },
+}
+
+export const PEDIDOS_CONFEITARIA = Array.from({ length: 28 }, (_, i) => {
+  const cliente = pick(CLIENTES_CONFEITARIA)
+  const itens = Array.from({ length: randInt(1, 3) }, () => {
+    const produto = pick(PRODUTOS_CONFEITARIA)
+    return { produtoNome: produto.nome, quantidade: randInt(1, 5), precoUnitario: produto.precoVenda }
+  })
+  const valorTotal = itens.reduce((soma, it) => soma + it.quantidade * it.precoUnitario, 0)
+  const status = i < 8 ? 'Entregue' : pick(STATUS_PEDIDO_CONFEITARIA)
+  const diasAtras = status === 'Entregue' ? randInt(1, 60) : -randInt(1, 15)
+  return {
+    id: `PED-${pad(i + 1)}`,
+    clienteId: cliente.id,
+    clienteNome: cliente.nome,
+    itens,
+    valorTotal,
+    dataEntrega: gerarData(diasAtras),
+    enderecoEntrega: `${pick(RUAS)}, ${randInt(10, 2500)}`,
+    status,
+    observacoes: rand() > 0.7 ? 'Sem glúten, por favor.' : '',
+    criadoEm: gerarData(diasAtras + randInt(1, 10)),
+  }
+})
+
+// =====================================================================
+// SALÃO DE FESTAS — dados mockados
+// =====================================================================
+const NOMES_CLIENTES_SALAO = [
+  'Ana Paula Ribeiro', 'Empresa TechNova Ltda', 'Carlos & Juliana (Casamento)', 'Escola Novo Saber',
+  'Fernanda Costa', 'Clube Recreativo União', 'Rodrigo & Camila (Casamento)', 'Universidade Nova Era',
+  'Mariana Alves', 'Distribuidora Rio Claro', 'Lucas Pereira (15 anos)', 'Banco Popular Agência 12',
+  'Beatriz Souza', 'Concessionária AutoMax', 'Thiago & Renata (Casamento)', 'Igreja Comunidade Viva',
+  'Isabela Martins', 'Laboratório Análises Rio', 'Gustavo Lima (Formatura)', 'Hospital São Lucas',
+]
+export const CLIENTES_SALAO = NOMES_CLIENTES_SALAO.map((nome, i) => {
+  const [cidade, uf] = pick(CIDADES_UF)
+  return {
+    id: `CLI-SL-${pad(i + 1, 2)}`,
+    nome,
+    telefone: gerarTelefone(),
+    email: `contato@${slugEmail(nome)}.com.br`,
+    cidade,
+    estado: uf,
+  }
+})
+
+const TIPOS_EVENTO = ['Aniversário', 'Casamento', 'Corporativo', 'Formatura', 'Confraternização', 'Outro']
+
+export const PACOTES_SALAO = [
+  { id: 'PCT-01', nome: 'Pacote Bronze', precoBase: 3500, capacidade: 80, itensInclusos: ['Decoração básica', 'Som', 'Buffet simples'] },
+  { id: 'PCT-02', nome: 'Pacote Prata', precoBase: 6500, capacidade: 120, itensInclusos: ['Decoração temática', 'Som e iluminação', 'Buffet completo'] },
+  { id: 'PCT-03', nome: 'Pacote Ouro', precoBase: 12000, capacidade: 200, itensInclusos: ['Decoração premium', 'Som, luz e telão', 'Buffet + open bar'] },
+  { id: 'PCT-04', nome: 'Pacote Premium', precoBase: 22000, capacidade: 350, itensInclusos: ['Cenografia completa', 'Estrutura de palco', 'Buffet gourmet + open bar'] },
+]
+
+export const STATUS_EVENTO = ['Orçamento', 'Confirmado', 'Em Andamento', 'Finalizado', 'Cancelado']
+export const STATUS_EVENTO_CORES = {
+  Orçamento: { bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' },
+  Confirmado: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  'Em Andamento': { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
+  Finalizado: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+  Cancelado: { bg: 'bg-gray-200', text: 'text-gray-600', dot: 'bg-gray-400' },
+}
+
+const CHECKLIST_EVENTO_PADRAO = [
+  'Contrato assinado', 'Sinal recebido', 'Equipe confirmada', 'Equipamentos separados',
+  'Decoração montada', 'Som e iluminação testados', 'Espaço limpo pós-evento',
+]
+
+export const EVENTOS_SALAO = Array.from({ length: 24 }, (_, i) => {
+  const cliente = pick(CLIENTES_SALAO)
+  const pacote = pick(PACOTES_SALAO)
+  const tipoEvento = pick(TIPOS_EVENTO)
+  const status = i < 6 ? 'Finalizado' : pick(STATUS_EVENTO)
+  const diasAtras = status === 'Finalizado' ? randInt(1, 90) : -randInt(1, 60)
+  return {
+    id: `EVT-${pad(i + 1)}`,
+    clienteId: cliente.id,
+    clienteNome: cliente.nome,
+    nomeEvento: `${tipoEvento} de ${cliente.nome}`,
+    tipoEvento,
+    pacoteId: pacote.id,
+    pacoteNome: pacote.nome,
+    dataEvento: gerarData(diasAtras),
+    numeroConvidados: randInt(40, pacote.capacidade),
+    valorTotal: pacote.precoBase,
+    status,
+    checklist: CHECKLIST_EVENTO_PADRAO.map((label, idx) => ({
+      id: idx,
+      label,
+      concluido: status === 'Finalizado' ? true : rand() > 0.5,
+      observacao: '',
+    })),
+    criadoEm: gerarData(diasAtras + randInt(5, 20)),
+  }
+})
+
+// =====================================================================
+// FOTOGRAFIA E VÍDEO — dados mockados
+// =====================================================================
+const NOMES_CLIENTES_FOTOGRAFIA = [
+  'Beatriz e Rafael (Casamento)', 'Studio Criativo Design', 'Larissa Mendes (Gestante)', 'Auto Peças Rodavia',
+  'Escritório Contábil Fortes', 'Pedro Henrique (15 anos)', 'Camila e Diego (Casamento)', 'Restaurante Cantina Italiana',
+  'Sofia Martins (Ensaio)', 'Torre Empresarial Atlântico', 'Rafaela Costa (Gestante)', 'Livraria Página Viva',
+  'André e Bianca (Casamento)', 'Clínica Fisio Ativa', 'Gabriel Souza (Formatura)', 'Depósito ArmazémBom',
+  'Letícia Alves (Ensaio)', 'Hotel Estrela do Sul', 'Vitor Hugo (15 anos)', 'Farmácia Bem Estar',
+]
+export const CLIENTES_FOTOGRAFIA = NOMES_CLIENTES_FOTOGRAFIA.map((nome, i) => {
+  const [cidade, uf] = pick(CIDADES_UF)
+  return {
+    id: `CLI-FT-${pad(i + 1, 2)}`,
+    nome,
+    telefone: gerarTelefone(),
+    email: `contato@${slugEmail(nome)}.com.br`,
+    cidade,
+    estado: uf,
+  }
+})
+
+const TIPOS_SESSAO = ['Ensaio', 'Casamento', 'Evento', 'Produto', 'Institucional', 'Outro']
+
+export const PACOTES_FOTOGRAFIA = [
+  { id: 'PCF-01', nome: 'Ensaio Fotográfico', precoBase: 450, fotosInclusas: 30, horasInclusas: 2 },
+  { id: 'PCF-02', nome: 'Cobertura de Casamento', precoBase: 3800, fotosInclusas: 300, horasInclusas: 8 },
+  { id: 'PCF-03', nome: 'Sessão Corporativa', precoBase: 900, fotosInclusas: 50, horasInclusas: 3 },
+  { id: 'PCF-04', nome: 'Vídeo Institucional', precoBase: 2200, fotosInclusas: 0, horasInclusas: 6 },
+]
+
+export const STATUS_SESSAO = ['Agendada', 'Realizada', 'Em Edição', 'Entregue', 'Cancelada']
+export const STATUS_SESSAO_CORES = {
+  Agendada: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  Realizada: { bg: 'bg-cyan-100', text: 'text-cyan-700', dot: 'bg-cyan-500' },
+  'Em Edição': { bg: 'bg-yellow-100', text: 'text-yellow-700', dot: 'bg-yellow-500' },
+  Entregue: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+  Cancelada: { bg: 'bg-gray-200', text: 'text-gray-600', dot: 'bg-gray-400' },
+}
+
+const LOCAIS_SESSAO = ['Estúdio principal', 'Externa — Parque da Cidade', 'Externa — Praia', 'Local do cliente']
+
+export const SESSOES_FOTOGRAFIA = Array.from({ length: 26 }, (_, i) => {
+  const cliente = pick(CLIENTES_FOTOGRAFIA)
+  const pacote = pick(PACOTES_FOTOGRAFIA)
+  const status = i < 7 ? 'Entregue' : pick(STATUS_SESSAO)
+  const diasAtras = status === 'Entregue' || status === 'Realizada' ? randInt(1, 90) : -randInt(1, 30)
+  const percentualEdicaoConcluida = status === 'Entregue' ? 100 : status === 'Em Edição' ? randInt(10, 90) : 0
+  return {
+    id: `SES-${pad(i + 1)}`,
+    clienteId: cliente.id,
+    clienteNome: cliente.nome,
+    tipoSessao: pick(TIPOS_SESSAO),
+    pacoteId: pacote.id,
+    pacoteNome: pacote.nome,
+    dataSessao: gerarData(diasAtras),
+    local: pick(LOCAIS_SESSAO),
+    valorTotal: pacote.precoBase,
+    quantidadeFotos: pacote.fotosInclusas,
+    percentualEdicaoConcluida,
+    status,
+    criadoEm: gerarData(diasAtras + randInt(3, 15)),
+  }
+})

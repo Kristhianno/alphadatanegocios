@@ -13,6 +13,9 @@ import AdminClientes from './pages/Admin/Clientes'
 import AdminPrestadores from './pages/Admin/Prestadores'
 import AdminRelatorios from './pages/Admin/Relatorios'
 import AdminConfiguracoes from './pages/Admin/Configuracoes'
+import PedidosConfeitaria from './pages/Admin/PedidosConfeitaria'
+import EventosSalao from './pages/Admin/EventosSalao'
+import SessoesFotografia from './pages/Admin/SessoesFotografia'
 
 import TecnicoDashboard from './pages/Tecnico/Dashboard'
 import TecnicoMinhasOrdens from './pages/Tecnico/MinhasOrdens'
@@ -62,6 +65,9 @@ export default function App() {
         <Route path="prestadores" element={<AdminPrestadores />} />
         <Route path="relatorios" element={<AdminRelatorios />} />
         <Route path="configuracoes" element={<AdminConfiguracoes />} />
+        <Route path="confeitaria/pedidos" element={<PedidosConfeitaria />} />
+        <Route path="salao-festas/eventos" element={<EventosSalao />} />
+        <Route path="fotografia/sessoes" element={<SessoesFotografia />} />
         <Route path="em-construcao/:modulo" element={<EmConstrucao />} />
       </Route>
 

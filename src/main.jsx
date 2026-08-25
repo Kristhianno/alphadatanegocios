@@ -8,6 +8,9 @@ import { ToastProvider } from './hooks/useToast'
 import { OrdensProvider } from './hooks/useOrdensServico'
 import { ClientesProvider } from './hooks/useClientes'
 import { PrestadoresProvider } from './hooks/usePrestadores'
+import { PedidosConfeitariaProvider } from './hooks/usePedidosConfeitaria'
+import { EventosSalaoProvider } from './hooks/useEventosSalao'
+import { SessoesFotografiaProvider } from './hooks/useSessoesFotografia'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -17,7 +20,13 @@ createRoot(document.getElementById('root')).render(
           <ClientesProvider>
             <PrestadoresProvider>
               <OrdensProvider>
-                <App />
+                <PedidosConfeitariaProvider>
+                  <EventosSalaoProvider>
+                    <SessoesFotografiaProvider>
+                      <App />
+                    </SessoesFotografiaProvider>
+                  </EventosSalaoProvider>
+                </PedidosConfeitariaProvider>
               </OrdensProvider>
             </PrestadoresProvider>
           </ClientesProvider>
