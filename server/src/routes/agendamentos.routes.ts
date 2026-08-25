@@ -1,15 +1,16 @@
-import { Router } from 'express'
+import { Hono } from 'hono'
 import { z } from 'zod'
-import { supabase } from '../config/database.config.js'
+import { getSupabase } from '../config/database.config.js'
 import { AgendamentoService } from '../services/AgendamentoService.js'
 import { autenticar } from '../middleware/auth.middleware.js'
 import { carregarContexto } from '../middleware/contexto-negocio.middleware.js'
 import { validar, validarUuidParam } from '../middleware/validacao.middleware.js'
 import { ErroProibido } from '../errors/AppError.js'
 import type { FiltrosAgendamento } from '../services/AgendamentoService.js'
+import type { AppEnv } from '../types/hono.js'
 
-const router = Router()
-const agendamentoService = new AgendamentoService(supabase)
+const router = new Hono<AppEnv>()
+function agendamentoService() { return new AgendamentoService(getSupabase()) }
 
 const schemaFiltros = z.object({
   status: z.enum(['agendado', 'confirmado', 'em_andamento', 'concluido', 'cancelado']).optional(),
@@ -20,37 +21,38 @@ const schemaFiltros = z.object({
 const schemaCancelar = z.object({ motivo: z.string().trim().min(1, 'Informe o motivo do cancelamento.') })
 const schemaStatus = z.object({ status: z.enum(['agendado', 'confirmado', 'em_andamento', 'concluido', 'cancelado']) })
 
-router.use(autenticar, carregarContexto)
+const protegido = [autenticar, carregarContexto] as const
 
-router.post('/', async (req, res) => {
-  if (!req.conta!.tipoNegocio) {
+router.post('/', ...protegido, async (c) => {
+  const conta = c.get('conta')
+  if (!conta.tipoNegocio) {
     throw new ErroProibido('Selecione o tipo de negócio da conta antes de criar agendamentos.')
   }
-  const agendamento = await agendamentoService.criarAgendamento(req.usuarioAutenticado!.id, req.conta!.tipoNegocio, req.body)
-  res.status(201).json(agendamento)
+  const agendamento = await agendamentoService().criarAgendamento(c.get('usuarioAutenticado').id, conta.tipoNegocio, await c.req.json())
+  return c.json(agendamento, 201)
 })
 
-router.get('/', validar(schemaFiltros, 'query'), async (req, res) => {
-  const filtros = req.dadosValidados as FiltrosAgendamento
-  const agendamentos = await agendamentoService.listarAgendamentos(req.usuarioAutenticado!.id, filtros)
-  res.status(200).json(agendamentos)
+router.get('/', ...protegido, validar(schemaFiltros, 'query'), async (c) => {
+  const filtros = c.get('dadosValidados') as FiltrosAgendamento
+  const agendamentos = await agendamentoService().listarAgendamentos(c.get('usuarioAutenticado').id, filtros)
+  return c.json(agendamentos, 200)
 })
 
-router.patch('/:id/status', validarUuidParam('id'), validar(schemaStatus), async (req, res) => {
-  const { status } = req.dadosValidados as z.infer<typeof schemaStatus>
-  const agendamento = await agendamentoService.atualizarStatus(req.params['id'] as string, status)
-  res.status(200).json(agendamento)
+router.patch('/:id/status', ...protegido, validarUuidParam('id'), validar(schemaStatus), async (c) => {
+  const { status } = c.get('dadosValidados') as z.infer<typeof schemaStatus>
+  const agendamento = await agendamentoService().atualizarStatus(c.req.param('id') as string, status)
+  return c.json(agendamento, 200)
 })
 
-router.post('/:id/confirmar', validarUuidParam('id'), async (req, res) => {
-  const agendamento = await agendamentoService.confirmarAgendamento(req.params['id'] as string)
-  res.status(200).json(agendamento)
+router.post('/:id/confirmar', ...protegido, validarUuidParam('id'), async (c) => {
+  const agendamento = await agendamentoService().confirmarAgendamento(c.req.param('id') as string)
+  return c.json(agendamento, 200)
 })
 
-router.post('/:id/cancelar', validarUuidParam('id'), validar(schemaCancelar), async (req, res) => {
-  const { motivo } = req.dadosValidados as z.infer<typeof schemaCancelar>
-  const agendamento = await agendamentoService.cancelarAgendamento(req.params['id'] as string, motivo)
-  res.status(200).json(agendamento)
+router.post('/:id/cancelar', ...protegido, validarUuidParam('id'), validar(schemaCancelar), async (c) => {
+  const { motivo } = c.get('dadosValidados') as z.infer<typeof schemaCancelar>
+  const agendamento = await agendamentoService().cancelarAgendamento(c.req.param('id') as string, motivo)
+  return c.json(agendamento, 200)
 })
 
 export default router

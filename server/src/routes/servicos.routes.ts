@@ -1,14 +1,15 @@
-import { Router } from 'express'
+import { Hono } from 'hono'
 import { z } from 'zod'
-import { supabase } from '../config/database.config.js'
+import { getSupabase } from '../config/database.config.js'
 import { ServicoService } from '../services/ServicoService.js'
 import { autenticar } from '../middleware/auth.middleware.js'
 import { carregarContexto } from '../middleware/contexto-negocio.middleware.js'
 import { validar, validarUuidParam } from '../middleware/validacao.middleware.js'
 import { ErroProibido } from '../errors/AppError.js'
+import type { AppEnv } from '../types/hono.js'
 
-const router = Router()
-const servicoService = new ServicoService(supabase)
+const router = new Hono<AppEnv>()
+function servicoService() { return new ServicoService(getSupabase()) }
 
 const schemaFiltros = z.object({
   ativo: z
@@ -17,40 +18,41 @@ const schemaFiltros = z.object({
     .transform((v) => (v === undefined ? undefined : v === 'true')),
 })
 
-router.use(autenticar, carregarContexto)
+const protegido = [autenticar, carregarContexto] as const
 
-router.post('/', async (req, res) => {
-  if (!req.conta!.tipoNegocio) {
+router.post('/', ...protegido, async (c) => {
+  const conta = c.get('conta')
+  if (!conta.tipoNegocio) {
     throw new ErroProibido('Selecione o tipo de negócio da conta antes de cadastrar serviços.')
   }
-  const servico = await servicoService.criarServico(req.usuarioAutenticado!.id, req.conta!.tipoNegocio, req.body)
-  res.status(201).json(servico)
+  const servico = await servicoService().criarServico(c.get('usuarioAutenticado').id, conta.tipoNegocio, await c.req.json())
+  return c.json(servico, 201)
 })
 
-router.get('/', validar(schemaFiltros, 'query'), async (req, res) => {
-  const filtros = req.dadosValidados as { ativo?: boolean }
-  const servicos = await servicoService.listarServicos(req.usuarioAutenticado!.id, filtros)
-  res.status(200).json(servicos)
+router.get('/', ...protegido, validar(schemaFiltros, 'query'), async (c) => {
+  const filtros = c.get('dadosValidados') as { ativo?: boolean }
+  const servicos = await servicoService().listarServicos(c.get('usuarioAutenticado').id, filtros)
+  return c.json(servicos, 200)
 })
 
-router.patch('/:id', validarUuidParam('id'), async (req, res) => {
-  const servico = await servicoService.atualizarServico(req.params['id'] as string, req.body)
-  res.status(200).json(servico)
+router.patch('/:id', ...protegido, validarUuidParam('id'), async (c) => {
+  const servico = await servicoService().atualizarServico(c.req.param('id') as string, await c.req.json())
+  return c.json(servico, 200)
 })
 
-router.delete('/:id', validarUuidParam('id'), async (req, res) => {
-  await servicoService.deletarServico(req.params['id'] as string)
-  res.status(204).send()
+router.delete('/:id', ...protegido, validarUuidParam('id'), async (c) => {
+  await servicoService().deletarServico(c.req.param('id') as string)
+  return c.body(null, 204)
 })
 
-router.post('/:id/ativar', validarUuidParam('id'), async (req, res) => {
-  const servico = await servicoService.ativarServico(req.params['id'] as string)
-  res.status(200).json(servico)
+router.post('/:id/ativar', ...protegido, validarUuidParam('id'), async (c) => {
+  const servico = await servicoService().ativarServico(c.req.param('id') as string)
+  return c.json(servico, 200)
 })
 
-router.post('/:id/desativar', validarUuidParam('id'), async (req, res) => {
-  const servico = await servicoService.desativarServico(req.params['id'] as string)
-  res.status(200).json(servico)
+router.post('/:id/desativar', ...protegido, validarUuidParam('id'), async (c) => {
+  const servico = await servicoService().desativarServico(c.req.param('id') as string)
+  return c.json(servico, 200)
 })
 
 export default router

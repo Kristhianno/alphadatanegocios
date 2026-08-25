@@ -1,32 +1,34 @@
 /**
- * Autenticação por JWT (Bearer) + checagem de papel. Express 5 propaga
- * sozinho uma Promise rejeitada de um handler/middleware assíncrono para
- * o error handler (`next(err)` automático) — por isso nenhum wrapper
- * try/catch é necessário aqui, diferente do que Express 4 exigiria.
+ * Autenticação por JWT (Bearer) + checagem de papel. Hono, assim como
+ * Express 5, propaga sozinho uma Promise rejeitada de um
+ * handler/middleware assíncrono pro error handler (`app.onError`) —
+ * nenhum wrapper try/catch é necessário aqui.
  */
-import type { NextFunction, Request, Response } from 'express'
+import type { Context, Next } from 'hono'
 import type { Papel } from '../models/User.js'
 import { verificarToken } from '../utils/jwt.js'
 import { ErroNaoAutorizado, ErroProibido } from '../errors/AppError.js'
+import type { AppEnv } from '../types/hono.js'
 
-export async function autenticar(req: Request, _res: Response, next: NextFunction): Promise<void> {
-  const cabecalho = req.headers.authorization
+export async function autenticar(c: Context<AppEnv>, next: Next): Promise<void> {
+  const cabecalho = c.req.header('authorization')
   if (!cabecalho?.startsWith('Bearer ')) {
     throw new ErroNaoAutorizado('Envie o token no header "Authorization: Bearer <token>".')
   }
   const token = cabecalho.slice('Bearer '.length)
   const payload = await verificarToken(token)
-  req.usuarioAutenticado = { id: payload.sub, contaId: payload.contaId, papel: payload.papel, email: payload.email, clienteId: payload.clienteId }
-  next()
+  c.set('usuarioAutenticado', { id: payload.sub, contaId: payload.contaId, papel: payload.papel, email: payload.email, clienteId: payload.clienteId })
+  await next()
 }
 
 /** Restringe a rota a um subconjunto de papéis — sempre depois de {@link autenticar}. */
 export function requererPapel(...papeis: readonly Papel[]) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
-    if (!req.usuarioAutenticado) throw new ErroNaoAutorizado('Autenticação necessária.')
-    if (!papeis.includes(req.usuarioAutenticado.papel)) {
+  return async (c: Context<AppEnv>, next: Next): Promise<void> => {
+    const usuario = c.get('usuarioAutenticado')
+    if (!usuario) throw new ErroNaoAutorizado('Autenticação necessária.')
+    if (!papeis.includes(usuario.papel)) {
       throw new ErroProibido(`Este recurso exige um dos papéis: ${papeis.join(', ')}.`)
     }
-    next()
+    await next()
   }
 }

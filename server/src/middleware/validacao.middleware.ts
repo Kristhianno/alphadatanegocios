@@ -6,38 +6,42 @@
  * ManutencaoService.criarChamado(userId, tipoManutencao, descricao)).
  *
  * Onde o service já valida sua própria entrada com Zod (a maioria dos
- * `criar*`/`atualizar*`), a rota passa `req.body` direto — validar de
+ * `criar*`/`atualizar*`), a rota passa o corpo direto — validar de
  * novo aqui seria duplicar o schema em dois lugares e deixá-los
  * divergir com o tempo.
  *
- * O resultado validado fica em `req.dadosValidados`, nunca sobrescreve
- * `req.body`/`req.query` diretamente — no Express 5 `req.query` é
- * somente leitura (getter sem setter).
+ * O resultado validado fica em `c.set('dadosValidados', ...)`.
  */
-import type { NextFunction, Request, Response } from 'express'
+import type { Context, Next } from 'hono'
 import type { z } from 'zod'
 import { ErroValidacao } from '../errors/AppError.js'
 import { validarUuid } from '../utils/validadores.js'
+import type { AppEnv } from '../types/hono.js'
 
 export function validar(schema: z.ZodTypeAny, origem: 'body' | 'query' | 'params' = 'body') {
-  return (req: Request, _res: Response, next: NextFunction): void => {
-    const resultado = schema.safeParse(req[origem])
+  return async (c: Context<AppEnv>, next: Next): Promise<void> => {
+    let dados: unknown
+    if (origem === 'body') dados = await c.req.json().catch(() => ({}))
+    else if (origem === 'query') dados = c.req.query()
+    else dados = c.req.param()
+
+    const resultado = schema.safeParse(dados)
     if (!resultado.success) {
       const detalhes = resultado.error.issues.map((problema) => ({ campo: problema.path.join('.'), mensagem: problema.message }))
       throw new ErroValidacao('Dados inválidos.', detalhes)
     }
-    req.dadosValidados = resultado.data
-    next()
+    c.set('dadosValidados', resultado.data)
+    await next()
   }
 }
 
 /** Rejeita cedo um `:id` de rota que nem parece um UUID, antes de gastar uma consulta no banco. */
 export function validarUuidParam(nomeParametro: string) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
-    const valor = req.params[nomeParametro]
+  return async (c: Context<AppEnv>, next: Next): Promise<void> => {
+    const valor = c.req.param(nomeParametro)
     if (!validarUuid(valor)) {
       throw new ErroValidacao(`Parâmetro de rota "${nomeParametro}" precisa ser um UUID válido.`)
     }
-    next()
+    await next()
   }
 }

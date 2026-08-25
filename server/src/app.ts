@@ -1,10 +1,12 @@
 /**
- * Montagem do app Express — separado de server.ts pra poder ser
- * importado por testes de integração (Tarefa 8) sem precisar abrir uma
- * porta de rede de verdade (supertest bate direto no `app`).
+ * Montagem do app Hono — o próprio `app` já é um handler `fetch`
+ * compatível com Cloudflare Workers (`export default app` no
+ * entrypoint é suficiente, sem adaptador nenhum). Continua separado do
+ * entrypoint de Workers pra poder ser testado (supertest-like) sem
+ * precisar do runtime de Workers.
  */
-import cors from 'cors'
-import express from 'express'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import authRoutes from './routes/auth.routes.js'
 import clientesRoutes from './routes/clientes.routes.js'
 import configRoutes from './routes/config.routes.js'
@@ -17,30 +19,45 @@ import salaoFestasRoutes from './routes/salao-festas.routes.js'
 import fotografiaRoutes from './routes/fotografia.routes.js'
 import manutencaoRoutes from './routes/manutencao.routes.js'
 import { tratarErro } from './middleware/erro.middleware.js'
+import type { AppEnv } from './types/hono.js'
 
-export const app = express()
+export const app = new Hono<AppEnv>()
 
-app.use(cors())
-app.use(express.json())
-
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' })
+/**
+ * Bindings de Workers (secrets/vars configurados no dashboard/wrangler)
+ * chegam via `c.env`, não `process.env` — mesmo com `nodejs_compat`,
+ * `process.env` não veio populado de verdade nem durante o
+ * processamento de uma requisição (comprovado rodando `wrangler dev`).
+ * Essa ponte copia `c.env` pra `process.env` uma vez por requisição,
+ * bem no início — daí em diante, código que só sabe ler `process.env`
+ * (getSupabase, obterChave, logger — todos genéricos, sem acesso a
+ * `c`) funciona sem precisar receber `env` explicitamente por parâmetro
+ * em cada camada. Em Node (dev com tsx, scripts), `c.env` é undefined
+ * e isso é um no-op — `process.env` já vem do `.env`/`--env-file`.
+ */
+app.use('*', async (c, next) => {
+  if (c.env && typeof c.env === 'object') {
+    Object.assign(process.env, c.env)
+  }
+  await next()
 })
 
-app.use('/auth', authRoutes)
-app.use('/clientes', clientesRoutes)
-app.use('/config', configRoutes)
-app.use('/convites', convitesRoutes)
-app.use('/dashboard', dashboardRoutes)
-app.use('/agendamentos', agendamentosRoutes)
-app.use('/servicos', servicosRoutes)
-app.use('/confeitaria', confeitariaRoutes)
-app.use('/salao-festas', salaoFestasRoutes)
-app.use('/fotografia', fotografiaRoutes)
-app.use('/manutencao', manutencaoRoutes)
+app.use('*', cors())
 
-app.use((req, res) => {
-  res.status(404).json({ erro: { codigo: 'ROTA_NAO_ENCONTRADA', mensagem: `Rota "${req.method} ${req.path}" não existe.` } })
-})
+app.get('/health', (c) => c.json({ status: 'ok' }, 200))
 
-app.use(tratarErro)
+app.route('/auth', authRoutes)
+app.route('/clientes', clientesRoutes)
+app.route('/config', configRoutes)
+app.route('/convites', convitesRoutes)
+app.route('/dashboard', dashboardRoutes)
+app.route('/agendamentos', agendamentosRoutes)
+app.route('/servicos', servicosRoutes)
+app.route('/confeitaria', confeitariaRoutes)
+app.route('/salao-festas', salaoFestasRoutes)
+app.route('/fotografia', fotografiaRoutes)
+app.route('/manutencao', manutencaoRoutes)
+
+app.notFound((c) => c.json({ erro: { codigo: 'ROTA_NAO_ENCONTRADA', mensagem: `Rota "${c.req.method} ${c.req.path}" não existe.` } }, 404))
+
+app.onError(tratarErro)

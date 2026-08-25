@@ -1,54 +1,55 @@
-import { Router } from 'express'
+import { Hono } from 'hono'
 import { z } from 'zod'
-import { supabase } from '../config/database.config.js'
+import { getSupabase } from '../config/database.config.js'
 import { SalaoFestasService } from '../services/tipo-especifico/SalaoFestasService.js'
 import { autenticar } from '../middleware/auth.middleware.js'
 import { carregarContexto, exigirTipoNegocio } from '../middleware/contexto-negocio.middleware.js'
 import { validar, validarUuidParam } from '../middleware/validacao.middleware.js'
+import type { AppEnv } from '../types/hono.js'
 
-const router = Router()
-const salaoFestasService = new SalaoFestasService(supabase)
+const router = new Hono<AppEnv>()
+function salaoFestasService() { return new SalaoFestasService(getSupabase()) }
 
 const schemaEquipe = z.object({ cargo: z.string().trim().min(2), quantidade: z.number().int().positive() })
 const schemaFinalizar = z.object({ fotos: z.array(z.string()).default([]) })
 
-router.use(autenticar, carregarContexto, exigirTipoNegocio('salao_festas'))
+const protegido = [autenticar, carregarContexto, exigirTipoNegocio('salao_festas')] as const
 
-router.post('/eventos', async (req, res) => {
-  const evento = await salaoFestasService.criarEvento(req.usuarioAutenticado!.id, req.body)
-  res.status(201).json(evento)
+router.post('/eventos', ...protegido, async (c) => {
+  const evento = await salaoFestasService().criarEvento(c.get('usuarioAutenticado').id, await c.req.json())
+  return c.json(evento, 201)
 })
 
-router.post('/eventos/:eventoId/equipe', validarUuidParam('eventoId'), validar(schemaEquipe), async (req, res) => {
-  const { cargo, quantidade } = req.dadosValidados as z.infer<typeof schemaEquipe>
-  await salaoFestasService.adicionarEquipeEvento(req.params['eventoId'] as string, cargo, quantidade)
-  res.status(201).json({ ok: true })
+router.post('/eventos/:eventoId/equipe', ...protegido, validarUuidParam('eventoId'), validar(schemaEquipe), async (c) => {
+  const { cargo, quantidade } = c.get('dadosValidados') as z.infer<typeof schemaEquipe>
+  await salaoFestasService().adicionarEquipeEvento(c.req.param('eventoId') as string, cargo, quantidade)
+  return c.json({ ok: true }, 201)
 })
 
-router.post('/eventos/:eventoId/equipamentos', validarUuidParam('eventoId'), async (req, res) => {
-  await salaoFestasService.adicionarEquipamentoEvento(req.params['eventoId'] as string, req.body)
-  res.status(201).json({ ok: true })
+router.post('/eventos/:eventoId/equipamentos', ...protegido, validarUuidParam('eventoId'), async (c) => {
+  await salaoFestasService().adicionarEquipamentoEvento(c.req.param('eventoId') as string, await c.req.json())
+  return c.json({ ok: true }, 201)
 })
 
-router.post('/eventos/:eventoId/confirmar-equipe', validarUuidParam('eventoId'), async (req, res) => {
-  const confirmados = await salaoFestasService.confirmarEquipesEvento(req.params['eventoId'] as string)
-  res.status(200).json({ confirmados })
+router.post('/eventos/:eventoId/confirmar-equipe', ...protegido, validarUuidParam('eventoId'), async (c) => {
+  const confirmados = await salaoFestasService().confirmarEquipesEvento(c.req.param('eventoId') as string)
+  return c.json({ confirmados }, 200)
 })
 
-router.post('/eventos/:eventoId/checklist', validarUuidParam('eventoId'), async (req, res) => {
-  const evento = await salaoFestasService.gerarChecklistEvento(req.params['eventoId'] as string)
-  res.status(200).json(evento)
+router.post('/eventos/:eventoId/checklist', ...protegido, validarUuidParam('eventoId'), async (c) => {
+  const evento = await salaoFestasService().gerarChecklistEvento(c.req.param('eventoId') as string)
+  return c.json(evento, 200)
 })
 
-router.post('/eventos/:eventoId/finalizar', validarUuidParam('eventoId'), validar(schemaFinalizar), async (req, res) => {
-  const { fotos } = req.dadosValidados as z.infer<typeof schemaFinalizar>
-  const evento = await salaoFestasService.finalizarEvento(req.params['eventoId'] as string, fotos)
-  res.status(200).json(evento)
+router.post('/eventos/:eventoId/finalizar', ...protegido, validarUuidParam('eventoId'), validar(schemaFinalizar), async (c) => {
+  const { fotos } = c.get('dadosValidados') as z.infer<typeof schemaFinalizar>
+  const evento = await salaoFestasService().finalizarEvento(c.req.param('eventoId') as string, fotos)
+  return c.json(evento, 200)
 })
 
-router.get('/eventos/:eventoId/lucro', validarUuidParam('eventoId'), async (req, res) => {
-  const lucro = await salaoFestasService.calcularLucroEvento(req.params['eventoId'] as string)
-  res.status(200).json({ lucro })
+router.get('/eventos/:eventoId/lucro', ...protegido, validarUuidParam('eventoId'), async (c) => {
+  const lucro = await salaoFestasService().calcularLucroEvento(c.req.param('eventoId') as string)
+  return c.json({ lucro }, 200)
 })
 
 export default router

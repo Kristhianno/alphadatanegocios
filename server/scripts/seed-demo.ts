@@ -10,7 +10,7 @@
  *
  * Roda com: npx tsx --env-file=.env scripts/seed-demo.ts
  */
-import { supabase } from '../src/config/database.config.js'
+import { getSupabase } from '../src/config/database.config.js'
 import { UsuarioRepository } from '../src/repositories/UsuarioRepository.js'
 import { UserService } from '../src/services/UserService.js'
 import { ClienteService } from '../src/services/ClienteService.js'
@@ -19,6 +19,7 @@ import { ManutencaoService } from '../src/services/tipo-especifico/ManutencaoSer
 import { hashSenha } from '../src/utils/senha.js'
 import { logger } from '../src/utils/logger.js'
 
+const supabase = getSupabase()
 const usuarios = new UsuarioRepository(supabase)
 const userService = new UserService(supabase)
 const clienteService = new ClienteService(supabase)

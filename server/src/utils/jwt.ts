@@ -8,11 +8,20 @@ import { jwtVerify, SignJWT } from 'jose'
 import type { Papel } from '../models/User.js'
 import { ErroNaoAutorizado, ErroValidacao } from '../errors/AppError.js'
 
-const SEGREDO = process.env['JWT_SECRET']
-if (!SEGREDO) {
-  throw new Error('JWT_SECRET é obrigatório. Copie server/.env.example para server/.env e preencha.')
+// Lazy — em Workers, `process.env` só reflete os bindings durante o
+// processamento de uma requisição, não na avaliação do módulo no cold
+// start (mesmo motivo documentado em config/database.config.ts).
+let chaveCache: Uint8Array | null = null
+function obterChave(): Uint8Array {
+  if (chaveCache) return chaveCache
+  const segredo = process.env['JWT_SECRET']
+  if (!segredo) {
+    throw new Error('JWT_SECRET é obrigatório. Copie server/.env.example para server/.env (Node) ou server/.dev.vars (wrangler) e preencha.')
+  }
+  chaveCache = new TextEncoder().encode(segredo)
+  return chaveCache
 }
-const CHAVE = new TextEncoder().encode(SEGREDO)
+
 const EMISSOR = 'servicehub-api'
 const VALIDADE = '7d'
 
@@ -41,13 +50,13 @@ export async function assinarToken(payload: PayloadAutenticacao): Promise<string
     .setIssuer(EMISSOR)
     .setIssuedAt()
     .setExpirationTime(VALIDADE)
-    .sign(CHAVE)
+    .sign(obterChave())
 }
 
 /** Lança {@link ErroNaoAutorizado} para qualquer token ausente/expirado/adulterado — o chamador nunca precisa distinguir o motivo. */
 export async function verificarToken(token: string): Promise<PayloadAutenticacao> {
   try {
-    const { payload } = await jwtVerify(token, CHAVE, { issuer: EMISSOR })
+    const { payload } = await jwtVerify(token, obterChave(), { issuer: EMISSOR })
     if (typeof payload.sub !== 'string') throw new Error('Token sem "sub".')
     return {
       sub: payload.sub,
@@ -73,13 +82,13 @@ export async function assinarConviteCliente(payload: PayloadConvite): Promise<st
     .setIssuer(EMISSOR_CONVITE)
     .setIssuedAt()
     .setExpirationTime(VALIDADE_CONVITE)
-    .sign(CHAVE)
+    .sign(obterChave())
 }
 
 /** Lança {@link ErroValidacao} (não ErroNaoAutorizado) — pro visitante público do formulário ver "link inválido/expirado", não algo que pareça um problema de login. */
 export async function verificarConviteCliente(token: string): Promise<PayloadConvite> {
   try {
-    const { payload } = await jwtVerify(token, CHAVE, { issuer: EMISSOR_CONVITE })
+    const { payload } = await jwtVerify(token, obterChave(), { issuer: EMISSOR_CONVITE })
     return { contaId: payload['contaId'] as string, criadoPor: payload['criadoPor'] as string }
   } catch {
     throw new ErroValidacao('Este link de convite é inválido ou já expirou.')

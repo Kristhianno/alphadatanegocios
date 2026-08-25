@@ -5,30 +5,24 @@
  * propósito: alimenta o seletor de vertical durante o cadastro, antes
  * de existir qualquer token.
  */
-import { Router } from 'express'
+import { Hono } from 'hono'
 import { getConfigPlano } from '../config/planos.config.js'
 import { getConfigTipoNegocio, listarTiposNegocioDisponiveis } from '../utils/config-factory.js'
 import { autenticar } from '../middleware/auth.middleware.js'
 import { carregarContexto } from '../middleware/contexto-negocio.middleware.js'
 import { ErroProibido } from '../errors/AppError.js'
+import type { AppEnv } from '../types/hono.js'
 
-const router = Router()
+const router = new Hono<AppEnv>()
 
-router.get('/tipos-negocio-disponiveis', (_req, res) => {
-  res.status(200).json(listarTiposNegocioDisponiveis())
+router.get('/tipos-negocio-disponiveis', (c) => c.json(listarTiposNegocioDisponiveis(), 200))
+
+router.get('/tipo-negocio', autenticar, carregarContexto, (c) => {
+  const conta = c.get('conta')
+  if (!conta.tipoNegocio) throw new ErroProibido('Esta conta ainda não escolheu um tipo de negócio.')
+  return c.json(getConfigTipoNegocio(conta.tipoNegocio), 200)
 })
 
-router.use(autenticar, carregarContexto)
-
-router.get('/tipo-negocio', (req, res) => {
-  if (!req.conta!.tipoNegocio) {
-    throw new ErroProibido('Esta conta ainda não escolheu um tipo de negócio.')
-  }
-  res.status(200).json(getConfigTipoNegocio(req.conta!.tipoNegocio))
-})
-
-router.get('/plano', (req, res) => {
-  res.status(200).json(getConfigPlano(req.conta!.plano))
-})
+router.get('/plano', autenticar, carregarContexto, (c) => c.json(getConfigPlano(c.get('conta').plano), 200))
 
 export default router

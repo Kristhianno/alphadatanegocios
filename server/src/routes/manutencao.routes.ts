@@ -10,17 +10,18 @@
  * `clienteId` vem do JWT (não do body), pra um cliente não conseguir
  * agir em nome de outro só trocando um id na requisição.
  */
-import { Router } from 'express'
+import { Hono } from 'hono'
 import { z } from 'zod'
-import { supabase } from '../config/database.config.js'
+import { getSupabase } from '../config/database.config.js'
 import { ManutencaoService } from '../services/tipo-especifico/ManutencaoService.js'
 import { autenticar, requererPapel } from '../middleware/auth.middleware.js'
 import { carregarContexto, exigirTipoNegocio } from '../middleware/contexto-negocio.middleware.js'
 import { validar, validarUuidParam } from '../middleware/validacao.middleware.js'
 import { ErroProibido } from '../errors/AppError.js'
+import type { AppEnv } from '../types/hono.js'
 
-const router = Router()
-const manutencaoService = new ManutencaoService(supabase)
+const router = new Hono<AppEnv>()
+function manutencaoService() { return new ManutencaoService(getSupabase()) }
 
 const EQUIPE_INTERNA = ['admin', 'gestor', 'tecnico'] as const
 
@@ -43,65 +44,66 @@ const schemaPreventiva = z.object({
   frequencia: z.enum(['semanal', 'mensal', 'trimestral', 'semestral', 'anual']),
 })
 
-router.use(autenticar, carregarContexto, exigirTipoNegocio('manutencao'))
+const base = [autenticar, carregarContexto, exigirTipoNegocio('manutencao')] as const
+const soEquipeInterna = [...base, requererPapel(...EQUIPE_INTERNA)] as const
+const soCliente = [...base, requererPapel('cliente')] as const
 
-router.post('/chamados', requererPapel('cliente'), validar(schemaChamado), async (req, res) => {
-  const { tipoManutencao, descricao } = req.dadosValidados as z.infer<typeof schemaChamado>
-  const chamado = await manutencaoService.criarChamado(req.usuarioAutenticado!.id, tipoManutencao, descricao)
-  res.status(201).json(chamado)
+router.post('/chamados', ...soCliente, validar(schemaChamado), async (c) => {
+  const { tipoManutencao, descricao } = c.get('dadosValidados') as z.infer<typeof schemaChamado>
+  const chamado = await manutencaoService().criarChamado(c.get('usuarioAutenticado').id, tipoManutencao, descricao)
+  return c.json(chamado, 201)
 })
 
 /** Sem restrição de papel: equipe interna vê todos os chamados da conta, cliente só os próprios — a distinção é resolvida dentro do service, não aqui. */
-router.get('/chamados', async (req, res) => {
-  const chamados = await manutencaoService.listarChamados(req.usuarioAutenticado!.id)
-  res.status(200).json(chamados)
+router.get('/chamados', ...base, async (c) => {
+  const chamados = await manutencaoService().listarChamados(c.get('usuarioAutenticado').id)
+  return c.json(chamados, 200)
 })
 
-router.post('/chamados/:chamadoId/orcamento', requererPapel(...EQUIPE_INTERNA), validarUuidParam('chamadoId'), async (req, res) => {
-  const orcamento = await manutencaoService.gerarOrcamento(req.params['chamadoId'] as string)
-  res.status(201).json(orcamento)
+router.post('/chamados/:chamadoId/orcamento', ...soEquipeInterna, validarUuidParam('chamadoId'), async (c) => {
+  const orcamento = await manutencaoService().gerarOrcamento(c.req.param('chamadoId') as string)
+  return c.json(orcamento, 201)
 })
 
-router.post('/chamados/:chamadoId/orcamento/aceitar', requererPapel('cliente'), validarUuidParam('chamadoId'), async (req, res) => {
-  if (!req.usuarioAutenticado!.clienteId) {
-    throw new ErroProibido('Este login não está vinculado a um cliente.')
-  }
-  const orcamento = await manutencaoService.aceitarOrcamento(req.params['chamadoId'] as string, req.usuarioAutenticado!.clienteId)
-  res.status(200).json(orcamento)
+router.post('/chamados/:chamadoId/orcamento/aceitar', ...soCliente, validarUuidParam('chamadoId'), async (c) => {
+  const clienteId = c.get('usuarioAutenticado').clienteId
+  if (!clienteId) throw new ErroProibido('Este login não está vinculado a um cliente.')
+  const orcamento = await manutencaoService().aceitarOrcamento(c.req.param('chamadoId') as string, clienteId)
+  return c.json(orcamento, 200)
 })
 
-router.post('/chamados/:chamadoId/ordem', requererPapel(...EQUIPE_INTERNA), validarUuidParam('chamadoId'), validar(schemaOrdem), async (req, res) => {
-  const { tecnicoId } = req.dadosValidados as z.infer<typeof schemaOrdem>
-  const ordem = await manutencaoService.criarOrdenManutencao(req.params['chamadoId'] as string, tecnicoId)
-  res.status(201).json(ordem)
+router.post('/chamados/:chamadoId/ordem', ...soEquipeInterna, validarUuidParam('chamadoId'), validar(schemaOrdem), async (c) => {
+  const { tecnicoId } = c.get('dadosValidados') as z.infer<typeof schemaOrdem>
+  const ordem = await manutencaoService().criarOrdenManutencao(c.req.param('chamadoId') as string, tecnicoId)
+  return c.json(ordem, 201)
 })
 
-router.post('/chamados/:chamadoId/agendar', requererPapel(...EQUIPE_INTERNA), validarUuidParam('chamadoId'), validar(schemaAgendar), async (req, res) => {
-  const { tecnicoId, data } = req.dadosValidados as z.infer<typeof schemaAgendar>
-  const ordem = await manutencaoService.agendarTecnico(req.params['chamadoId'] as string, tecnicoId, data)
-  res.status(200).json(ordem)
+router.post('/chamados/:chamadoId/agendar', ...soEquipeInterna, validarUuidParam('chamadoId'), validar(schemaAgendar), async (c) => {
+  const { tecnicoId, data } = c.get('dadosValidados') as z.infer<typeof schemaAgendar>
+  const ordem = await manutencaoService().agendarTecnico(c.req.param('chamadoId') as string, tecnicoId, data)
+  return c.json(ordem, 200)
 })
 
-router.post('/ordens/:ordemId/materiais', requererPapel(...EQUIPE_INTERNA), validarUuidParam('ordemId'), validar(schemaMateriais), async (req, res) => {
-  const { materiais } = req.dadosValidados as z.infer<typeof schemaMateriais>
-  const quantidade = await manutencaoService.registrarMaterialsUsados(req.params['ordemId'] as string, materiais)
-  res.status(201).json({ quantidade })
+router.post('/ordens/:ordemId/materiais', ...soEquipeInterna, validarUuidParam('ordemId'), validar(schemaMateriais), async (c) => {
+  const { materiais } = c.get('dadosValidados') as z.infer<typeof schemaMateriais>
+  const quantidade = await manutencaoService().registrarMaterialsUsados(c.req.param('ordemId') as string, materiais)
+  return c.json({ quantidade }, 201)
 })
 
-router.post('/ordens/:ordemId/laudo', requererPapel(...EQUIPE_INTERNA), validarUuidParam('ordemId'), validar(schemaLaudo), async (req, res) => {
-  const dados = req.dadosValidados as z.infer<typeof schemaLaudo>
-  const laudo = await manutencaoService.gerarLaudoTecnico(req.params['ordemId'] as string, {
+router.post('/ordens/:ordemId/laudo', ...soEquipeInterna, validarUuidParam('ordemId'), validar(schemaLaudo), async (c) => {
+  const dados = c.get('dadosValidados') as z.infer<typeof schemaLaudo>
+  const laudo = await manutencaoService().gerarLaudoTecnico(c.req.param('ordemId') as string, {
     ...(dados.diagnostico !== undefined && { diagnostico: dados.diagnostico }),
     ...(dados.servicosRealizados !== undefined && { servicosRealizados: dados.servicosRealizados }),
     ...(dados.recomendacoes !== undefined && { recomendacoes: dados.recomendacoes }),
   })
-  res.status(201).json(laudo)
+  return c.json(laudo, 201)
 })
 
-router.post('/preventivas', requererPapel(...EQUIPE_INTERNA), validar(schemaPreventiva), async (req, res) => {
-  const { clienteId, frequencia } = req.dadosValidados as z.infer<typeof schemaPreventiva>
-  const preventiva = await manutencaoService.criarManutencaoPreventiva(clienteId, frequencia)
-  res.status(201).json(preventiva)
+router.post('/preventivas', ...soEquipeInterna, validar(schemaPreventiva), async (c) => {
+  const { clienteId, frequencia } = c.get('dadosValidados') as z.infer<typeof schemaPreventiva>
+  const preventiva = await manutencaoService().criarManutencaoPreventiva(clienteId, frequencia)
+  return c.json(preventiva, 201)
 })
 
 export default router
