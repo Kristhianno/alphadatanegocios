@@ -64,6 +64,8 @@ export interface Usuario {
   /** Preenchido apenas quando papel === 'cliente'. */
   clienteId: string | null
   status: StatusUsuario
+  /** true quando a senha atual foi gerada pelo sistema (convite de cliente) e ainda não foi trocada. */
+  deveTrocarSenha: boolean
   ultimoLoginEm: Date | null
   criadoEm: Date
   atualizadoEm: Date

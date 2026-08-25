@@ -2725,6 +2725,7 @@ export type Database = {
           cliente_id: string | null
           conta_id: string
           criado_em: string
+          deve_trocar_senha: boolean
           email: string
           id: string
           nome: string
@@ -2739,6 +2740,7 @@ export type Database = {
           cliente_id?: string | null
           conta_id: string
           criado_em?: string
+          deve_trocar_senha?: boolean
           email: string
           id?: string
           nome: string
@@ -2753,6 +2755,7 @@ export type Database = {
           cliente_id?: string | null
           conta_id?: string
           criado_em?: string
+          deve_trocar_senha?: boolean
           email?: string
           id?: string
           nome?: string

@@ -49,4 +49,11 @@ router.post('/selecionar-tipo-negocio', requererPapel('admin'), async (req, res)
   res.status(200).json(conta)
 })
 
+/** Usada tanto pra troca voluntária quanto pra sair do estado "senha temporária" de um cadastro por convite (ver ConvitesService). */
+router.post('/trocar-senha', async (req, res) => {
+  const { senhaAtual, novaSenha } = req.body as Record<string, unknown>
+  await userService.trocarSenha(req.usuarioAutenticado!.id, senhaAtual as string, novaSenha as string)
+  res.status(200).json({ ok: true })
+})
+
 export default router

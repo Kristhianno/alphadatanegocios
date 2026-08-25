@@ -34,6 +34,11 @@ const schemaAtualizarPerfil = z.object({
   email: z.string().email().optional(),
 })
 
+const schemaTrocarSenha = z.object({
+  senhaAtual: z.string().min(1, 'Informe a senha atual.'),
+  novaSenha: z.string().min(8, 'A nova senha precisa de ao menos 8 caracteres.'),
+})
+
 /** Defaults de configuração aplicados quando a conta escolhe seu vertical. */
 const CONFIGURACOES_PADRAO_POR_TIPO: Record<TipoNegocio, Record<string, unknown>> = {
   confeitaria: { moeda: 'BRL', alertaEstoqueBaixo: true },
@@ -72,6 +77,7 @@ export class UserService {
       nome: dados.nomeEmpresa,
       papel: 'admin' as const,
       status: 'ativo',
+      deveTrocarSenha: false,
     })
 
     logger.info({ contaId: conta.id, usuarioId: usuario.id }, 'Nova conta cadastrada.')
@@ -162,6 +168,25 @@ export class UserService {
     const validado = schemaAtualizarPerfil.parse(dados)
     await this.buscarUsuarioOuFalhar(userId)
     return this.usuarios.atualizar(userId, validado)
+  }
+
+  /**
+   * Troca a senha do usuário logado — exige a senha atual (que pode ser
+   * a temporária gerada por um convite de cliente, ver
+   * ConvitesService.criarClientePorConvite). Sempre zera
+   * `deveTrocarSenha`, mesmo se já estava false, pra essa ser a única
+   * saída do estado "senha temporária" no sistema.
+   */
+  async trocarSenha(userId: string, senhaAtual: string, novaSenha: string): Promise<void> {
+    const validado = schemaTrocarSenha.parse({ senhaAtual, novaSenha })
+    const credenciais = await this.usuarios.buscarComCredenciaisPorEmail((await this.buscarUsuarioOuFalhar(userId)).email)
+    if (!credenciais?.senhaHash || !(await verificarSenha(validado.senhaAtual, credenciais.senhaHash))) {
+      throw new ErroNaoAutorizado('Senha atual incorreta.')
+    }
+
+    const senhaHash = await hashSenha(validado.novaSenha)
+    await this.usuarios.atualizar(userId, { senhaHash, deveTrocarSenha: false })
+    logger.info({ usuarioId: userId }, 'Senha trocada pelo usuário.')
   }
 
   private async buscarUsuarioOuFalhar(userId: string): Promise<Usuario> {

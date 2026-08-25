@@ -26,6 +26,7 @@ export class UsuarioRepository extends Repository<Usuario> {
       papel: linha['papel'] as Usuario['papel'],
       clienteId: (linha['cliente_id'] as string) ?? null,
       status: linha['status'] as Usuario['status'],
+      deveTrocarSenha: linha['deve_trocar_senha'] as boolean,
       ultimoLoginEm: linha['ultimo_login_em'] ? new Date(linha['ultimo_login_em'] as string) : null,
       criadoEm: new Date(linha['criado_em'] as string),
       atualizadoEm: new Date(linha['atualizado_em'] as string),
@@ -40,6 +41,7 @@ export class UsuarioRepository extends Repository<Usuario> {
     if (dados['papel'] !== undefined) linha['papel'] = dados['papel']
     if (dados['clienteId'] !== undefined) linha['cliente_id'] = dados['clienteId']
     if (dados['status'] !== undefined) linha['status'] = dados['status']
+    if (dados['deveTrocarSenha'] !== undefined) linha['deve_trocar_senha'] = dados['deveTrocarSenha']
     if (dados['senhaHash'] !== undefined) linha['senha_hash'] = dados['senhaHash']
     if (dados['ultimoLoginEm'] !== undefined) linha['ultimo_login_em'] = dados['ultimoLoginEm']
     return linha

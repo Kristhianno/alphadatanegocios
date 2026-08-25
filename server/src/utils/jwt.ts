@@ -6,7 +6,7 @@
  */
 import { jwtVerify, SignJWT } from 'jose'
 import type { Papel } from '../models/User.js'
-import { ErroNaoAutorizado } from '../errors/AppError.js'
+import { ErroNaoAutorizado, ErroValidacao } from '../errors/AppError.js'
 
 const SEGREDO = process.env['JWT_SECRET']
 if (!SEGREDO) {
@@ -15,6 +15,14 @@ if (!SEGREDO) {
 const CHAVE = new TextEncoder().encode(SEGREDO)
 const EMISSOR = 'servicehub-api'
 const VALIDADE = '7d'
+
+// Emissor diferente do de autenticação, de propósito: um convite de
+// cliente e um token de sessão têm o mesmo segredo (mesma CHAVE), mas
+// `jwtVerify(..., { issuer })` rejeita um token do tipo errado sendo
+// usado no lugar do outro — um token de convite vazado não vira uma
+// sessão autenticada, e vice-versa.
+const EMISSOR_CONVITE = 'servicehub-convite-cliente'
+const VALIDADE_CONVITE = '7d'
 
 export interface PayloadAutenticacao {
   /** id do Usuario (login) — vai em `sub`, não no corpo do payload. */
@@ -50,5 +58,30 @@ export async function verificarToken(token: string): Promise<PayloadAutenticacao
     }
   } catch {
     throw new ErroNaoAutorizado('Token inválido ou expirado.')
+  }
+}
+
+export interface PayloadConvite {
+  contaId: string
+  /** id do Usuario (admin/gestor/tecnico) que gerou o link — só pra auditoria/log, não usado em regra de negócio. */
+  criadoPor: string
+}
+
+export async function assinarConviteCliente(payload: PayloadConvite): Promise<string> {
+  return new SignJWT({ contaId: payload.contaId, criadoPor: payload.criadoPor })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuer(EMISSOR_CONVITE)
+    .setIssuedAt()
+    .setExpirationTime(VALIDADE_CONVITE)
+    .sign(CHAVE)
+}
+
+/** Lança {@link ErroValidacao} (não ErroNaoAutorizado) — pro visitante público do formulário ver "link inválido/expirado", não algo que pareça um problema de login. */
+export async function verificarConviteCliente(token: string): Promise<PayloadConvite> {
+  try {
+    const { payload } = await jwtVerify(token, CHAVE, { issuer: EMISSOR_CONVITE })
+    return { contaId: payload['contaId'] as string, criadoPor: payload['criadoPor'] as string }
+  } catch {
+    throw new ErroValidacao('Este link de convite é inválido ou já expirou.')
   }
 }

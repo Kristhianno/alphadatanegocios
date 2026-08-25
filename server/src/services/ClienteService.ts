@@ -44,10 +44,21 @@ export class ClienteService {
 
   async criarCliente(userId: string, dados: unknown): Promise<ClienteFinal> {
     const usuario = await this.buscarUsuarioOuFalhar(userId)
+    return this.criarClienteParaConta(usuario.contaId, dados)
+  }
+
+  /**
+   * Mesma criação de `criarCliente`, mas recebendo `contaId` já
+   * resolvido em vez de um `userId` autenticado — é o que
+   * ConvitesService.criarClientePorConvite usa, já que ali quem está
+   * preenchendo o formulário é o próprio cliente sendo cadastrado, sem
+   * login algum ainda.
+   */
+  async criarClienteParaConta(contaId: string, dados: unknown): Promise<ClienteFinal> {
     const validado = schemaCriarCliente.parse(dados)
 
     const cliente = await this.clientes.criar({
-      contaId: usuario.contaId,
+      contaId,
       nome: validado.nome,
       ativo: true,
       ...(validado.email !== undefined && { email: validado.email }),

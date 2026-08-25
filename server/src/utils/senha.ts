@@ -20,3 +20,17 @@ export async function verificarSenha(senhaPlana: string, hashArmazenado: string)
   if (chaveEsperada.length !== chaveInformada.length) return false
   return timingSafeEqual(chaveEsperada, chaveInformada)
 }
+
+// Sem 0/O/1/I/l — evita confusão visual numa senha temporária que o
+// cliente vai digitar de um papel/tela, não colar.
+const ALFABETO_SENHA_TEMPORARIA = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+
+/** Gera uma senha temporária legível (10 caracteres) — usada quando o sistema cria o login, não o próprio usuário (ver ConvitesService). */
+export function gerarSenhaTemporaria(tamanho = 10): string {
+  const bytes = randomBytes(tamanho)
+  let senha = ''
+  for (let i = 0; i < tamanho; i++) {
+    senha += ALFABETO_SENHA_TEMPORARIA[bytes[i]! % ALFABETO_SENHA_TEMPORARIA.length]
+  }
+  return senha
+}
