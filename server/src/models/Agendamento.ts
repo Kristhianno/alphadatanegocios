@@ -7,6 +7,7 @@
  */
 
 import type { TipoNegocio } from './User.js'
+import { ErroConflito } from '../errors/AppError.js'
 
 export type StatusAgendamento = 'agendado' | 'confirmado' | 'em_andamento' | 'concluido' | 'cancelado'
 
@@ -68,10 +69,17 @@ const TRANSICOES_VALIDAS: Record<StatusAgendamento, readonly StatusAgendamento[]
   cancelado: [],
 }
 
-export class TransicaoInvalidaError extends Error {
+/**
+ * Estende ErroConflito (não `Error` puro) — sem isso, uma transição
+ * inválida vinda de AgendamentoService.atualizarStatus não batia em
+ * nenhum branch de erro.middleware.ts (que só reconhece `AppError` e
+ * `ZodError`) e virava 500 "erro interno" em vez do 409 que é de fato:
+ * o recurso está num estado que conflita com a operação pedida. Achado
+ * escrevendo os testes da Tarefa 8, não em produção.
+ */
+export class TransicaoInvalidaError extends ErroConflito {
   constructor(public readonly de: StatusAgendamento, public readonly para: StatusAgendamento) {
     super(`Transição de status inválida: "${de}" → "${para}".`)
-    this.name = 'TransicaoInvalidaError'
   }
 }
 

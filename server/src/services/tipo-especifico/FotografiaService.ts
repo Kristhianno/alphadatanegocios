@@ -80,6 +80,7 @@ export class FotografiaService {
           tipo_sessao: validado.tipoSessao,
           data_sessao: validado.dataSessao.toISOString(),
           local: validado.local ?? null,
+          status: 'agendada', // explícito, não deixado pro default da coluna — é o estado inicial que atualizarStatusEdicao espera encontrar
           valor_total: valorTotal,
         })
         .select()
@@ -221,6 +222,7 @@ export class FotografiaService {
           titulo: validado.titulo,
           duracao_estimada_segundos: validado.duracaoEstimadaSegundos ?? null,
           editor_id: validado.editorId ?? null,
+          status: 'captacao', // explícito, não deixado pro default da coluna
         })
         .select()
         .single()

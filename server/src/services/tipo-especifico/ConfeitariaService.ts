@@ -173,6 +173,7 @@ export class ConfeitariaService {
           data_entrega: validado.dataEntrega?.toISOString() ?? null,
           endereco_entrega: validado.enderecoEntrega ?? null,
           valor_total: valorTotal,
+          status: 'novo', // explícito, não deixado pro default da coluna
         })
         .select()
         .single()

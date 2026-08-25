@@ -70,6 +70,7 @@ export class ManutencaoService {
           categoria_manutencao: tipoManutencao,
           prioridade,
           descricao: descricao.trim(),
+          status: 'aberto', // explícito, não deixado pro default da coluna
         })
         .select()
         .single()
@@ -97,7 +98,14 @@ export class ManutencaoService {
       'criar',
       this.client
         .from('orcamentos')
-        .insert({ chamado_id: chamadoId, itens: itens as unknown as Json, valor_mao_obra: valorMaoObra, valor_materiais: 0, gerado_automaticamente: true })
+        .insert({
+          chamado_id: chamadoId,
+          itens: itens as unknown as Json,
+          valor_mao_obra: valorMaoObra,
+          valor_materiais: 0,
+          gerado_automaticamente: true,
+          status: 'pendente', // explícito — é o que aceitarOrcamento filtra (.eq('status', 'pendente'))
+        })
         .select()
         .single()
     )

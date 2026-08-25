@@ -94,6 +94,7 @@ export class SalaoFestasService {
           data_evento: validado.dataEvento.toISOString(),
           numero_convidados: validado.numeroConvidados ?? null,
           valor_total: valorTotal,
+          status: 'orcamento', // explícito, não deixado pro default da coluna
         })
         .select()
         .single()

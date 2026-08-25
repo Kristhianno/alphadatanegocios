@@ -8,7 +8,11 @@
  */
 
 const FORMATADOR_MOEDA = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-const FORMATADOR_DATA = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+// timeZone fixo em 'UTC': todo Date aqui vem de uma coluna timestamptz do
+// Postgres (já normalizada pra UTC) — sem isso, o mesmo Date formataria
+// diferente dependendo do fuso horário local do processo Node, o que é
+// exatamente o tipo de coisa que só aparece rodando em outro servidor.
+const FORMATADOR_DATA = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
 
 export function formatarMoedaBr(valor: number): string {
   return FORMATADOR_MOEDA.format(valor)
