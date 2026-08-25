@@ -16,6 +16,13 @@ import AdminConfiguracoes from './pages/Admin/Configuracoes'
 import PedidosConfeitaria from './pages/Admin/PedidosConfeitaria'
 import EventosSalao from './pages/Admin/EventosSalao'
 import SessoesFotografia from './pages/Admin/SessoesFotografia'
+import AgendamentosVertical from './pages/Admin/AgendamentosVertical'
+import CatalogoVertical from './pages/Admin/CatalogoVertical'
+import ReceitasConfeitaria from './pages/Admin/ReceitasConfeitaria'
+import EstoqueConfeitaria from './pages/Admin/EstoqueConfeitaria'
+import EquipeEquipamentosSalao from './pages/Admin/EquipeEquipamentosSalao'
+import ProducoesVideoFotografia from './pages/Admin/ProducoesVideoFotografia'
+import PortfolioFotografia from './pages/Admin/PortfolioFotografia'
 
 import TecnicoDashboard from './pages/Tecnico/Dashboard'
 import TecnicoMinhasOrdens from './pages/Tecnico/MinhasOrdens'
@@ -65,9 +72,16 @@ export default function App() {
         <Route path="prestadores" element={<AdminPrestadores />} />
         <Route path="relatorios" element={<AdminRelatorios />} />
         <Route path="configuracoes" element={<AdminConfiguracoes />} />
+        <Route path="agendamentos" element={<AgendamentosVertical />} />
+        <Route path="catalogo" element={<CatalogoVertical />} />
         <Route path="confeitaria/pedidos" element={<PedidosConfeitaria />} />
+        <Route path="confeitaria/receitas" element={<ReceitasConfeitaria />} />
+        <Route path="confeitaria/estoque" element={<EstoqueConfeitaria />} />
         <Route path="salao-festas/eventos" element={<EventosSalao />} />
+        <Route path="salao-festas/equipe-equipamentos" element={<EquipeEquipamentosSalao />} />
         <Route path="fotografia/sessoes" element={<SessoesFotografia />} />
+        <Route path="fotografia/producoes-video" element={<ProducoesVideoFotografia />} />
+        <Route path="fotografia/portfolio" element={<PortfolioFotografia />} />
         <Route path="em-construcao/:modulo" element={<EmConstrucao />} />
       </Route>
 

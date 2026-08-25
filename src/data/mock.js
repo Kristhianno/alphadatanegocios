@@ -448,3 +448,149 @@ export const SESSOES_FOTOGRAFIA = Array.from({ length: 26 }, (_, i) => {
     criadoEm: gerarData(diasAtras + randInt(3, 15)),
   }
 })
+
+// =====================================================================
+// AGENDAMENTOS — genérico, um dataset por vertical (mesma forma nos 3:
+// confeitaria, salão de festas e fotografia usam a mesma tela)
+// =====================================================================
+export const STATUS_AGENDAMENTO = ['Agendado', 'Confirmado', 'Em Andamento', 'Concluído', 'Cancelado']
+export const STATUS_AGENDAMENTO_CORES = {
+  Agendado: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  Confirmado: { bg: 'bg-cyan-100', text: 'text-cyan-700', dot: 'bg-cyan-500' },
+  'Em Andamento': { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
+  Concluído: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+  Cancelado: { bg: 'bg-gray-200', text: 'text-gray-600', dot: 'bg-gray-400' },
+}
+
+function gerarAgendamentos(quantidade, clientes, tiposServico, prefixoId) {
+  return Array.from({ length: quantidade }, (_, i) => {
+    const cliente = pick(clientes)
+    const status = i < Math.round(quantidade * 0.3) ? 'Concluído' : pick(STATUS_AGENDAMENTO)
+    const diasAtras = status === 'Concluído' ? randInt(1, 60) : -randInt(0, 25)
+    return {
+      id: `${prefixoId}-${pad(i + 1, 3)}`,
+      clienteId: cliente.id,
+      clienteNome: cliente.nome,
+      tipoServico: pick(tiposServico),
+      data: gerarData(diasAtras),
+      hora: `${pad(randInt(8, 18), 2)}:${pick(['00', '15', '30', '45'])}`,
+      endereco: `${pick(RUAS)}, ${randInt(10, 2500)}`,
+      status,
+      criadoEm: gerarData(diasAtras + randInt(1, 10)),
+    }
+  })
+}
+
+export const AGENDAMENTOS_CONFEITARIA = gerarAgendamentos(
+  16, CLIENTES_CONFEITARIA, CATALOGO_PRODUTOS_CONFEITARIA.map((p) => p.nome), 'AGD-CF'
+)
+export const AGENDAMENTOS_SALAO = gerarAgendamentos(
+  16, CLIENTES_SALAO, PACOTES_SALAO.map((p) => p.nome), 'AGD-SL'
+)
+export const AGENDAMENTOS_FOTOGRAFIA = gerarAgendamentos(
+  16, CLIENTES_FOTOGRAFIA, PACOTES_FOTOGRAFIA.map((p) => p.nome), 'AGD-FT'
+)
+
+// =====================================================================
+// ESTOQUE DE INGREDIENTES — Confeitaria e Salgados
+// =====================================================================
+const CATALOGO_INGREDIENTES = [
+  { nome: 'Farinha de Trigo', unidade: 'kg' }, { nome: 'Açúcar Refinado', unidade: 'kg' },
+  { nome: 'Chocolate Belga', unidade: 'kg' }, { nome: 'Ovos', unidade: 'dúzia' },
+  { nome: 'Manteiga', unidade: 'kg' }, { nome: 'Leite Condensado', unidade: 'lata' },
+  { nome: 'Fermento em Pó', unidade: 'kg' }, { nome: 'Essência de Baunilha', unidade: 'ml' },
+  { nome: 'Frango Desfiado', unidade: 'kg' }, { nome: 'Queijo Mussarela', unidade: 'kg' },
+  { nome: 'Palmito', unidade: 'kg' }, { nome: 'Massa Folhada', unidade: 'kg' },
+]
+export const INGREDIENTES_CONFEITARIA = CATALOGO_INGREDIENTES.map((ing, i) => {
+  const quantidadeMinima = randInt(5, 15)
+  const quantidadeAtual = rand() > 0.2 ? randInt(quantidadeMinima, quantidadeMinima * 6) : randInt(0, quantidadeMinima - 1)
+  return {
+    id: `ING-${pad(i + 1, 2)}`,
+    nome: ing.nome,
+    unidadeMedida: ing.unidade,
+    quantidadeAtual,
+    quantidadeMinima,
+    custoUnitario: Number((rand() * 40 + 2).toFixed(2)),
+  }
+})
+
+// =====================================================================
+// EQUIPE E EQUIPAMENTOS — Salão de Festas
+// =====================================================================
+const CARGOS_EQUIPE_SALAO = ['Garçom', 'Garçonete', 'Segurança', 'Recepcionista', 'DJ', 'Cerimonialista', 'Cozinheiro', 'Auxiliar de Cozinha']
+const NOMES_EQUIPE = [
+  'Wesley Rocha', 'Débora Nascimento', 'Anderson Melo', 'Priscila Farias', 'Diego Barbosa',
+  'Vanessa Teixeira', 'Bruno Cardoso', 'Aline Moreira', 'Felipe Duarte', 'Tatiane Correia',
+]
+export const EQUIPE_SALAO = NOMES_EQUIPE.map((nome, i) => ({
+  id: `EQP-${pad(i + 1, 2)}`,
+  nome,
+  cargo: pick(CARGOS_EQUIPE_SALAO),
+  telefone: gerarTelefone(),
+  disponivel: rand() > 0.15,
+}))
+
+const CATALOGO_EQUIPAMENTOS_SALAO = [
+  'Sistema de Som Profissional', 'Iluminação de Palco', 'Telão e Projetor', 'Mesa de Buffet (10un)',
+  'Cadeiras Tiffany (100un)', 'Toalhas de Mesa (20un)', 'Gerador de Energia', 'Pista de Dança Iluminada',
+  'Máquina de Fumaça', 'Tenda 10x10m',
+]
+export const EQUIPAMENTOS_SALAO = CATALOGO_EQUIPAMENTOS_SALAO.map((nome, i) => {
+  const quantidadeTotal = randInt(1, 10)
+  return {
+    id: `EQM-${pad(i + 1, 2)}`,
+    nome,
+    quantidadeTotal,
+    quantidadeEmUso: randInt(0, quantidadeTotal),
+    condicao: pick(['Ótimo', 'Bom', 'Regular', 'Manutenção']),
+  }
+})
+
+// =====================================================================
+// PRODUÇÕES DE VÍDEO — Fotografia e Vídeo
+// =====================================================================
+export const STATUS_PRODUCAO_VIDEO = ['Captação', 'Edição', 'Revisão', 'Entregue']
+export const STATUS_PRODUCAO_VIDEO_CORES = {
+  Captação: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  Edição: { bg: 'bg-yellow-100', text: 'text-yellow-700', dot: 'bg-yellow-500' },
+  Revisão: { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
+  Entregue: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+}
+const EDITORES_VIDEO = ['Rafael Nogueira', 'Camila Duarte', 'Bruno Faria']
+const TITULOS_PRODUCAO_VIDEO = [
+  'Making Of Casamento', 'Vídeo Institucional', 'Save the Date', 'Highlights do Evento',
+  'Vídeo Convite Digital', 'Cobertura Completa (Longa Metragem)', 'Reels para Redes Sociais',
+]
+export const PRODUCOES_VIDEO_FOTOGRAFIA = Array.from({ length: 12 }, (_, i) => {
+  const cliente = pick(CLIENTES_FOTOGRAFIA)
+  const status = i < 4 ? 'Entregue' : pick(STATUS_PRODUCAO_VIDEO)
+  const diasAtras = status === 'Entregue' ? randInt(5, 90) : -randInt(1, 30)
+  return {
+    id: `VID-${pad(i + 1, 2)}`,
+    clienteId: cliente.id,
+    clienteNome: cliente.nome,
+    titulo: `${pick(TITULOS_PRODUCAO_VIDEO)} — ${cliente.nome}`,
+    duracaoEstimadaSegundos: randInt(60, 600),
+    editor: pick(EDITORES_VIDEO),
+    status,
+    criadoEm: gerarData(diasAtras + randInt(2, 10)),
+  }
+})
+
+// =====================================================================
+// PORTFÓLIO — Fotografia e Vídeo
+// =====================================================================
+export const PORTFOLIO_FOTOGRAFIA = Array.from({ length: 18 }, (_, i) => {
+  const cliente = pick(CLIENTES_FOTOGRAFIA)
+  const tipoSessao = pick(TIPOS_SESSAO)
+  return {
+    id: `PORT-${pad(i + 1, 2)}`,
+    fotoUrl: `https://placehold.co/400x400?text=Foto+${i + 1}`,
+    clienteNome: cliente.nome,
+    tipoSessao,
+    permissaoCliente: true,
+    publico: rand() > 0.1,
+    criadoEm: gerarData(randInt(5, 200)),
+  }
+})

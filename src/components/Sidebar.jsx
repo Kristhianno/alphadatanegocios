@@ -3,6 +3,8 @@ import { NavLink } from 'react-router-dom'
 import {
   IconChartBar, IconListCheck, IconUsers, IconUserBolt, IconFileTypePdf, IconSettings,
   IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX, IconApps,
+  IconCalendarEvent, IconCategory, IconClipboardList, IconBook2, IconPackage,
+  IconConfetti, IconUsersGroup, IconCamera, IconVideo, IconPhoto,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
@@ -31,18 +33,41 @@ const MENUS = {
 }
 
 // A conta demo de manutenção mantém o menu acima, com telas de verdade
-// pra cada item (é o vertical mais completo hoje). Pros outros 3
-// verticais (confeitaria, salão de festas, fotografia), o menu vem de
-// verdade da API de config — só que os itens que ainda não têm tela
-// própria (Receitas, Eventos, Sessões...) caem em /admin/em-construcao,
-// em vez de link quebrado ou de mostrar uma tela que não bate com o
-// vertical.
+// pra cada item (é o vertical mais completo hoje, com checklist/fotos/
+// assinatura). Pros outros 3 verticais (confeitaria, salão de festas,
+// fotografia), o menu vem de verdade da API de config, e agora todo
+// item tem uma tela real (mockada) — "Agendamentos" e "Catálogo/
+// Pacotes" são telas genéricas reaproveitadas entre os 3 (a forma é a
+// mesma, só o dataset muda); o resto é específico de cada vertical.
 const ROTAS_REAIS_POR_ID = {
   dashboard: '/admin/dashboard',
   clientes: '/admin/clientes',
+  agendamentos: '/admin/agendamentos',
+  servicos: '/admin/catalogo',
   pedidos: '/admin/confeitaria/pedidos',
+  receitas: '/admin/confeitaria/receitas',
+  estoque: '/admin/confeitaria/estoque',
   eventos: '/admin/salao-festas/eventos',
+  'equipe-equipamentos': '/admin/salao-festas/equipe-equipamentos',
   sessoes: '/admin/fotografia/sessoes',
+  'producoes-video': '/admin/fotografia/producoes-video',
+  portfolio: '/admin/fotografia/portfolio',
+}
+
+// Um ícone por item — antes todos caíam no mesmo IconApps genérico.
+const ICONES_POR_ID = {
+  dashboard: IconChartBar,
+  clientes: IconUsers,
+  agendamentos: IconCalendarEvent,
+  servicos: IconCategory,
+  pedidos: IconClipboardList,
+  receitas: IconBook2,
+  estoque: IconPackage,
+  eventos: IconConfetti,
+  'equipe-equipamentos': IconUsersGroup,
+  sessoes: IconCamera,
+  'producoes-video': IconVideo,
+  portfolio: IconPhoto,
 }
 const ICONE_PADRAO = IconApps
 
@@ -75,7 +100,7 @@ export default function Sidebar({ userType, aberta, onClose }) {
     ? menuDinamico.map((item) => ({
         to: ROTAS_REAIS_POR_ID[item.id] ?? `/admin/em-construcao/${encodeURIComponent(item.label)}`,
         label: item.label,
-        icon: ICONE_PADRAO,
+        icon: ICONES_POR_ID[item.id] ?? ICONE_PADRAO,
       }))
     : (MENUS[userType] ?? [])
 
