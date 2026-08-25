@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-muted text-[#333333] antialiased;
+}
+
+/* Canvas de assinatura */
+.signature-canvas {
+  touch-action: none;
+}
+
+/* Scrollbar discreto para kanban e tabelas */
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
