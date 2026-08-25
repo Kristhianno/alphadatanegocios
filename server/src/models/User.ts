@@ -33,7 +33,8 @@ export type StatusUsuario = 'ativo' | 'inativo' | 'suspenso'
 export interface Conta {
   id: string
   nomeEmpresa: string
-  tipoNegocio: TipoNegocio
+  /** Nulo entre o cadastro e a seleção do vertical (POST /auth/selecionar-negocio). */
+  tipoNegocio: TipoNegocio | null
   plano: Plano
   status: StatusConta
   /** Preferências livres (tema, notificações, integrações) sem coluna própria. */
@@ -42,9 +43,11 @@ export interface Conta {
   atualizadoEm: Date
 }
 
-/** Dados necessários para abrir uma nova conta — campos gerados pelo banco ficam de fora. */
-export type NovaContaInput = Pick<Conta, 'nomeEmpresa' | 'tipoNegocio'> &
-  Partial<Pick<Conta, 'plano' | 'configuracoesGerais'>>
+/**
+ * Dados necessários para abrir uma nova conta. tipoNegocio fica de fora
+ * de propósito — só é definido depois, em selecionarTipoNegocio().
+ */
+export type NovaContaInput = Pick<Conta, 'nomeEmpresa'> & Partial<Pick<Conta, 'plano' | 'configuracoesGerais'>>
 
 /**
  * Um login dentro de uma conta. Espelha 1:1 a tabela `usuarios`,

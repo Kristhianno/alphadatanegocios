@@ -84,27 +84,25 @@ create index idx_contas_configuracoes_gin      on contas using gin (configuracoe
 -- =====================================================================
 -- Registro de decisão: comportamento ON DELETE por relação
 -- =====================================================================
--- As FKs já foram declaradas com seu comportamento definitivo nos
--- arquivos de schema (Postgres não permite alterar ON DELETE de uma
--- constraint existente sem recriá-la). Documentado aqui para revisão:
+-- [ATUALIZADO em 20260825000004_fix_restrict_fks_to_cascade.sql —
+-- ver esse arquivo para o porquê.] Documentado aqui para revisão:
 --
---   CASCADE      → contas → (quase tudo): apagar uma conta remove todo
---                  o histórico daquele tenant. Times de dados devem
---                  preferir soft-delete (status='cancelado') em vez de
---                  DELETE físico em produção.
---   RESTRICT     → clientes → agendamentos/ordens_servico/eventos/etc:
---                  não é possível apagar um cliente que tem histórico
---                  operacional; o fluxo correto é desativar
---                  (clientes.ativo = false).
+--   CASCADE      → contas → praticamente tudo (inclusive clientes →
+--                  agendamentos/ordens_servico/eventos/etc, que
+--                  começou como RESTRICT e foi corrigido pra CASCADE):
+--                  apagar uma conta remove todo o histórico daquele
+--                  tenant, de ponta a ponta, numa operação só.
 --   SET NULL     → usuarios → responsavel_id, tecnico_id, editor_id...:
 --                  remover um usuário (ex: funcionário demitido) não
 --                  deve apagar o histórico de trabalho que ele fez,
 --                  apenas desvincular o "quem fez".
 --
 -- Regra geral aplicada em todo o schema: nunca DELETE físico de
--- usuarios/clientes a partir da aplicação — sempre soft-delete via
--- campo status/ativo. As constraints RESTRICT acima existem
--- justamente para barrar o caso de alguém tentar um DELETE direto.
+-- usuarios/clientes/produtos a partir da aplicação em uso normal —
+-- sempre soft-delete via campo status/ativo. Isso NÃO é mais reforçado
+-- por RESTRICT no banco (RESTRICT quebrava a cascata de exclusão de
+-- conta inteira — testado e comprovado); a responsabilidade de nunca
+-- fazer um DELETE físico avulso é 100% da camada de aplicação agora.
 -- =====================================================================
 
 -- =====================================================================

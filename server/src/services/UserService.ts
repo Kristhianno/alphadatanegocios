@@ -1,0 +1,133 @@
+/**
+ * Service de identidade: cadastro de conta, seleção do vertical de
+ * negócio e gestão de perfil do usuário logado.
+ *
+ * `userId` em todos os métodos é o id de {@link Usuario} (o login),
+ * não o id da {@link Conta} — é o que vai no JWT depois que
+ * auth.middleware (Tarefa 5) autentica a requisição. O service resolve
+ * `usuario.contaId` internamente sempre que precisa tocar a conta.
+ */
+import { z } from 'zod'
+import type { Cliente } from '../config/database.config.js'
+import type { Conta, TipoNegocio, Usuario } from '../models/User.js'
+import { ContaRepository } from '../repositories/ContaRepository.js'
+import { UsuarioRepository } from '../repositories/UsuarioRepository.js'
+import { hashSenha } from '../utils/senha.js'
+import { ErroConflito, ErroNaoEncontrado, ErroProibido, ErroValidacao } from '../errors/AppError.js'
+import { logger } from '../utils/logger.js'
+
+const TIPOS_NEGOCIO_VALIDOS = ['confeitaria', 'salao_festas', 'fotografia_video', 'manutencao', 'outro'] as const
+
+const schemaCriarUsuario = z.object({
+  email: z.string().email('Email inválido.'),
+  senha: z.string().min(8, 'A senha precisa de ao menos 8 caracteres.'),
+  nomeEmpresa: z.string().trim().min(2, 'Informe o nome da empresa.'),
+})
+
+const schemaAtualizarPerfil = z.object({
+  nome: z.string().trim().min(2).optional(),
+  email: z.string().email().optional(),
+})
+
+/** Defaults de configuração aplicados quando a conta escolhe seu vertical. */
+const CONFIGURACOES_PADRAO_POR_TIPO: Record<TipoNegocio, Record<string, unknown>> = {
+  confeitaria: { moeda: 'BRL', alertaEstoqueBaixo: true },
+  salao_festas: { moeda: 'BRL', confirmacaoEquipeDiasAntes: 7 },
+  fotografia_video: { moeda: 'BRL', validadeGaleriaDias: 30 },
+  manutencao: { moeda: 'BRL', slaPadraoHoras: 24 },
+  outro: { moeda: 'BRL' },
+}
+
+export class UserService {
+  private readonly contas: ContaRepository
+  private readonly usuarios: UsuarioRepository
+
+  constructor(client: Cliente) {
+    this.contas = new ContaRepository(client)
+    this.usuarios = new UsuarioRepository(client)
+  }
+
+  /**
+   * Cadastro inicial: abre a conta (sem vertical ainda) e cria o
+   * primeiro login, com papel 'admin'. tipoNegocio é escolhido depois,
+   * em {@link selecionarTipoNegocio} — por isso não é parâmetro aqui.
+   */
+  async criarUsuario(email: string, senha: string, nomeEmpresa: string): Promise<{ conta: Conta; usuario: Usuario }> {
+    const dados = schemaCriarUsuario.parse({ email, senha, nomeEmpresa })
+
+    const existente = await this.usuarios.buscarComCredenciaisPorEmail(dados.email)
+    if (existente) throw new ErroConflito(`Já existe uma conta com o email "${dados.email}".`)
+
+    const conta = await this.contas.criar({ nomeEmpresa: dados.nomeEmpresa, plano: 'startup', configuracoesGerais: {} })
+    const senhaHash = await hashSenha(dados.senha)
+    const usuario = await this.usuarios.criar({
+      contaId: conta.id,
+      email: dados.email,
+      senhaHash,
+      nome: dados.nomeEmpresa,
+      papel: 'admin' as const,
+      status: 'ativo',
+    })
+
+    logger.info({ contaId: conta.id, usuarioId: usuario.id }, 'Nova conta cadastrada.')
+    return { conta, usuario }
+  }
+
+  /**
+   * Define o vertical de negócio da conta. Só o admin que abriu a
+   * conta pode fazer essa escolha (é uma decisão estrutural, não
+   * operacional).
+   */
+  async selecionarTipoNegocio(userId: string, tipoNegocio: TipoNegocio): Promise<Conta> {
+    if (!TIPOS_NEGOCIO_VALIDOS.includes(tipoNegocio)) {
+      throw new ErroValidacao(`Tipo de negócio inválido: "${tipoNegocio}".`)
+    }
+
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+    if (usuario.papel !== 'admin') {
+      throw new ErroProibido('Apenas o administrador da conta pode escolher o tipo de negócio.')
+    }
+
+    const conta = await this.contas.buscarPorId(usuario.contaId)
+    if (!conta) throw new ErroNaoEncontrado('Conta', usuario.contaId)
+    if (conta.tipoNegocio) {
+      throw new ErroConflito('Esta conta já tem um tipo de negócio definido.')
+    }
+
+    await this.contas.atualizar(conta.id, { tipoNegocio })
+    const contaComConfiguracoes = await this.criarConfiguracoesIniciais(userId, tipoNegocio)
+
+    logger.info({ contaId: conta.id, tipoNegocio }, 'Tipo de negócio selecionado.')
+    return contaComConfiguracoes
+  }
+
+  /** Aplica os defaults de configuração do vertical escolhido, sem sobrescrever o que o usuário já tiver customizado. */
+  async criarConfiguracoesIniciais(userId: string, tipoNegocio: TipoNegocio): Promise<Conta> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+    const conta = await this.contas.buscarPorId(usuario.contaId)
+    if (!conta) throw new ErroNaoEncontrado('Conta', usuario.contaId)
+
+    const configuracoesGerais = { ...CONFIGURACOES_PADRAO_POR_TIPO[tipoNegocio], ...conta.configuracoesGerais }
+    return this.contas.atualizar(conta.id, { configuracoesGerais })
+  }
+
+  /** Configuração completa da conta do usuário logado — usado para hidratar o app no login. */
+  async obterConfiguracoes(userId: string): Promise<Conta> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+    const conta = await this.contas.buscarPorId(usuario.contaId)
+    if (!conta) throw new ErroNaoEncontrado('Conta', usuario.contaId)
+    return conta
+  }
+
+  async atualizarPerfil(userId: string, dados: { nome?: string; email?: string }): Promise<Usuario> {
+    const validado = schemaAtualizarPerfil.parse(dados)
+    await this.buscarUsuarioOuFalhar(userId)
+    return this.usuarios.atualizar(userId, validado)
+  }
+
+  private async buscarUsuarioOuFalhar(userId: string): Promise<Usuario> {
+    const usuario = await this.usuarios.buscarPorId(userId)
+    if (!usuario) throw new ErroNaoEncontrado('Usuário', userId)
+    return usuario
+  }
+}
