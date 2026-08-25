@@ -276,6 +276,12 @@ export const PRODUTOS_CONFEITARIA = CATALOGO_PRODUTOS_CONFEITARIA.map((p, i) => 
   precoVenda: p.preco,
   categoria: pick(CATEGORIAS_RECEITA),
   ativo: rand() > 0.1,
+  descricao: `${p.nome}, feito sob encomenda com ingredientes selecionados. Consulte opções de personalização de sabor e tamanho.`,
+  fotos: [
+    `https://placehold.co/500x350?text=${encodeURIComponent(p.nome)}+1`,
+    `https://placehold.co/500x350?text=${encodeURIComponent(p.nome)}+2`,
+    `https://placehold.co/500x350?text=${encodeURIComponent(p.nome)}+3`,
+  ],
 }))
 
 export const STATUS_PEDIDO_CONFEITARIA = ['Novo', 'Confirmado', 'Em Produção', 'Pronto', 'Entregue', 'Cancelado']
@@ -336,10 +342,30 @@ export const CLIENTES_SALAO = NOMES_CLIENTES_SALAO.map((nome, i) => {
 const TIPOS_EVENTO = ['Aniversário', 'Casamento', 'Corporativo', 'Formatura', 'Confraternização', 'Outro']
 
 export const PACOTES_SALAO = [
-  { id: 'PCT-01', nome: 'Pacote Bronze', precoBase: 3500, capacidade: 80, itensInclusos: ['Decoração básica', 'Som', 'Buffet simples'] },
-  { id: 'PCT-02', nome: 'Pacote Prata', precoBase: 6500, capacidade: 120, itensInclusos: ['Decoração temática', 'Som e iluminação', 'Buffet completo'] },
-  { id: 'PCT-03', nome: 'Pacote Ouro', precoBase: 12000, capacidade: 200, itensInclusos: ['Decoração premium', 'Som, luz e telão', 'Buffet + open bar'] },
-  { id: 'PCT-04', nome: 'Pacote Premium', precoBase: 22000, capacidade: 350, itensInclusos: ['Cenografia completa', 'Estrutura de palco', 'Buffet gourmet + open bar'] },
+  {
+    id: 'PCT-01', nome: 'Pacote Bronze', precoBase: 3500, capacidade: 80,
+    itensInclusos: ['Decoração básica', 'Som', 'Buffet simples'],
+    descricao: 'Ideal para aniversários e confraternizações menores, com decoração básica, som ambiente e buffet simples para até 80 convidados.',
+    fotos: ['https://placehold.co/500x350?text=Pacote+Bronze+1', 'https://placehold.co/500x350?text=Pacote+Bronze+2', 'https://placehold.co/500x350?text=Pacote+Bronze+3'],
+  },
+  {
+    id: 'PCT-02', nome: 'Pacote Prata', precoBase: 6500, capacidade: 120,
+    itensInclusos: ['Decoração temática', 'Som e iluminação', 'Buffet completo'],
+    descricao: 'Perfeito para casamentos e formaturas de médio porte: decoração temática, som e iluminação profissionais e buffet completo para até 120 convidados.',
+    fotos: ['https://placehold.co/500x350?text=Pacote+Prata+1', 'https://placehold.co/500x350?text=Pacote+Prata+2', 'https://placehold.co/500x350?text=Pacote+Prata+3'],
+  },
+  {
+    id: 'PCT-03', nome: 'Pacote Ouro', precoBase: 12000, capacidade: 200,
+    itensInclusos: ['Decoração premium', 'Som, luz e telão', 'Buffet + open bar'],
+    descricao: 'A opção mais requisitada para eventos corporativos e casamentos: decoração premium, som, luz e telão, buffet completo com open bar para até 200 convidados.',
+    fotos: ['https://placehold.co/500x350?text=Pacote+Ouro+1', 'https://placehold.co/500x350?text=Pacote+Ouro+2', 'https://placehold.co/500x350?text=Pacote+Ouro+3'],
+  },
+  {
+    id: 'PCT-04', nome: 'Pacote Premium', precoBase: 22000, capacidade: 350,
+    itensInclusos: ['Cenografia completa', 'Estrutura de palco', 'Buffet gourmet + open bar'],
+    descricao: 'Experiência completa para grandes celebrações: cenografia exclusiva, estrutura de palco, buffet gourmet e open bar para até 350 convidados.',
+    fotos: ['https://placehold.co/500x350?text=Pacote+Premium+1', 'https://placehold.co/500x350?text=Pacote+Premium+2', 'https://placehold.co/500x350?text=Pacote+Premium+3'],
+  },
 ]
 
 export const STATUS_EVENTO = ['Orçamento', 'Confirmado', 'Em Andamento', 'Finalizado', 'Cancelado']
@@ -409,10 +435,26 @@ export const CLIENTES_FOTOGRAFIA = NOMES_CLIENTES_FOTOGRAFIA.map((nome, i) => {
 const TIPOS_SESSAO = ['Ensaio', 'Casamento', 'Evento', 'Produto', 'Institucional', 'Outro']
 
 export const PACOTES_FOTOGRAFIA = [
-  { id: 'PCF-01', nome: 'Ensaio Fotográfico', precoBase: 450, fotosInclusas: 30, horasInclusas: 2 },
-  { id: 'PCF-02', nome: 'Cobertura de Casamento', precoBase: 3800, fotosInclusas: 300, horasInclusas: 8 },
-  { id: 'PCF-03', nome: 'Sessão Corporativa', precoBase: 900, fotosInclusas: 50, horasInclusas: 3 },
-  { id: 'PCF-04', nome: 'Vídeo Institucional', precoBase: 2200, fotosInclusas: 0, horasInclusas: 6 },
+  {
+    id: 'PCF-01', nome: 'Ensaio Fotográfico', precoBase: 450, fotosInclusas: 30, horasInclusas: 2,
+    descricao: 'Sessão de retratos em estúdio ou externa, com iluminação profissional e 30 fotos editadas inclusas.',
+    fotos: ['https://placehold.co/500x350?text=Ensaio+Fotografico+1', 'https://placehold.co/500x350?text=Ensaio+Fotografico+2', 'https://placehold.co/500x350?text=Ensaio+Fotografico+3'],
+  },
+  {
+    id: 'PCF-02', nome: 'Cobertura de Casamento', precoBase: 3800, fotosInclusas: 300, horasInclusas: 8,
+    descricao: 'Cobertura completa da cerimônia e da festa, com 2 fotógrafos, 8 horas de cobertura e 300 fotos editadas.',
+    fotos: ['https://placehold.co/500x350?text=Cobertura+Casamento+1', 'https://placehold.co/500x350?text=Cobertura+Casamento+2', 'https://placehold.co/500x350?text=Cobertura+Casamento+3'],
+  },
+  {
+    id: 'PCF-03', nome: 'Sessão Corporativa', precoBase: 900, fotosInclusas: 50, horasInclusas: 3,
+    descricao: 'Fotos institucionais da equipe, dos produtos ou do ambiente da empresa, com 50 fotos editadas inclusas.',
+    fotos: ['https://placehold.co/500x350?text=Sessao+Corporativa+1', 'https://placehold.co/500x350?text=Sessao+Corporativa+2', 'https://placehold.co/500x350?text=Sessao+Corporativa+3'],
+  },
+  {
+    id: 'PCF-04', nome: 'Vídeo Institucional', precoBase: 2200, fotosInclusas: 0, horasInclusas: 6,
+    descricao: 'Produção de vídeo institucional com captação e edição profissional, incluindo 6 horas de gravação.',
+    fotos: ['https://placehold.co/500x350?text=Video+Institucional+1', 'https://placehold.co/500x350?text=Video+Institucional+2', 'https://placehold.co/500x350?text=Video+Institucional+3'],
+  },
 ]
 
 export const STATUS_SESSAO = ['Agendada', 'Realizada', 'Em Edição', 'Entregue', 'Cancelada']

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { IconPlus, IconTrash, IconMapPin } from '@tabler/icons-react'
+import { IconPlus, IconTrash, IconMapPin, IconList, IconCalendar } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
 import { usePersisted } from '../../hooks/usePersisted'
 import { useToast } from '../../hooks/useToast'
@@ -7,11 +7,12 @@ import {
   AGENDAMENTOS_CONFEITARIA, AGENDAMENTOS_SALAO, AGENDAMENTOS_FOTOGRAFIA,
   CLIENTES_CONFEITARIA, CLIENTES_SALAO, CLIENTES_FOTOGRAFIA,
   PRODUTOS_CONFEITARIA, PACOTES_SALAO, PACOTES_FOTOGRAFIA,
-  STATUS_AGENDAMENTO,
+  STATUS_AGENDAMENTO, STATUS_AGENDAMENTO_CORES,
 } from '../../data/mock'
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import CalendarioMensal from '../../components/ui/CalendarioMensal'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -43,8 +44,10 @@ export default function AgendamentosVertical() {
 
   const [busca, setBusca] = useState('')
   const [filtroStatus, setFiltroStatus] = useState('')
+  const [visualizacao, setVisualizacao] = useState('calendario')
   const [modalCriar, setModalCriar] = useState(false)
   const [paraDeletar, setParaDeletar] = useState(null)
+  const [detalhe, setDetalhe] = useState(null)
 
   const [clienteId, setClienteId] = useState(config.clientes[0]?.id ?? '')
   const [tipoServico, setTipoServico] = useState(config.servicos[0] ?? '')
@@ -130,11 +133,29 @@ export default function AgendamentosVertical() {
             {STATUS_AGENDAMENTO.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
+        <div className="flex items-center rounded-btn border border-muted-dark overflow-hidden self-end">
+          <button
+            onClick={() => setVisualizacao('calendario')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-label font-medium ${visualizacao === 'calendario' ? 'bg-primary text-white' : 'text-[#666] hover:bg-muted'}`}
+          >
+            <IconCalendar size={16} /> Calendário
+          </button>
+          <button
+            onClick={() => setVisualizacao('lista')}
+            className={`flex items-center gap-1.5 px-3 py-2 text-label font-medium ${visualizacao === 'lista' ? 'bg-primary text-white' : 'text-[#666] hover:bg-muted'}`}
+          >
+            <IconList size={16} /> Lista
+          </button>
+        </div>
       </div>
 
-      <div className="bg-surface rounded-card shadow-card p-5">
-        <DataTable data={filtrados} columns={colunas} />
-      </div>
+      {visualizacao === 'calendario' ? (
+        <CalendarioMensal eventos={filtrados} corStatus={STATUS_AGENDAMENTO_CORES} onSelecionarEvento={setDetalhe} />
+      ) : (
+        <div className="bg-surface rounded-card shadow-card p-5">
+          <DataTable data={filtrados} columns={colunas} />
+        </div>
+      )}
 
       <Modal open={modalCriar} onClose={() => setModalCriar(false)} title="Novo Agendamento" size="md">
         <form onSubmit={handleCriar} className="flex flex-col gap-4">
@@ -170,6 +191,42 @@ export default function AgendamentosVertical() {
             <button type="submit" className="rounded-btn px-4 py-2 text-body font-medium bg-primary text-white hover:bg-primary-dark">Criar</button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={!!detalhe} onClose={() => setDetalhe(null)} title={detalhe?.tipoServico ?? ''} size="sm">
+        {detalhe && (
+          <div className="flex flex-col gap-4">
+            <p className="text-body"><span className="text-[#666]">Cliente:</span> {detalhe.clienteNome}</p>
+            <p className="text-body"><span className="text-[#666]">Data:</span> {detalhe.data} às {detalhe.hora}</p>
+            {detalhe.endereco && (
+              <p className="text-body"><IconMapPin size={13} className="inline mr-1 text-[#666]" />{detalhe.endereco}</p>
+            )}
+            <div>
+              <label className={labelClasse}>Status</label>
+              <select
+                className={inputClasse}
+                value={detalhe.status}
+                onChange={(e) => {
+                  alterarStatus(detalhe.id, e.target.value)
+                  setDetalhe((d) => ({ ...d, status: e.target.value }))
+                }}
+              >
+                {STATUS_AGENDAMENTO.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="flex justify-end pt-2 border-t border-muted-dark">
+              <button
+                onClick={() => {
+                  setParaDeletar(detalhe)
+                  setDetalhe(null)
+                }}
+                className="flex items-center gap-1.5 rounded-btn px-4 py-2 text-body font-medium text-danger hover:bg-red-50"
+              >
+                <IconTrash size={16} /> Remover agendamento
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <ConfirmModal

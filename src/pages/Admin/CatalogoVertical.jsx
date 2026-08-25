@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconPlus, IconTrash } from '@tabler/icons-react'
+import { IconPlus, IconTrash, IconEye, IconPhoto } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
 import { usePersisted } from '../../hooks/usePersisted'
 import { useToast } from '../../hooks/useToast'
@@ -19,14 +19,17 @@ const CONFIG_POR_VERTICAL = {
   confeitaria: {
     titulo: 'Catálogo', storageKey: 'alphadata_catalogo_confeitaria', mock: PRODUTOS_CONFEITARIA, prefixoId: 'PRD',
     campoPreco: 'precoVenda', camposExtra: [],
+    camposDetalhe: [{ chave: 'categoria', label: 'Categoria' }],
   },
   salao_festas: {
     titulo: 'Pacotes', storageKey: 'alphadata_catalogo_salao', mock: PACOTES_SALAO, prefixoId: 'PCT',
     campoPreco: 'precoBase', camposExtra: [{ chave: 'capacidade', label: 'Capacidade' }],
+    camposDetalhe: [{ chave: 'itensInclusos', label: 'Itens inclusos', lista: true }],
   },
   fotografia_video: {
     titulo: 'Pacotes', storageKey: 'alphadata_catalogo_fotografia', mock: PACOTES_FOTOGRAFIA, prefixoId: 'PCF',
     campoPreco: 'precoBase', camposExtra: [{ chave: 'horasInclusas', label: 'Horas inclusas' }],
+    camposDetalhe: [{ chave: 'fotosInclusas', label: 'Fotos inclusas' }],
   },
 }
 
@@ -47,6 +50,7 @@ export default function CatalogoVertical() {
 
   const [modalCriar, setModalCriar] = useState(false)
   const [paraDeletar, setParaDeletar] = useState(null)
+  const [detalhe, setDetalhe] = useState(null)
   const [nome, setNome] = useState('')
   const [preco, setPreco] = useState('')
 
@@ -87,9 +91,14 @@ export default function CatalogoVertical() {
     },
     {
       header: 'Ações', id: 'acoes', cell: (info) => (
-        <button onClick={() => setParaDeletar(info.row.original)} className="p-1.5 rounded-btn hover:bg-red-50 text-danger" aria-label="Remover">
-          <IconTrash size={18} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setDetalhe(info.row.original)} className="p-1.5 rounded-btn hover:bg-muted text-primary" aria-label="Ver detalhes">
+            <IconEye size={18} />
+          </button>
+          <button onClick={() => setParaDeletar(info.row.original)} className="p-1.5 rounded-btn hover:bg-red-50 text-danger" aria-label="Remover">
+            <IconTrash size={18} />
+          </button>
+        </div>
       ),
     },
   ]
@@ -122,6 +131,62 @@ export default function CatalogoVertical() {
             <button type="submit" className="rounded-btn px-4 py-2 text-body font-medium bg-primary text-white hover:bg-primary-dark">Salvar</button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={!!detalhe} onClose={() => setDetalhe(null)} title={detalhe?.nome ?? ''} size="lg">
+        {detalhe && (
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-h2 text-primary">
+                R$ {Number(detalhe[config.campoPreco] ?? 0).toLocaleString('pt-BR')}
+              </span>
+              <span className={`text-label font-medium rounded-full px-2.5 py-1 ${detalhe.ativo !== false ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                {detalhe.ativo !== false ? 'Ativo' : 'Inativo'}
+              </span>
+              {config.camposExtra.map((c) => (
+                detalhe[c.chave] != null && (
+                  <span key={c.chave} className="text-label font-medium rounded-full px-2.5 py-1 bg-muted text-[#666]">
+                    {c.label}: {detalhe[c.chave]}
+                  </span>
+                )
+              ))}
+            </div>
+
+            {detalhe.descricao && <p className="text-body text-[#444]">{detalhe.descricao}</p>}
+
+            {(config.camposDetalhe ?? []).map((c) => {
+              const valor = detalhe[c.chave]
+              if (valor == null || (Array.isArray(valor) && valor.length === 0)) return null
+              return (
+                <div key={c.chave}>
+                  <p className={labelClasse}>{c.label}</p>
+                  {c.lista ? (
+                    <ul className="list-disc list-inside text-body text-[#444] flex flex-col gap-0.5">
+                      {valor.map((v) => <li key={v}>{v}</li>)}
+                    </ul>
+                  ) : (
+                    <p className="text-body text-[#444]">{valor}</p>
+                  )}
+                </div>
+              )
+            })}
+
+            <div>
+              <p className={`${labelClasse} flex items-center gap-1.5`}>
+                <IconPhoto size={14} /> Fotos
+              </p>
+              {detalhe.fotos?.length ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {detalhe.fotos.map((url, i) => (
+                    <img key={url} src={url} alt={`${detalhe.nome} ${i + 1}`} className="w-full aspect-[4/3] object-cover rounded-input border border-muted-dark" />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-body text-[#999]">Nenhuma foto cadastrada.</p>
+              )}
+            </div>
+          </div>
+        )}
       </Modal>
 
       <ConfirmModal
