@@ -29,6 +29,10 @@ function itemClientes(): MenuItem {
   return { id: 'clientes', label: 'Clientes', icone: '👥', rota: '/clientes', papeis: [...EQUIPE_INTERNA] }
 }
 
+function itemContratos(): MenuItem {
+  return { id: 'contratos', label: 'Contratos', icone: '📜', rota: '/contratos' }
+}
+
 function itemServicos(label: string): MenuItem {
   return { id: 'servicos', label, icone: '🗂️', rota: '/servicos' }
 }
@@ -45,6 +49,7 @@ const CONFEITARIA: TipoNegocioConfig = {
     { id: 'receitas', label: 'Receitas', icone: '📖', rota: '/confeitaria/receitas', papeis: [...EQUIPE_INTERNA] },
     { id: 'pedidos', label: 'Pedidos', icone: '🧾', rota: '/confeitaria/pedidos' },
     { id: 'estoque', label: 'Estoque', icone: '📦', rota: '/confeitaria/ingredientes', papeis: [...EQUIPE_INTERNA] },
+    itemContratos(),
     itemClientes(),
   ],
   relatorios: ['custo-por-receita', 'margem-por-produto'],
@@ -71,6 +76,7 @@ const SALAO_FESTAS: TipoNegocioConfig = {
     itemServicos('Pacotes'),
     { id: 'eventos', label: 'Eventos', icone: '🎪', rota: '/salao-festas/eventos' },
     { id: 'equipe-equipamentos', label: 'Equipe e Equipamentos', icone: '🧰', rota: '/salao-festas/eventos', papeis: [...EQUIPE_INTERNA] },
+    itemContratos(),
     itemClientes(),
   ],
   relatorios: ['lucro-por-evento'],
@@ -100,6 +106,7 @@ const FOTOGRAFIA_VIDEO: TipoNegocioConfig = {
     { id: 'sessoes', label: 'Sessões', icone: '🖼️', rota: '/fotografia/sessoes' },
     { id: 'producoes-video', label: 'Produções de Vídeo', icone: '🎬', rota: '/fotografia/producoes-video', papeis: [...EQUIPE_INTERNA] },
     { id: 'portfolio', label: 'Portfólio', icone: '✨', rota: '/fotografia/sessoes', papeis: [...EQUIPE_INTERNA] },
+    itemContratos(),
     itemClientes(),
   ],
   relatorios: ['sessoes-por-status'],

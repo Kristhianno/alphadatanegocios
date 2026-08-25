@@ -18,6 +18,7 @@ import EventosSalao from './pages/Admin/EventosSalao'
 import SessoesFotografia from './pages/Admin/SessoesFotografia'
 import AgendamentosVertical from './pages/Admin/AgendamentosVertical'
 import CatalogoVertical from './pages/Admin/CatalogoVertical'
+import ContratosVertical from './pages/Admin/ContratosVertical'
 import ReceitasConfeitaria from './pages/Admin/ReceitasConfeitaria'
 import EstoqueConfeitaria from './pages/Admin/EstoqueConfeitaria'
 import EquipeEquipamentosSalao from './pages/Admin/EquipeEquipamentosSalao'
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="configuracoes" element={<AdminConfiguracoes />} />
         <Route path="agendamentos" element={<AgendamentosVertical />} />
         <Route path="catalogo" element={<CatalogoVertical />} />
+        <Route path="contratos" element={<ContratosVertical />} />
         <Route path="confeitaria/pedidos" element={<PedidosConfeitaria />} />
         <Route path="confeitaria/receitas" element={<ReceitasConfeitaria />} />
         <Route path="confeitaria/estoque" element={<EstoqueConfeitaria />} />

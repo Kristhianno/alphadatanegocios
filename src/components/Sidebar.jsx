@@ -4,7 +4,7 @@ import {
   IconChartBar, IconListCheck, IconUsers, IconUserBolt, IconFileTypePdf, IconSettings,
   IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX, IconApps,
   IconCalendarEvent, IconCategory, IconClipboardList, IconBook2, IconPackage,
-  IconConfetti, IconUsersGroup, IconCamera, IconVideo, IconPhoto,
+  IconConfetti, IconUsersGroup, IconCamera, IconVideo, IconPhoto, IconContract,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
@@ -44,6 +44,7 @@ const ROTAS_REAIS_POR_ID = {
   clientes: '/admin/clientes',
   agendamentos: '/admin/agendamentos',
   servicos: '/admin/catalogo',
+  contratos: '/admin/contratos',
   pedidos: '/admin/confeitaria/pedidos',
   receitas: '/admin/confeitaria/receitas',
   estoque: '/admin/confeitaria/estoque',
@@ -60,6 +61,7 @@ const ICONES_POR_ID = {
   clientes: IconUsers,
   agendamentos: IconCalendarEvent,
   servicos: IconCategory,
+  contratos: IconContract,
   pedidos: IconClipboardList,
   receitas: IconBook2,
   estoque: IconPackage,

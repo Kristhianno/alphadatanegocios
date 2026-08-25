@@ -534,6 +534,50 @@ export const AGENDAMENTOS_FOTOGRAFIA = gerarAgendamentos(
 )
 
 // =====================================================================
+// CONTRATOS — genérico, um dataset por vertical (mesma forma nos 3:
+// cliente, pacote/produto contratado, data do evento e status de
+// assinatura; anexo do contrato assinado fica em branco no mock, o
+// usuário anexa pela tela)
+// =====================================================================
+export const STATUS_CONTRATO = ['Pendente Assinatura', 'Assinado', 'Cancelado']
+export const STATUS_CONTRATO_CORES = {
+  'Pendente Assinatura': { bg: 'bg-yellow-100', text: 'text-yellow-700', dot: 'bg-yellow-500' },
+  Assinado: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+  Cancelado: { bg: 'bg-gray-200', text: 'text-gray-600', dot: 'bg-gray-400' },
+}
+
+function gerarContratos(quantidade, clientes, pacotes, campoPreco, prefixoId) {
+  return Array.from({ length: quantidade }, (_, i) => {
+    const cliente = pick(clientes)
+    const pacote = pick(pacotes)
+    const status = i < Math.round(quantidade * 0.55) ? 'Assinado' : pick(STATUS_CONTRATO)
+    const diasAtras = status === 'Assinado' ? randInt(1, 90) : -randInt(0, 40)
+    return {
+      id: `${prefixoId}-${pad(i + 1, 3)}`,
+      clienteId: cliente.id,
+      clienteNome: cliente.nome,
+      pacoteId: pacote.id,
+      pacoteNome: pacote.nome,
+      dataEvento: gerarData(diasAtras),
+      valorTotal: pacote[campoPreco] ?? 0,
+      status,
+      arquivo: null,
+      criadoEm: gerarData(diasAtras + randInt(5, 20)),
+    }
+  })
+}
+
+export const CONTRATOS_CONFEITARIA = gerarContratos(
+  14, CLIENTES_CONFEITARIA, PRODUTOS_CONFEITARIA, 'precoVenda', 'CTR-CF'
+)
+export const CONTRATOS_SALAO = gerarContratos(
+  14, CLIENTES_SALAO, PACOTES_SALAO, 'precoBase', 'CTR-SL'
+)
+export const CONTRATOS_FOTOGRAFIA = gerarContratos(
+  14, CLIENTES_FOTOGRAFIA, PACOTES_FOTOGRAFIA, 'precoBase', 'CTR-FT'
+)
+
+// =====================================================================
 // ESTOQUE DE INGREDIENTES — Confeitaria e Salgados
 // =====================================================================
 const CATALOGO_INGREDIENTES = [
