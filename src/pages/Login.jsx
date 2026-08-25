@@ -4,8 +4,20 @@ import { IconLogin2, IconUserPlus, IconArrowLeft } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
 
-const CREDENCIAIS_DEMO = [
-  { label: 'Admin', email: 'admin@alphadata.com', senha: 'admin123' },
+// Cada tipo de negócio tem sua própria conta demo (dados reais no
+// banco, semeados por server/scripts/seed-*.ts) — a de manutenção é a
+// única com histórico rico de Ordens de Serviço (checklist/fotos/
+// assinatura, ainda mockado no frontend); as outras 3 mostram um
+// dashboard e cadastro de clientes reais, com o menu lateral já
+// refletindo os módulos daquele vertical (ver Sidebar.jsx).
+const VERTICAIS_DEMO = [
+  { label: 'Manutenção', icone: '🔧', email: 'admin@alphadata.com', senha: 'admin123' },
+  { label: 'Confeitaria', icone: '🧁', email: 'confeitaria@alphadata.com', senha: 'admin123' },
+  { label: 'Salão de Festas', icone: '🎉', email: 'salaodefestas@alphadata.com', senha: 'admin123' },
+  { label: 'Fotografia', icone: '📷', email: 'fotografia@alphadata.com', senha: 'admin123' },
+]
+
+const OUTROS_PAPEIS_DEMO = [
   { label: 'Técnico', email: 'tecnico@alphadata.com', senha: 'tecnico123' },
   { label: 'Cliente', email: 'cliente@alphadata.com', senha: 'cliente123' },
 ]
@@ -180,9 +192,24 @@ export default function Login() {
                   </button>
 
                   <div className="pt-3 border-t border-muted-dark">
-                    <p className="text-label text-[#999] text-center mb-2">Versão demo com dados fictícios</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {CREDENCIAIS_DEMO.map((cred) => (
+                    <p className="text-label text-[#999] text-center mb-2">Testar um tipo de negócio (dados reais)</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {VERTICAIS_DEMO.map((v) => (
+                        <button
+                          key={v.email}
+                          type="button"
+                          onClick={() => preencherDemo(v)}
+                          className="flex items-center justify-center gap-1.5 rounded-btn border border-muted-dark py-2 text-label text-[#333] hover:bg-primary-light hover:border-primary"
+                        >
+                          <span className="text-base leading-none">{v.icone}</span>
+                          {v.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <p className="text-label text-[#999] text-center mt-3 mb-2">Outros papéis (conta de manutenção)</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {OUTROS_PAPEIS_DEMO.map((cred) => (
                         <button
                           key={cred.email}
                           type="button"

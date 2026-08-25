@@ -4,8 +4,10 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import CadastroCliente from './pages/CadastroCliente'
 import TrocarSenha from './pages/TrocarSenha'
+import EmConstrucao from './pages/EmConstrucao'
 
 import AdminDashboard from './pages/Admin/Dashboard'
+import AdminDashboardVertical from './pages/Admin/DashboardVertical'
 import AdminOrdensServico from './pages/Admin/OrdensServico'
 import AdminClientes from './pages/Admin/Clientes'
 import AdminPrestadores from './pages/Admin/Prestadores'
@@ -22,6 +24,12 @@ import ClienteDashboard from './pages/Cliente/Dashboard'
 import ClienteMinhasOrdens from './pages/Cliente/MinhasOrdens'
 import ClienteAgendar from './pages/Cliente/Agendar'
 import ClientePerfil from './pages/Cliente/Perfil'
+
+/** Manutenção mantém o dashboard mockado rico (gráficos, KPIs de OS); os outros 3 verticais usam o dashboard genérico com dados reais da API. */
+function AdminDashboardRoteado() {
+  const { user } = useAuth()
+  return user?.tipoNegocio && user.tipoNegocio !== 'manutencao' ? <AdminDashboardVertical /> : <AdminDashboard />
+}
 
 function RaizApp() {
   const { isAuthenticated, user } = useAuth()
@@ -48,12 +56,13 @@ export default function App() {
       <Route path="/trocar-senha" element={<TrocarSenha />} />
 
       <Route path="/admin" element={<Layout userType="admin" />}>
-        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboardRoteado />} />
         <Route path="ordens" element={<AdminOrdensServico />} />
         <Route path="clientes" element={<AdminClientes />} />
         <Route path="prestadores" element={<AdminPrestadores />} />
         <Route path="relatorios" element={<AdminRelatorios />} />
         <Route path="configuracoes" element={<AdminConfiguracoes />} />
+        <Route path="em-construcao/:modulo" element={<EmConstrucao />} />
       </Route>
 
       <Route path="/tecnico" element={<Layout userType="tecnico" />}>

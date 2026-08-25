@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   IconChartBar, IconListCheck, IconUsers, IconUserBolt, IconFileTypePdf, IconSettings,
-  IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX,
+  IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX, IconApps,
 } from '@tabler/icons-react'
+import { useAuth } from '../hooks/useAuth'
+import { api } from '../services/api'
 
 const MENUS = {
   admin: [
@@ -27,8 +30,48 @@ const MENUS = {
   ],
 }
 
+// A conta demo de manutenção mantém o menu acima, com telas de verdade
+// pra cada item (é o vertical mais completo hoje). Pros outros 3
+// verticais (confeitaria, salão de festas, fotografia), o menu vem de
+// verdade da API de config — só que os itens que ainda não têm tela
+// própria (Receitas, Eventos, Sessões...) caem em /admin/em-construcao,
+// em vez de link quebrado ou de mostrar uma tela que não bate com o
+// vertical.
+const ROTAS_REAIS_POR_ID = { dashboard: '/admin/dashboard', clientes: '/admin/clientes' }
+const ICONE_PADRAO = IconApps
+
 export default function Sidebar({ userType, aberta, onClose }) {
-  const itens = MENUS[userType] ?? []
+  const { user } = useAuth()
+  const [menuDinamico, setMenuDinamico] = useState(null)
+
+  const precisaMenuDinamico = userType === 'admin' && user?.tipoNegocio && user.tipoNegocio !== 'manutencao'
+
+  useEffect(() => {
+    if (!precisaMenuDinamico) {
+      setMenuDinamico(null)
+      return
+    }
+    let cancelado = false
+    api
+      .get('/config/tipo-negocio')
+      .then((config) => {
+        if (!cancelado) setMenuDinamico(config.menuItems)
+      })
+      .catch(() => {
+        if (!cancelado) setMenuDinamico(null)
+      })
+    return () => {
+      cancelado = true
+    }
+  }, [precisaMenuDinamico])
+
+  const itens = menuDinamico
+    ? menuDinamico.map((item) => ({
+        to: ROTAS_REAIS_POR_ID[item.id] ?? `/admin/em-construcao/${encodeURIComponent(item.label)}`,
+        label: item.label,
+        icon: ICONE_PADRAO,
+      }))
+    : (MENUS[userType] ?? [])
 
   return (
     <>
