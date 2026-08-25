@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { IconPlus, IconDotsVertical, IconHistory, IconEdit, IconTrash, IconMessage } from '@tabler/icons-react'
+import { IconPlus, IconDotsVertical, IconHistory, IconEdit, IconTrash, IconMessage, IconLink, IconCopy, IconCheck } from '@tabler/icons-react'
 import { useClientes } from '../../hooks/useClientes'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useToast } from '../../hooks/useToast'
@@ -33,7 +33,7 @@ function AcoesDropdown({ cliente, onHistorico, onEditar, onDeletar, onMensagem }
               <IconMessage size={16} /> Enviar mensagem
             </button>
             <button onClick={() => { onDeletar(cliente); setAberto(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-body hover:bg-red-50 text-danger text-left border-t border-muted-dark">
-              <IconTrash size={16} /> Deletar
+              <IconTrash size={16} /> Desativar
             </button>
           </div>
         </>
@@ -43,7 +43,7 @@ function AcoesDropdown({ cliente, onHistorico, onEditar, onDeletar, onMensagem }
 }
 
 export default function Clientes() {
-  const { clientes, addCliente, updateCliente, deleteCliente } = useClientes()
+  const { clientes, addCliente, updateCliente, deleteCliente, gerarConviteCliente } = useClientes()
   const { ordens } = useOrdensServico()
   const { showToast } = useToast()
 
@@ -55,6 +55,9 @@ export default function Clientes() {
   const [dados, setDados] = useState(CAMPOS_INICIAIS)
   const [historicoCliente, setHistoricoCliente] = useState(null)
   const [clienteParaDeletar, setClienteParaDeletar] = useState(null)
+  const [linkConvite, setLinkConvite] = useState(null)
+  const [gerandoConvite, setGerandoConvite] = useState(false)
+  const [linkCopiado, setLinkCopiado] = useState(false)
 
   const clientesFiltrados = useMemo(() => {
     let lista = clientes.filter((c) => c.nome.toLowerCase().includes(busca.toLowerCase()))
@@ -80,22 +83,54 @@ export default function Clientes() {
     setModalForm(true)
   }
 
-  function handleSalvar(e) {
+  async function handleSalvar(e) {
     e.preventDefault()
-    if (clienteEditando) {
-      updateCliente(clienteEditando.id, dados)
-      showToast('Cliente atualizado com sucesso!')
-    } else {
-      addCliente(dados)
-      showToast('Cliente criado com sucesso!')
+    try {
+      if (clienteEditando) {
+        await updateCliente(clienteEditando.id, dados)
+        showToast('Cliente atualizado com sucesso!')
+      } else {
+        await addCliente(dados)
+        showToast('Cliente criado com sucesso!')
+      }
+      setModalForm(false)
+    } catch (erro) {
+      showToast(erro.message ?? 'Falha ao salvar cliente.', 'erro')
     }
-    setModalForm(false)
   }
 
-  function handleDeletar() {
-    deleteCliente(clienteParaDeletar.id)
-    showToast('Cliente removido.')
-    setClienteParaDeletar(null)
+  async function handleDeletar() {
+    try {
+      await deleteCliente(clienteParaDeletar.id)
+      showToast('Cliente desativado.')
+    } catch (erro) {
+      showToast(erro.message ?? 'Falha ao desativar cliente.', 'erro')
+    } finally {
+      setClienteParaDeletar(null)
+    }
+  }
+
+  async function handleGerarConvite() {
+    setGerandoConvite(true)
+    setLinkCopiado(false)
+    try {
+      const link = await gerarConviteCliente()
+      setLinkConvite(link)
+    } catch (erro) {
+      showToast(erro.message ?? 'Falha ao gerar o convite.', 'erro')
+    } finally {
+      setGerandoConvite(false)
+    }
+  }
+
+  async function copiarLink() {
+    try {
+      await navigator.clipboard.writeText(linkConvite)
+      setLinkCopiado(true)
+      setTimeout(() => setLinkCopiado(false), 2000)
+    } catch {
+      showToast('Não foi possível copiar automaticamente — selecione e copie manualmente.', 'erro')
+    }
   }
 
   const colunas = [
@@ -125,9 +160,18 @@ export default function Clientes() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-h1 text-primary">Clientes ALPHADATA</h1>
-        <button onClick={abrirNovo} className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn px-4 py-2 text-body font-medium">
-          <IconPlus size={18} /> Novo Cliente
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleGerarConvite}
+            disabled={gerandoConvite}
+            className="flex items-center gap-2 bg-surface border border-primary text-primary hover:bg-primary-light rounded-btn px-4 py-2 text-body font-medium disabled:opacity-60"
+          >
+            <IconLink size={18} /> {gerandoConvite ? 'Gerando link...' : 'Convidar Cliente'}
+          </button>
+          <button onClick={abrirNovo} className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn px-4 py-2 text-body font-medium">
+            <IconPlus size={18} /> Novo Cliente
+          </button>
+        </div>
       </div>
 
       <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap items-end gap-3">
@@ -177,6 +221,25 @@ export default function Clientes() {
         </form>
       </Modal>
 
+      <Modal open={!!linkConvite} onClose={() => setLinkConvite(null)} title="Convite de Cliente" size="sm">
+        <div className="flex flex-col gap-4">
+          <p className="text-body text-[#666]">
+            Envie este link para o futuro cliente. Ele preenche o próprio cadastro e já recebe login e senha temporária
+            para acessar a plataforma. O link expira em 7 dias.
+          </p>
+          <div className="flex items-center gap-2">
+            <input readOnly value={linkConvite ?? ''} className="flex-1 rounded-input border border-muted-dark px-3 py-2 text-body bg-muted" onFocus={(e) => e.target.select()} />
+            <button
+              onClick={copiarLink}
+              className="flex items-center gap-1.5 shrink-0 rounded-btn px-3 py-2 text-body font-medium bg-primary text-white hover:bg-primary-dark"
+            >
+              {linkCopiado ? <IconCheck size={18} /> : <IconCopy size={18} />}
+              {linkCopiado ? 'Copiado!' : 'Copiar'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       <Modal open={!!historicoCliente} onClose={() => setHistoricoCliente(null)} title={`Histórico — ${historicoCliente?.nome ?? ''}`} size="lg">
         <div className="flex flex-col gap-2">
           {ordens.filter((o) => o.clienteId === historicoCliente?.id).length === 0 && <p className="text-body text-[#999]">Nenhuma ordem registrada.</p>}
@@ -196,10 +259,10 @@ export default function Clientes() {
         open={!!clienteParaDeletar}
         onClose={() => setClienteParaDeletar(null)}
         onConfirm={handleDeletar}
-        titulo="Deletar cliente"
-        mensagem={`Tem certeza que deseja deletar ${clienteParaDeletar?.nome}?`}
+        titulo="Desativar cliente"
+        mensagem={`Tem certeza que deseja desativar ${clienteParaDeletar?.nome}? O cadastro é mantido, só deixa de aparecer como ativo.`}
         corConfirmar="bg-danger hover:bg-red-600"
-        textoConfirmar="Deletar"
+        textoConfirmar="Desativar"
       />
     </div>
   )

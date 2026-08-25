@@ -1,38 +1,97 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { IconBriefcase, IconTool, IconUserCircle, IconLogin2 } from '@tabler/icons-react'
+import { IconLogin2, IconUserPlus, IconArrowLeft } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
-import { USUARIOS_DEMO } from '../data/mock'
+import { api } from '../services/api'
 
-const TIPOS = [
-  { valor: 'admin', label: 'Admin', icon: IconBriefcase },
-  { valor: 'tecnico', label: 'Técnico', icon: IconTool },
-  { valor: 'cliente', label: 'Cliente', icon: IconUserCircle },
+const CREDENCIAIS_DEMO = [
+  { label: 'Admin', email: 'admin@alphadata.com', senha: 'admin123' },
+  { label: 'Técnico', email: 'tecnico@alphadata.com', senha: 'tecnico123' },
+  { label: 'Cliente', email: 'cliente@alphadata.com', senha: 'cliente123' },
 ]
 
 export default function Login() {
-  const { login } = useAuth()
+  const { login, registrar, selecionarTipoNegocio } = useAuth()
   const navigate = useNavigate()
-  const [userType, setUserType] = useState('admin')
+
+  // 'entrar' | 'criar-conta' | 'escolher-negocio'
+  const [modo, setModo] = useState('entrar')
+
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [nomeEmpresa, setNomeEmpresa] = useState('')
   const [erro, setErro] = useState('')
+  const [enviando, setEnviando] = useState(false)
 
-  function preencherDemo() {
-    const demo = USUARIOS_DEMO[userType]
-    setEmail(demo.email)
-    setSenha(demo.senha)
+  const [sessaoPendente, setSessaoPendente] = useState(null)
+  const [tiposNegocio, setTiposNegocio] = useState([])
+  const [tipoEscolhido, setTipoEscolhido] = useState(null)
+
+  useEffect(() => {
+    if (modo === 'escolher-negocio' && tiposNegocio.length === 0) {
+      api
+        .get('/config/tipos-negocio-disponiveis', { comAuth: false })
+        .then(setTiposNegocio)
+        .catch(() => setErro('Não foi possível carregar os tipos de negócio.'))
+    }
+  }, [modo, tiposNegocio.length])
+
+  function irParaDashboard(sessao) {
+    navigate(sessao.deveTrocarSenha ? '/trocar-senha' : `/${sessao.userType}/dashboard`, { replace: true })
   }
 
-  function handleSubmit(e) {
+  async function handleEntrar(e) {
     e.preventDefault()
     setErro('')
-    const resultado = login(userType, email, senha)
+    setEnviando(true)
+    const resultado = await login(email, senha)
+    setEnviando(false)
     if (!resultado.ok) {
       setErro(resultado.error)
       return
     }
-    navigate(`/${userType}/dashboard`)
+    if (resultado.precisaEscolherNegocio) {
+      setSessaoPendente(resultado.sessao)
+      setModo('escolher-negocio')
+      return
+    }
+    irParaDashboard(resultado.sessao)
+  }
+
+  async function handleCriarConta(e) {
+    e.preventDefault()
+    setErro('')
+    if (senha.length < 8) {
+      setErro('A senha precisa de ao menos 8 caracteres.')
+      return
+    }
+    setEnviando(true)
+    const resultado = await registrar(email, senha, nomeEmpresa)
+    setEnviando(false)
+    if (!resultado.ok) {
+      setErro(resultado.error)
+      return
+    }
+    setSessaoPendente(resultado.sessao)
+    setModo('escolher-negocio')
+  }
+
+  async function handleEscolherNegocio(tipo) {
+    setErro('')
+    setTipoEscolhido(tipo)
+    const resultado = await selecionarTipoNegocio(tipo)
+    if (!resultado.ok) {
+      setErro(resultado.error)
+      setTipoEscolhido(null)
+      return
+    }
+    irParaDashboard(sessaoPendente)
+  }
+
+  function preencherDemo(cred) {
+    setEmail(cred.email)
+    setSenha(cred.senha)
+    setErro('')
   }
 
   return (
@@ -44,62 +103,157 @@ export default function Login() {
         </div>
 
         <div className="bg-surface rounded-card shadow-cardHover p-6 sm:p-8">
-          <p className="text-h2 text-[#1a1a1a] mb-4">Entrar como...</p>
+          {modo === 'escolher-negocio' ? (
+            <>
+              <p className="text-h2 text-[#1a1a1a] mb-1">Qual é o seu tipo de negócio?</p>
+              <p className="text-body text-[#666] mb-5">Isso define o menu e os módulos que você vai usar. Só pode ser escolhido uma vez.</p>
 
-          <div className="grid grid-cols-3 gap-2 mb-6">
-            {TIPOS.map(({ valor, label, icon: Icon }) => (
-              <button
-                key={valor}
-                type="button"
-                onClick={() => setUserType(valor)}
-                className={`flex flex-col items-center gap-1.5 rounded-card border py-3 text-label font-medium transition-colors ${
-                  userType === valor ? 'border-primary bg-primary-light text-primary' : 'border-muted-dark text-[#666] hover:bg-muted'
-                }`}
-              >
-                <Icon size={22} />
-                {label}
-              </button>
-            ))}
-          </div>
+              <div className="grid grid-cols-1 gap-2">
+                {tiposNegocio.map((t) => (
+                  <button
+                    key={t.tipo}
+                    type="button"
+                    disabled={!!tipoEscolhido}
+                    onClick={() => handleEscolherNegocio(t.tipo)}
+                    className="flex items-center gap-3 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60"
+                  >
+                    <span className="text-2xl leading-none">{t.icone}</span>
+                    <span className="text-body font-medium text-[#1a1a1a]">{tipoEscolhido === t.tipo ? 'Configurando...' : t.nome}</span>
+                  </button>
+                ))}
+                {tiposNegocio.length === 0 && !erro && <p className="text-body text-[#999] text-center py-4">Carregando opções...</p>}
+              </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label className="text-label text-[#666] block mb-1">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={`ex: ${USUARIOS_DEMO[userType].email}`}
-                className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="text-label text-[#666] block mb-1">Senha</label>
-              <input
-                type="password"
-                required
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+              {erro && <p className="text-danger text-label mt-3">{erro}</p>}
+            </>
+          ) : (
+            <>
+              <div className="flex rounded-btn bg-muted p-1 mb-6">
+                <button
+                  onClick={() => { setModo('entrar'); setErro('') }}
+                  className={`flex-1 rounded-btn py-2 text-body font-medium transition-colors ${modo === 'entrar' ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
+                >
+                  Entrar
+                </button>
+                <button
+                  onClick={() => { setModo('criar-conta'); setErro('') }}
+                  className={`flex-1 rounded-btn py-2 text-body font-medium transition-colors ${modo === 'criar-conta' ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
+                >
+                  Criar conta
+                </button>
+              </div>
 
-            {erro && <p className="text-danger text-label">{erro}</p>}
+              {modo === 'entrar' ? (
+                <form onSubmit={handleEntrar} className="flex flex-col gap-4">
+                  <div>
+                    <label className="text-label text-[#666] block mb-1">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-label text-[#666] block mb-1">Senha</label>
+                    <input
+                      type="password"
+                      required
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
 
+                  {erro && <p className="text-danger text-label">{erro}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={enviando}
+                    className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn py-2.5 text-body font-semibold transition-colors disabled:opacity-60"
+                  >
+                    <IconLogin2 size={20} />
+                    {enviando ? 'Entrando...' : 'Entrar na ALPHADATA'}
+                  </button>
+
+                  <div className="pt-3 border-t border-muted-dark">
+                    <p className="text-label text-[#999] text-center mb-2">Versão demo com dados fictícios</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {CREDENCIAIS_DEMO.map((cred) => (
+                        <button
+                          key={cred.email}
+                          type="button"
+                          onClick={() => preencherDemo(cred)}
+                          className="rounded-btn border border-muted-dark py-1.5 text-label text-primary hover:bg-primary-light"
+                        >
+                          {cred.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleCriarConta} className="flex flex-col gap-4">
+                  <div>
+                    <label className="text-label text-[#666] block mb-1">Nome da empresa</label>
+                    <input
+                      required
+                      value={nomeEmpresa}
+                      onChange={(e) => setNomeEmpresa(e.target.value)}
+                      placeholder="Ex: Manutenções Silva"
+                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-label text-[#666] block mb-1">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-label text-[#666] block mb-1">Senha</label>
+                    <input
+                      type="password"
+                      required
+                      minLength={8}
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      placeholder="Ao menos 8 caracteres"
+                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  {erro && <p className="text-danger text-label">{erro}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={enviando}
+                    className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn py-2.5 text-body font-semibold transition-colors disabled:opacity-60"
+                  >
+                    <IconUserPlus size={20} />
+                    {enviando ? 'Criando conta...' : 'Criar minha conta'}
+                  </button>
+                </form>
+              )}
+            </>
+          )}
+
+          {modo === 'escolher-negocio' && sessaoPendente && (
             <button
-              type="submit"
-              className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn py-2.5 text-body font-semibold transition-colors"
+              onClick={() => { setModo('entrar'); setSessaoPendente(null) }}
+              className="flex items-center gap-1.5 text-label text-primary hover:underline mt-4"
             >
-              <IconLogin2 size={20} />
-              Entrar na ALPHADATA
+              <IconArrowLeft size={14} /> Voltar
             </button>
-          </form>
-
-          <button onClick={preencherDemo} className="w-full text-center text-label text-primary hover:underline mt-4">
-            Versão demo com dados fictícios
-          </button>
+          )}
         </div>
 
         <p className="text-center text-blue-100 text-label mt-6">© 2026 ALPHADATA - Ordens de Serviços</p>

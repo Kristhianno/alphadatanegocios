@@ -16,7 +16,7 @@ function chavePreferencias(clienteId) {
 }
 
 export default function Perfil() {
-  const { user, logout } = useAuth()
+  const { user, logout, trocarSenha } = useAuth()
   const { getById, updateCliente } = useClientes()
   const { ordens } = useOrdensServico()
   const { showToast } = useToast()
@@ -27,6 +27,35 @@ export default function Perfil() {
   const [editandoDados, setEditandoDados] = useState(false)
   const [dados, setDados] = useState(cliente ?? {})
   const [modalSenha, setModalSenha] = useState(false)
+  const [senhaAtual, setSenhaAtual] = useState('')
+  const [novaSenha, setNovaSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('')
+  const [erroSenha, setErroSenha] = useState('')
+  const [salvandoSenha, setSalvandoSenha] = useState(false)
+
+  async function salvarNovaSenha() {
+    setErroSenha('')
+    if (novaSenha.length < 8) {
+      setErroSenha('A nova senha precisa de ao menos 8 caracteres.')
+      return
+    }
+    if (novaSenha !== confirmarSenha) {
+      setErroSenha('A confirmação não confere com a nova senha.')
+      return
+    }
+    setSalvandoSenha(true)
+    const resultado = await trocarSenha(senhaAtual, novaSenha)
+    setSalvandoSenha(false)
+    if (!resultado.ok) {
+      setErroSenha(resultado.error)
+      return
+    }
+    setModalSenha(false)
+    setSenhaAtual('')
+    setNovaSenha('')
+    setConfirmarSenha('')
+    showToast('Senha alterada com sucesso!')
+  }
 
   const [preferencias, setPreferencias] = useState(() => {
     try {
@@ -218,15 +247,16 @@ export default function Perfil() {
         title="Alterar Senha"
         size="sm"
         footer={
-          <button onClick={() => { setModalSenha(false); showToast('Senha alterada com sucesso!') }} className="rounded-btn px-4 py-2 text-body font-medium bg-primary text-white hover:bg-primary-dark">
-            Salvar Nova Senha
+          <button onClick={salvarNovaSenha} disabled={salvandoSenha} className="rounded-btn px-4 py-2 text-body font-medium bg-primary text-white hover:bg-primary-dark disabled:opacity-60">
+            {salvandoSenha ? 'Salvando...' : 'Salvar Nova Senha'}
           </button>
         }
       >
         <div className="flex flex-col gap-3">
-          <div><label className={labelClasse}>Senha Atual</label><input type="password" className={inputClasse} /></div>
-          <div><label className={labelClasse}>Nova Senha</label><input type="password" className={inputClasse} /></div>
-          <div><label className={labelClasse}>Confirmar Nova Senha</label><input type="password" className={inputClasse} /></div>
+          <div><label className={labelClasse}>Senha Atual</label><input type="password" className={inputClasse} value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} /></div>
+          <div><label className={labelClasse}>Nova Senha</label><input type="password" className={inputClasse} value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} /></div>
+          <div><label className={labelClasse}>Confirmar Nova Senha</label><input type="password" className={inputClasse} value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} /></div>
+          {erroSenha && <p className="text-danger text-label">{erroSenha}</p>}
         </div>
       </Modal>
     </div>

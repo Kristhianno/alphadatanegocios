@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import CadastroCliente from './pages/CadastroCliente'
+import TrocarSenha from './pages/TrocarSenha'
 
 import AdminDashboard from './pages/Admin/Dashboard'
 import AdminOrdensServico from './pages/Admin/OrdensServico'
@@ -23,15 +25,27 @@ import ClientePerfil from './pages/Cliente/Perfil'
 
 function RaizApp() {
   const { isAuthenticated, user } = useAuth()
-  if (isAuthenticated) return <Navigate to={`/${user.userType}/dashboard`} replace />
+  if (isAuthenticated) {
+    return <Navigate to={user.deveTrocarSenha ? '/trocar-senha' : `/${user.userType}/dashboard`} replace />
+  }
   return <Navigate to="/login" replace />
 }
 
 export default function App() {
+  const { carregando } = useAuth()
+
+  // Evita um "flash" pro /login antes de terminar de restaurar a sessão
+  // (o token já existe no localStorage, mas GET /auth/me ainda não voltou).
+  if (carregando) {
+    return <div className="min-h-screen flex items-center justify-center bg-muted text-body text-[#666]">Carregando...</div>
+  }
+
   return (
     <Routes>
       <Route path="/" element={<RaizApp />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/cadastro-cliente/:token" element={<CadastroCliente />} />
+      <Route path="/trocar-senha" element={<TrocarSenha />} />
 
       <Route path="/admin" element={<Layout userType="admin" />}>
         <Route path="dashboard" element={<AdminDashboard />} />

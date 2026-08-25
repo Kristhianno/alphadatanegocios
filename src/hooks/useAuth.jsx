@@ -1,54 +1,124 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { USUARIOS_DEMO } from '../data/mock'
+import { api, ApiError, clearToken, getToken, setToken } from '../services/api'
 
-const AUTH_KEY = 'alphadata_auth'
 const AuthContext = createContext(null)
 
-function readStoredAuth() {
-  try {
-    const raw = localStorage.getItem(AUTH_KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
+// As contas demo (seed-demo.ts no backend) continuam apontando pro
+// dataset mockado de Ordens de Serviço via esses ids fixos — o backend
+// real não tem chamados/ordens no formato rico que essas páginas
+// esperam (checklist, fotos, assinatura), então a autenticação é real,
+// mas o histórico de OS que elas veem continua sendo o mock. Os 3
+// técnicos demo foram nomeados igual aos 3 primeiros técnicos do mock
+// de propósito (Carlos Santos/Fernanda Lima/Roberto Alves), pra essa
+// ponte fazer sentido visualmente. Qualquer conta criada via "Criar
+// conta" ou convite de cliente não recebe ponte nenhuma — começa sem
+// ordens mockadas, que é o comportamento correto (não é a mesma pessoa
+// que a demo).
+const PONTES_DEMO_MOCK = {
+  'tecnico@alphadata.com': { tecnicoId: 'TEC-01' }, // Carlos Santos
+  'fernanda.lima@alphadata.com': { tecnicoId: 'TEC-03' }, // Fernanda Lima
+  'roberto.alves@alphadata.com': { tecnicoId: 'TEC-04' }, // Roberto Alves
+  'cliente@alphadata.com': { clienteId: 'CLI-01' },
+}
+
+function papelParaUserType(papel) {
+  return papel === 'gestor' ? 'admin' : papel
+}
+
+function montarSessao(usuario, conta) {
+  const ponte = PONTES_DEMO_MOCK[usuario.email] ?? {}
+  return {
+    id: usuario.id,
+    contaId: usuario.contaId,
+    userType: papelParaUserType(usuario.papel),
+    papel: usuario.papel,
+    email: usuario.email,
+    nome: usuario.nome,
+    deveTrocarSenha: usuario.deveTrocarSenha,
+    tipoNegocio: conta?.tipoNegocio ?? null,
+    nomeEmpresa: conta?.nomeEmpresa ?? null,
+    tecnicoId: ponte.tecnicoId ?? null,
+    clienteId: ponte.clienteId ?? usuario.clienteId ?? null,
   }
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(readStoredAuth)
+  const [user, setUser] = useState(null)
+  const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key === AUTH_KEY) setUser(readStoredAuth())
+    let cancelado = false
+    async function restaurarSessao() {
+      if (!getToken()) {
+        setCarregando(false)
+        return
+      }
+      try {
+        const { usuario, conta } = await api.get('/auth/me')
+        if (!cancelado) setUser(montarSessao(usuario, conta))
+      } catch {
+        clearToken()
+      } finally {
+        if (!cancelado) setCarregando(false)
+      }
     }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    restaurarSessao()
+    return () => {
+      cancelado = true
+    }
   }, [])
 
-  function login(userType, email, senha) {
-    const demo = USUARIOS_DEMO[userType]
-    if (!demo || demo.email !== email || demo.senha !== senha) {
-      return { ok: false, error: 'Email ou senha inválidos para o tipo de usuário selecionado.' }
+  async function login(email, senha) {
+    try {
+      const { token, usuario, conta } = await api.post('/auth/login', { email, senha }, { comAuth: false })
+      setToken(token)
+      const sessao = montarSessao(usuario, conta)
+      setUser(sessao)
+      return { ok: true, sessao, precisaEscolherNegocio: !conta.tipoNegocio, deveTrocarSenha: usuario.deveTrocarSenha }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao entrar. Tente novamente.' }
     }
-    const sessao = {
-      userType: demo.userType,
-      email: demo.email,
-      nome: demo.nome,
-      papel: demo.papel,
-      tecnicoId: demo.tecnicoId ?? null,
-      clienteId: demo.clienteId ?? null,
+  }
+
+  async function registrar(email, senha, nomeEmpresa) {
+    try {
+      const { token, usuario, conta } = await api.post('/auth/registrar', { email, senha, nomeEmpresa }, { comAuth: false })
+      setToken(token)
+      const sessao = montarSessao(usuario, conta)
+      setUser(sessao)
+      return { ok: true, sessao }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao criar conta. Tente novamente.', detalhes: erro?.detalhes }
     }
-    localStorage.setItem(AUTH_KEY, JSON.stringify(sessao))
-    setUser(sessao)
-    return { ok: true }
+  }
+
+  async function selecionarTipoNegocio(tipoNegocio) {
+    try {
+      const conta = await api.post('/auth/selecionar-tipo-negocio', { tipoNegocio })
+      setUser((u) => (u ? { ...u, tipoNegocio: conta.tipoNegocio, nomeEmpresa: conta.nomeEmpresa } : u))
+      return { ok: true }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao definir o tipo de negócio.' }
+    }
+  }
+
+  async function trocarSenha(senhaAtual, novaSenha) {
+    try {
+      await api.post('/auth/trocar-senha', { senhaAtual, novaSenha })
+      setUser((u) => (u ? { ...u, deveTrocarSenha: false } : u))
+      return { ok: true }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao trocar a senha.' }
+    }
   }
 
   function logout() {
-    localStorage.removeItem(AUTH_KEY)
+    clearToken()
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, carregando, login, registrar, selecionarTipoNegocio, trocarSenha, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   )
