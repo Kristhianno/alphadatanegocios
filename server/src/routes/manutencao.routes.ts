@@ -51,6 +51,12 @@ router.post('/chamados', requererPapel('cliente'), validar(schemaChamado), async
   res.status(201).json(chamado)
 })
 
+/** Sem restrição de papel: equipe interna vê todos os chamados da conta, cliente só os próprios — a distinção é resolvida dentro do service, não aqui. */
+router.get('/chamados', async (req, res) => {
+  const chamados = await manutencaoService.listarChamados(req.usuarioAutenticado!.id)
+  res.status(200).json(chamados)
+})
+
 router.post('/chamados/:chamadoId/orcamento', requererPapel(...EQUIPE_INTERNA), validarUuidParam('chamadoId'), async (req, res) => {
   const orcamento = await manutencaoService.gerarOrcamento(req.params['chamadoId'] as string)
   res.status(201).json(orcamento)

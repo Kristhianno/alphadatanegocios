@@ -80,6 +80,25 @@ export class ManutencaoService {
     return linha
   }
 
+  /**
+   * Lista chamados da conta do usuário logado — se quem chama tem papel
+   * 'cliente', filtra automaticamente só os chamados dele (nunca deixa
+   * um cliente listar chamados de outro cliente da mesma conta, mesmo
+   * que peça todos). Ordena por mais recente primeiro.
+   */
+  async listarChamados(userId: string): Promise<LinhaChamado[]> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+
+    let query = this.client.from('chamados_manutencao').select('*').eq('conta_id', usuario.contaId)
+    if (usuario.papel === 'cliente') {
+      if (!usuario.clienteId) return []
+      query = query.eq('cliente_id', usuario.clienteId)
+    }
+    const { data, error } = await query.order('criado_em', { ascending: false })
+    if (error) throw new ErroValidacao(`Falha ao listar chamados: ${error.message}`)
+    return data
+  }
+
   /** Orçamento automático: horas estimadas do tipo de serviço (ou 2h default) × tarifa padrão. */
   async gerarOrcamento(chamadoId: string): Promise<LinhaOrcamento> {
     const chamado = await this.buscarChamadoOuFalhar(chamadoId)
