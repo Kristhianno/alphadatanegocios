@@ -1,10 +1,38 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { IconLogin2, IconUserPlus, IconArrowLeft } from '@tabler/icons-react'
+import {
+  IconLogin2, IconUserPlus, IconArrowLeft, IconMail, IconLock,
+  IconBuildingStore, IconApps, IconUsers, IconPackage, IconChartBar, IconSettings,
+} from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../hooks/useToast'
 import { TAMANHO_MAX_LOGO_BYTES } from '../hooks/useBranding'
 import { api } from '../services/api'
 import PasswordInput from '../components/ui/PasswordInput'
+import AlphaDataLogo from '../components/AlphaDataLogo'
+import LoginIllustration from '../components/LoginIllustration'
+
+const inputComIconeClasse = 'w-full rounded-input border border-muted-dark pl-10 pr-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary'
+const iconeCampoClasse = 'absolute left-3 top-1/2 -translate-y-1/2 text-[#999] pointer-events-none'
+
+const FUNCIONALIDADES = [
+  { icon: IconApps, label: 'Gestão completa do seu negócio' },
+  { icon: IconUsers, label: 'Clientes, vendas e atendimentos' },
+  { icon: IconPackage, label: 'Estoque e produtos' },
+  { icon: IconChartBar, label: 'Relatórios e indicadores' },
+  { icon: IconSettings, label: 'Integrações e automação' },
+]
+
+function IconGoogle(props) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" {...props}>
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 35.4 26.9 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.6 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.6 5.6C39.9 37.9 44 32 44 24c0-1.3-.1-2.7-.4-3.5z" />
+    </svg>
+  )
+}
 
 // Login/cadastro "de verdade" — sem nenhuma referência a conta de
 // demonstração (nem o seletor de vertical, nem "outros papéis"). Pra
@@ -15,6 +43,7 @@ import PasswordInput from '../components/ui/PasswordInput'
 // gente de fora — só o formulário de criar conta, sem aba "Entrar".
 export default function Login({ apenasCadastro = false }) {
   const { login, registrar, selecionarTipoNegocio, atualizarBranding } = useAuth()
+  const { showToast } = useToast()
   const navigate = useNavigate()
 
   // 'entrar' | 'criar-conta' | 'escolher-negocio' | 'escolher-logo'
@@ -144,15 +173,47 @@ export default function Login({ apenasCadastro = false }) {
     irParaDashboard(sessaoPendente)
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary via-blue-600 to-primary-dark">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-white tracking-tight">ALPHADATA</h1>
-          <p className="text-blue-100 mt-1 text-body">Negócios</p>
-        </div>
+  function handleGoogleEntrar() {
+    showToast('Login com Google em breve — por enquanto, entre com e-mail e senha.', 'erro')
+  }
 
-        <div className="bg-surface rounded-card shadow-cardHover p-6 sm:p-8">
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Painel de marketing — vira embutido no topo em telas pequenas */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-primary-light md:w-1/2 flex items-center justify-center px-6 py-10 md:p-16">
+        <LoginIllustration className="absolute inset-0 w-full h-full" />
+        <div className="relative z-10 max-w-md">
+          <div className="leading-none">
+            <span className="text-3xl sm:text-4xl font-extrabold text-[#2F7DE0]">ALPHADATA</span>
+            <br />
+            <span className="text-3xl sm:text-4xl font-extrabold text-[#1B2233]">Negócios</span>
+          </div>
+          <p className="text-xl sm:text-2xl font-semibold text-[#1B2233] mt-4">um sistema</p>
+          <p className="text-xl sm:text-2xl font-semibold text-[#2F7DE0] underline decoration-2 underline-offset-4 inline-block">vários negócios</p>
+          <p className="text-body text-[#555] mt-4 max-w-xs">
+            Soluções completas para simplificar, organizar e fazer seu negócio crescer.
+          </p>
+
+          <div className="hidden sm:grid grid-cols-3 gap-4 mt-10">
+            {FUNCIONALIDADES.slice(0, 3).map(({ icon: Icon, label }) => (
+              <div key={label} className="flex flex-col items-center text-center gap-2">
+                <div className="w-12 h-12 rounded-card bg-white shadow-card flex items-center justify-center text-[#2F7DE0]">
+                  <Icon size={22} />
+                </div>
+                <span className="text-label text-[#1B2233]">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Painel do formulário */}
+      <div className="flex-1 flex items-center justify-center p-4 py-10 bg-[#0E1A2B]">
+        <div className="w-full max-w-md bg-surface rounded-card shadow-cardHover p-6 sm:p-8">
+          <div className="flex justify-center mb-6">
+            <AlphaDataLogo />
+          </div>
+
           {modo === 'escolher-negocio' ? (
             <>
               <p className="text-h2 text-[#1a1a1a] mb-1">Qual é o seu tipo de negócio?</p>
@@ -250,6 +311,13 @@ export default function Login({ apenasCadastro = false }) {
             </>
           ) : (
             <>
+              <p className="text-h2 text-[#1a1a1a] text-center mb-1">
+                {modo === 'entrar' && !apenasCadastro ? 'Bem-vindo de volta!' : 'Crie sua conta'}
+              </p>
+              <p className="text-body text-[#666] text-center mb-6">
+                {modo === 'entrar' && !apenasCadastro ? 'Faça login para acessar seu negócio' : 'Comece a organizar seu negócio hoje'}
+              </p>
+
               {!apenasCadastro && (
                 <div className="flex rounded-btn bg-muted p-1 mb-6">
                   <button
@@ -267,28 +335,48 @@ export default function Login({ apenasCadastro = false }) {
                 </div>
               )}
 
+              <button
+                type="button"
+                onClick={handleGoogleEntrar}
+                className="w-full flex items-center justify-center gap-2 rounded-btn border border-muted-dark py-2.5 text-body font-medium text-[#333] hover:bg-muted transition-colors"
+              >
+                <IconGoogle /> Continuar com Google
+              </button>
+
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-muted-dark" />
+                <span className="text-label text-[#999]">ou entre com e-mail e senha</span>
+                <div className="flex-1 h-px bg-muted-dark" />
+              </div>
+
               {modo === 'entrar' && !apenasCadastro ? (
                 <form onSubmit={handleEntrar} className="flex flex-col gap-4">
                   <div>
                     <label className="text-label text-[#666] block mb-1">Email</label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <div className="relative">
+                      <IconMail size={18} className={iconeCampoClasse} />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="seu@email.com"
+                        className={inputComIconeClasse}
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="text-label text-[#666] block mb-1">Senha</label>
-                    <PasswordInput
-                      required
-                      value={senha}
-                      onChange={(e) => setSenha(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <div className="relative">
+                      <IconLock size={18} className={iconeCampoClasse} />
+                      <PasswordInput
+                        required
+                        value={senha}
+                        onChange={(e) => setSenha(e.target.value)}
+                        placeholder="••••••••"
+                        className={inputComIconeClasse}
+                      />
+                    </div>
                   </div>
 
                   {erro && <p className="text-danger text-label">{erro}</p>}
@@ -306,35 +394,44 @@ export default function Login({ apenasCadastro = false }) {
                 <form onSubmit={handleCriarConta} className="flex flex-col gap-4">
                   <div>
                     <label className="text-label text-[#666] block mb-1">Nome da empresa</label>
-                    <input
-                      required
-                      value={nomeEmpresa}
-                      onChange={(e) => setNomeEmpresa(e.target.value)}
-                      placeholder="Ex: Manutenções Silva"
-                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <div className="relative">
+                      <IconBuildingStore size={18} className={iconeCampoClasse} />
+                      <input
+                        required
+                        value={nomeEmpresa}
+                        onChange={(e) => setNomeEmpresa(e.target.value)}
+                        placeholder="Ex: Manutenções Silva"
+                        className={inputComIconeClasse}
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="text-label text-[#666] block mb-1">Email</label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <div className="relative">
+                      <IconMail size={18} className={iconeCampoClasse} />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="seu@email.com"
+                        className={inputComIconeClasse}
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="text-label text-[#666] block mb-1">Senha</label>
-                    <PasswordInput
-                      required
-                      minLength={8}
-                      value={senha}
-                      onChange={(e) => setSenha(e.target.value)}
-                      placeholder="Ao menos 8 caracteres"
-                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <div className="relative">
+                      <IconLock size={18} className={iconeCampoClasse} />
+                      <PasswordInput
+                        required
+                        minLength={8}
+                        value={senha}
+                        onChange={(e) => setSenha(e.target.value)}
+                        placeholder="Ao menos 8 caracteres"
+                        className={inputComIconeClasse}
+                      />
+                    </div>
                   </div>
 
                   {erro && <p className="text-danger text-label">{erro}</p>}
@@ -366,9 +463,9 @@ export default function Login({ apenasCadastro = false }) {
               <IconArrowLeft size={14} /> Voltar
             </button>
           )}
-        </div>
 
-        <p className="text-center text-blue-100 text-label mt-6">© 2026 ALPHADATA - Negócios</p>
+          <p className="text-center text-[#999] text-label mt-6">© 2026 ALPHADATA - Negócios</p>
+        </div>
       </div>
     </div>
   )

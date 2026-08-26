@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IconBuildingStore, IconCheck, IconAlertTriangle, IconCopy } from '@tabler/icons-react'
 import { api, ApiError } from '../services/api'
+import AlphaDataLogo from '../components/AlphaDataLogo'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -74,9 +75,8 @@ export default function CadastroCliente() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary via-blue-600 to-primary-dark">
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-white tracking-tight">ALPHADATA</h1>
-          <p className="text-blue-100 mt-1 text-body">Cadastro de Cliente</p>
+        <div className="flex justify-center mb-6">
+          <AlphaDataLogo variant="branco" tagline="Cadastro de Cliente" />
         </div>
 
         <div className="bg-surface rounded-card shadow-cardHover p-6 sm:p-8">

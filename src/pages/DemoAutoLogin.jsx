@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { IconAlertTriangle } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { CONTAS_DEMO_VERTICAIS, CHAVE_DEMO_VERTICAL_FIXADO } from '../data/demoContas'
+import AlphaDataLogo from '../components/AlphaDataLogo'
 
 /**
  * Link de demonstração de um único nicho — pra mandar pro cliente sem
@@ -38,9 +39,8 @@ export default function DemoAutoLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary via-blue-600 to-primary-dark">
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-white tracking-tight">ALPHADATA</h1>
-          <p className="text-blue-100 mt-1 text-body">Negócios</p>
+        <div className="flex justify-center mb-6">
+          <AlphaDataLogo variant="branco" />
         </div>
 
         <div className="bg-surface rounded-card shadow-cardHover p-8 text-center">
