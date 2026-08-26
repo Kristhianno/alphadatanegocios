@@ -4,25 +4,15 @@ import { IconLogin2, IconUserPlus, IconArrowLeft } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { TAMANHO_MAX_LOGO_BYTES } from '../hooks/useBranding'
 import { api } from '../services/api'
-import { CONTAS_DEMO_VERTICAIS, CHAVE_DEMO_VERTICAL_FIXADO } from '../data/demoContas'
 import PasswordInput from '../components/ui/PasswordInput'
 
-// Cada tipo de negócio tem sua própria conta demo (dados reais no
-// banco, semeados por server/scripts/seed-*.ts) — a de manutenção é a
-// única com histórico rico de Ordens de Serviço (checklist/fotos/
-// assinatura, ainda mockado no frontend); as outras 3 mostram um
-// dashboard e cadastro de clientes reais, com o menu lateral já
-// refletindo os módulos daquele vertical (ver Sidebar.jsx). Pra mandar
-// pra um cliente só o nicho dele (sem ele ver os outros 3 aqui), use o
-// link /demo/:slug — ver DemoAutoLogin.jsx.
-const OUTROS_PAPEIS_DEMO = [
-  { label: 'Técnico', email: 'tecnico@alphadata.com', senha: 'tecnico123' },
-  { label: 'Cliente', email: 'cliente@alphadata.com', senha: 'cliente123' },
-]
-
+// Login/cadastro "de verdade" — sem nenhuma referência a conta de
+// demonstração (nem o seletor de vertical, nem "outros papéis"). Pra
+// mostrar/testar um nicho específico sem senha, use /demo/:slug (ver
+// DemoAutoLogin.jsx e data/demoContas.js) — aquele link é só pra quem
+// já tem o link em mãos, nunca aparece aqui.
 // Rota /cadastro usa apenasCadastro=true: link "limpo" pra mandar pra
-// gente de fora — só o formulário de criar conta, sem aba "Entrar" nem
-// as contas de demonstração (essas continuam só em /login e /demo/:slug).
+// gente de fora — só o formulário de criar conta, sem aba "Entrar".
 export default function Login({ apenasCadastro = false }) {
   const { login, registrar, selecionarTipoNegocio, atualizarBranding } = useAuth()
   const navigate = useNavigate()
@@ -44,11 +34,6 @@ export default function Login({ apenasCadastro = false }) {
 
   const [logoPreview, setLogoPreview] = useState(null)
   const [salvandoLogo, setSalvandoLogo] = useState(false)
-
-  // Se esse navegador já entrou uma vez por /demo/:vertical, trava a
-  // seção de teste nesse nicho só — inclusive depois de um logout.
-  const [verticalFixado] = useState(() => CONTAS_DEMO_VERTICAIS.find((v) => v.slug === localStorage.getItem(CHAVE_DEMO_VERTICAL_FIXADO)) ?? null)
-  const contasDemoParaExibir = verticalFixado ? [verticalFixado] : CONTAS_DEMO_VERTICAIS
 
   useEffect(() => {
     if (modo === 'escolher-negocio' && tiposNegocio.length === 0) {
@@ -157,12 +142,6 @@ export default function Login({ apenasCadastro = false }) {
       return
     }
     irParaDashboard(sessaoPendente)
-  }
-
-  function preencherDemo(cred) {
-    setEmail(cred.email)
-    setSenha(cred.senha)
-    setErro('')
   }
 
   return (
@@ -322,42 +301,6 @@ export default function Login({ apenasCadastro = false }) {
                     <IconLogin2 size={20} />
                     {enviando ? 'Entrando...' : 'Entrar na ALPHADATA'}
                   </button>
-
-                  <div className="pt-3 border-t border-muted-dark">
-                    <p className="text-label text-[#999] text-center mb-2">
-                      {verticalFixado ? 'Conta de demonstração' : 'Testar um tipo de negócio (dados reais)'}
-                    </p>
-                    <div className={`grid gap-2 ${verticalFixado ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                      {contasDemoParaExibir.map((v) => (
-                        <button
-                          key={v.email}
-                          type="button"
-                          onClick={() => preencherDemo(v)}
-                          className="flex items-center justify-center rounded-btn border border-muted-dark py-2 text-label text-[#333] hover:bg-primary-light hover:border-primary"
-                        >
-                          {v.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {(!verticalFixado || verticalFixado.slug === 'manutencao') && (
-                      <>
-                        <p className="text-label text-[#999] text-center mt-3 mb-2">Outros papéis (conta de manutenção)</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {OUTROS_PAPEIS_DEMO.map((cred) => (
-                            <button
-                              key={cred.email}
-                              type="button"
-                              onClick={() => preencherDemo(cred)}
-                              className="rounded-btn border border-muted-dark py-1.5 text-label text-primary hover:bg-primary-light"
-                            >
-                              {cred.label}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
                 </form>
               ) : (
                 <form onSubmit={handleCriarConta} className="flex flex-col gap-4">
