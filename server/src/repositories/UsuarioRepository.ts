@@ -16,6 +16,13 @@ export class UsuarioRepository extends Repository<Usuario> {
     return { ...this.paraDominio(data), senhaHash: data.senha_hash }
   }
 
+  /** Busca pelo vínculo com auth.users do Supabase Auth — usado pelo bridge de login via Google/redefinição de senha. */
+  async buscarPorAuthUserId(authUserId: string): Promise<Usuario | null> {
+    const { data, error } = await this.clienteTipado.from('usuarios').select('*').eq('auth_user_id', authUserId).maybeSingle()
+    if (error) throw new ErroPersistencia('usuarios', 'buscarPorAuthUserId', error)
+    return data ? this.paraDominio(data) : null
+  }
+
   protected paraDominio(linha: LinhaBanco): Usuario {
     return {
       id: linha['id'] as string,
@@ -36,6 +43,7 @@ export class UsuarioRepository extends Repository<Usuario> {
   protected paraLinha(dados: Record<string, unknown>): LinhaBanco {
     const linha: LinhaBanco = {}
     if (dados['contaId'] !== undefined) linha['conta_id'] = dados['contaId']
+    if (dados['authUserId'] !== undefined) linha['auth_user_id'] = dados['authUserId']
     if (dados['email'] !== undefined) linha['email'] = dados['email']
     if (dados['nome'] !== undefined) linha['nome'] = dados['nome']
     if (dados['papel'] !== undefined) linha['papel'] = dados['papel']

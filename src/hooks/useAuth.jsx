@@ -81,6 +81,19 @@ export function AuthProvider({ children }) {
     }
   }
 
+  /** Bridge do login com Google: troca a sessão do Supabase (já autenticada pelo front) pelo mesmo JWT de sempre. */
+  async function entrarComSupabase(supabaseAccessToken) {
+    try {
+      const { token, usuario, conta } = await api.post('/auth/entrar-supabase', { supabaseAccessToken }, { comAuth: false })
+      setToken(token)
+      const sessao = montarSessao(usuario, conta)
+      setUser(sessao)
+      return { ok: true, sessao, precisaEscolherNegocio: !conta.tipoNegocio, deveTrocarSenha: usuario.deveTrocarSenha }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao entrar com Google. Tente novamente.' }
+    }
+  }
+
   async function registrar(email, senha, nomeEmpresa) {
     try {
       const { token, usuario, conta } = await api.post('/auth/registrar', { email, senha, nomeEmpresa }, { comAuth: false })
@@ -141,7 +154,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, carregando, login, registrar, selecionarTipoNegocio, atualizarBranding, atualizarPerfil, trocarSenha, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, carregando, login, entrarComSupabase, registrar, selecionarTipoNegocio, atualizarBranding, atualizarPerfil, trocarSenha, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   )

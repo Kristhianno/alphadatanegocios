@@ -170,8 +170,63 @@ class ConstrutorConsultaFake implements PromiseLike<ResultadoLista> {
   }
 }
 
+interface UsuarioAuthFake {
+  id: string
+  email: string
+  user_metadata: Record<string, unknown>
+}
+
+interface ResultadoAuthUnico {
+  data: { user: UsuarioAuthFake | null }
+  error: { message: string } | null
+}
+
+/**
+ * Fake mínimo de `client.auth` — só o que `UserService.autenticarViaSupabase`
+ * e o espelhamento em `criarUsuario` usam (`admin.createUser`,
+ * `admin.listUsers`, `getUser`). Deliberadamente não verifica JWT de
+ * verdade: nesse fake, o "token" que `getUser` aceita É o id do usuário
+ * — suficiente pra testar a lógica do service, que é o que interessa
+ * aqui (mesma filosofia do resto deste arquivo, ver comentário no topo).
+ */
+class AuthFake {
+  private usuarios: UsuarioAuthFake[] = []
+
+  admin = {
+    createUser: async (dados: { email: string; password: string; email_confirm?: boolean; user_metadata?: Record<string, unknown> }): Promise<ResultadoAuthUnico> => {
+      if (this.usuarios.some((u) => u.email === dados.email)) {
+        return { data: { user: null }, error: { message: 'A user with this email address has already been registered' } }
+      }
+      const user: UsuarioAuthFake = { id: randomUUID(), email: dados.email, user_metadata: dados.user_metadata ?? {} }
+      this.usuarios.push(user)
+      return { data: { user }, error: null }
+    },
+    listUsers: async (): Promise<{ data: { users: UsuarioAuthFake[] }; error: null }> => ({
+      data: { users: this.usuarios.map((u) => ({ ...u })) },
+      error: null,
+    }),
+  }
+
+  getUser = async (token: string): Promise<ResultadoAuthUnico> => {
+    const user = this.usuarios.find((u) => u.id === token)
+    if (!user) return { data: { user: null }, error: { message: 'Invalid token' } }
+    return { data: { user: { ...user } }, error: null }
+  }
+
+  /** Atalho de teste: registra (ou reaproveita) uma identidade falsa e devolve o "token" que `getUser` reconhece pra ela. */
+  criarIdentidade(email: string, user_metadata: Record<string, unknown> = {}): { id: string; token: string } {
+    let user = this.usuarios.find((u) => u.email === email)
+    if (!user) {
+      user = { id: randomUUID(), email, user_metadata }
+      this.usuarios.push(user)
+    }
+    return { id: user.id, token: user.id }
+  }
+}
+
 export class ClienteFake {
   private readonly tabelas = new Map<string, TabelaFake>()
+  readonly auth = new AuthFake()
 
   from(nomeTabela: string): ConstrutorConsultaFake {
     if (!this.tabelas.has(nomeTabela)) this.tabelas.set(nomeTabela, new TabelaFake())

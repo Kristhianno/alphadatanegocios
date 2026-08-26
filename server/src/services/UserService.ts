@@ -29,6 +29,11 @@ const schemaAutenticar = z.object({
   senha: z.string().min(1, 'Informe a senha.'),
 })
 
+const schemaAutenticarViaSupabase = z.object({
+  supabaseAccessToken: z.string().min(1, 'Token do Supabase ausente.'),
+  novaSenha: z.string().min(8, 'A nova senha precisa de ao menos 8 caracteres.').optional(),
+})
+
 const schemaAtualizarPerfil = z.object({
   nome: z.string().trim().min(2).optional(),
   email: z.string().email().optional(),
@@ -58,7 +63,7 @@ export class UserService {
   private readonly contas: ContaRepository
   private readonly usuarios: UsuarioRepository
 
-  constructor(client: Cliente) {
+  constructor(private readonly client: Cliente) {
     this.contas = new ContaRepository(client)
     this.usuarios = new UsuarioRepository(client)
   }
@@ -76,7 +81,7 @@ export class UserService {
 
     const conta = await this.contas.criar({ nomeEmpresa: dados.nomeEmpresa, plano: 'startup', configuracoesGerais: {} })
     const senhaHash = await hashSenha(dados.senha)
-    const usuario = await this.usuarios.criar({
+    let usuario = await this.usuarios.criar({
       contaId: conta.id,
       email: dados.email,
       senhaHash,
@@ -85,6 +90,26 @@ export class UserService {
       status: 'ativo',
       deveTrocarSenha: false,
     })
+
+    // Espelha o login no Supabase Auth pra habilitar "esqueci minha senha"
+    // e a vinculação por email caso essa pessoa entre com Google depois.
+    // Best-effort: uma falha aqui (rede, provider fora do ar, ou o email
+    // já existir lá por causa do script de backfill) não pode derrubar
+    // o cadastro — o login local por bcrypt continua funcionando de todo jeito.
+    try {
+      const { data: supabaseUser, error: erroSupabase } = await this.client.auth.admin.createUser({
+        email: dados.email,
+        password: dados.senha,
+        email_confirm: true,
+      })
+      if (erroSupabase) {
+        logger.warn({ erro: erroSupabase.message, email: dados.email }, 'Não foi possível espelhar o cadastro no Supabase Auth.')
+      } else if (supabaseUser.user) {
+        usuario = await this.usuarios.atualizar(usuario.id, { authUserId: supabaseUser.user.id })
+      }
+    } catch (erro) {
+      logger.warn({ erro }, 'Falha ao espelhar o cadastro no Supabase Auth.')
+    }
 
     logger.info({ contaId: conta.id, usuarioId: usuario.id }, 'Nova conta cadastrada.')
     return { conta, usuario }
@@ -113,6 +138,75 @@ export class UserService {
 
     await this.usuarios.atualizar(usuario.id, { ultimoLoginEm: new Date() })
     logger.info({ usuarioId: usuario.id }, 'Login realizado.')
+    return { usuario, conta }
+  }
+
+  /**
+   * Autentica via uma identidade já confirmada pelo Supabase Auth
+   * (retorno do login com Google, ou o link de "esqueci minha senha") e
+   * devolve usuário + conta prontos pra emissão do MESMO JWT de sempre —
+   * o Supabase só serve de verificador de identidade aqui, nunca vira o
+   * tipo de sessão que o resto do app entende.
+   *
+   * Resolve o Usuario local em 3 passos: por `authUserId` (caminho
+   * comum, depois da primeira vez); senão por `email` (linka uma conta
+   * que já existia só com senha local, na primeira vez que ela usa
+   * Google/reset); senão cria Conta+Usuario novos (equivalente a
+   * {@link criarUsuario}, mas sem senha local — `senhaHash: null`).
+   *
+   * `novaSenha`, quando presente (fluxo de redefinição de senha),
+   * também atualiza o hash bcrypt local — sem isso, o `/auth/login`
+   * comum ficaria checando uma senha antiga depois de um reset feito
+   * pelo Supabase.
+   */
+  async autenticarViaSupabase(supabaseAccessToken: string, novaSenha?: string): Promise<{ usuario: Usuario; conta: Conta }> {
+    const dados = schemaAutenticarViaSupabase.parse({ supabaseAccessToken, novaSenha })
+
+    const { data, error } = await this.client.auth.getUser(dados.supabaseAccessToken)
+    if (error || !data.user) throw new ErroNaoAutorizado('Sessão do Supabase inválida ou expirada.')
+    const identidade = data.user
+    if (!identidade.email) throw new ErroValidacao('Não foi possível obter o email da conta do Supabase.')
+
+    let usuario = await this.usuarios.buscarPorAuthUserId(identidade.id)
+    if (!usuario) {
+      const credenciais = await this.usuarios.buscarComCredenciaisPorEmail(identidade.email)
+      if (credenciais) {
+        const { senhaHash: _senhaHashDescartada, ...usuarioExistente } = credenciais
+        usuario = await this.usuarios.atualizar(usuarioExistente.id, { authUserId: identidade.id })
+      }
+    }
+
+    let conta: Conta
+    if (usuario) {
+      const contaExistente = await this.contas.buscarPorId(usuario.contaId)
+      if (!contaExistente) throw new ErroNaoEncontrado('Conta', usuario.contaId)
+      conta = contaExistente
+    } else {
+      const nomeFallback = identidade.email.split('@')[0] ?? 'Minha Empresa'
+      const nomeEmpresa = (identidade.user_metadata?.['full_name'] as string | undefined)?.trim() || nomeFallback
+      conta = await this.contas.criar({ nomeEmpresa, plano: 'startup', configuracoesGerais: {} })
+      usuario = await this.usuarios.criar({
+        contaId: conta.id,
+        authUserId: identidade.id,
+        email: identidade.email,
+        senhaHash: null,
+        nome: nomeEmpresa,
+        papel: 'admin' as const,
+        status: 'ativo',
+        deveTrocarSenha: false,
+      })
+      logger.info({ contaId: conta.id, usuarioId: usuario.id }, 'Nova conta cadastrada via Supabase Auth (Google/redefinição).')
+    }
+
+    if (usuario.status !== 'ativo') throw new ErroProibido('Este usuário está inativo ou suspenso.')
+
+    if (dados.novaSenha) {
+      usuario = await this.usuarios.atualizar(usuario.id, { senhaHash: await hashSenha(dados.novaSenha) })
+      logger.info({ usuarioId: usuario.id }, 'Senha local sincronizada após redefinição via Supabase.')
+    }
+
+    await this.usuarios.atualizar(usuario.id, { ultimoLoginEm: new Date() })
+    logger.info({ usuarioId: usuario.id }, 'Login via Supabase Auth realizado.')
     return { usuario, conta }
   }
 

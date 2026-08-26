@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   IconLogin2,
   IconUserPlus,
@@ -17,6 +17,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { TAMANHO_MAX_LOGO_BYTES } from '../hooks/useBranding'
 import { api } from '../services/api'
+import { supabase } from '../services/supabase'
 import PasswordInput from '../components/ui/PasswordInput'
 import AlphaDataLogo from '../components/AlphaDataLogo'
 import fundoLogin from '../assets/login-fundo.jpeg'
@@ -60,9 +61,15 @@ export default function Login({ apenasCadastro = false }) {
   const { login, registrar, selecionarTipoNegocio, atualizarBranding } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Volta do /auth/callback (login com Google) pra uma conta nova, que
+  // ainda precisa escolher o vertical — mesma tela de "escolher-negocio"
+  // que um cadastro normal usa, só que chegando aqui já autenticada.
+  const sessaoPendenteInicial = location.state?.sessaoPendente ?? null
 
   // 'entrar' | 'criar-conta' | 'escolher-negocio' | 'escolher-logo'
-  const [modo, setModo] = useState(apenasCadastro ? 'criar-conta' : 'entrar')
+  const [modo, setModo] = useState(sessaoPendenteInicial ? 'escolher-negocio' : apenasCadastro ? 'criar-conta' : 'entrar')
 
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -70,7 +77,7 @@ export default function Login({ apenasCadastro = false }) {
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
 
-  const [sessaoPendente, setSessaoPendente] = useState(null)
+  const [sessaoPendente, setSessaoPendente] = useState(sessaoPendenteInicial)
   const [tiposNegocio, setTiposNegocio] = useState([])
   const [tipoEscolhido, setTipoEscolhido] = useState(null)
   const [mostrarCampoOutro, setMostrarCampoOutro] = useState(false)
@@ -188,8 +195,16 @@ export default function Login({ apenasCadastro = false }) {
     irParaDashboard(sessaoPendente)
   }
 
-  function handleGoogleEntrar() {
-    showToast('Login com Google em breve — por enquanto, entre com e-mail e senha.', 'erro')
+  async function handleGoogleEntrar() {
+    if (!supabase) {
+      showToast('Login com Google não está configurado neste ambiente.', 'erro')
+      return
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    })
+    if (error) showToast('Não foi possível iniciar o login com Google. Tente novamente.', 'erro')
   }
 
   return (

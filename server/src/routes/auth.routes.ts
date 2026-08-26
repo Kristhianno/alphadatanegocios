@@ -34,6 +34,22 @@ router.post('/login', async (c) => {
   return c.json({ token, ...emitirResposta(usuario, conta) }, 200)
 })
 
+/** Bridge do login com Google: o front já trocou o consentimento por uma sessão do Supabase, aqui ela vira o mesmo JWT de sempre. */
+router.post('/entrar-supabase', async (c) => {
+  const { supabaseAccessToken } = (await c.req.json()) as Record<string, unknown>
+  const { usuario, conta } = await userService().autenticarViaSupabase(supabaseAccessToken as string)
+  const token = await assinarToken({ sub: usuario.id, contaId: conta.id, papel: usuario.papel, email: usuario.email, clienteId: usuario.clienteId })
+  return c.json({ token, ...emitirResposta(usuario, conta) }, 200)
+})
+
+/** Conclui o fluxo de "esqueci minha senha": o front já trocou a nova senha no Supabase, aqui ela é sincronizada localmente e a sessão vira o mesmo JWT de sempre. */
+router.post('/concluir-redefinicao-senha', async (c) => {
+  const { supabaseAccessToken, novaSenha } = (await c.req.json()) as Record<string, unknown>
+  const { usuario, conta } = await userService().autenticarViaSupabase(supabaseAccessToken as string, novaSenha as string)
+  const token = await assinarToken({ sub: usuario.id, contaId: conta.id, papel: usuario.papel, email: usuario.email, clienteId: usuario.clienteId })
+  return c.json({ token, ...emitirResposta(usuario, conta) }, 200)
+})
+
 router.get('/me', autenticar, async (c) => {
   const { usuario, conta } = await userService().obterPerfilCompleto(c.get('usuarioAutenticado').id)
   return c.json(emitirResposta(usuario, conta), 200)

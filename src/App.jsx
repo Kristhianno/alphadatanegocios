@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import CallbackSupabase from './pages/CallbackSupabase'
 import DemoAutoLogin from './pages/DemoAutoLogin'
 import CadastroCliente from './pages/CadastroCliente'
 import TrocarSenha from './pages/TrocarSenha'
@@ -66,6 +67,7 @@ export default function App() {
       <Route path="/" element={<RaizApp />} />
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Login apenasCadastro />} />
+      <Route path="/auth/callback" element={<CallbackSupabase />} />
       <Route path="/demo/:vertical" element={<DemoAutoLogin />} />
       <Route path="/cadastro-cliente/:token" element={<CadastroCliente />} />
       <Route path="/trocar-senha" element={<TrocarSenha />} />

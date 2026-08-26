@@ -63,6 +63,87 @@ describe('UserService.autenticar', () => {
   })
 })
 
+describe('UserService.autenticarViaSupabase', () => {
+  it('cria conta+usuario novos quando a identidade do Supabase não existe localmente', async () => {
+    const cliente = criarClienteFake()
+    const { token } = cliente.auth.criarIdentidade('novo@google.com', { full_name: 'Fulano da Silva' })
+
+    const service = new UserService(paraTipado(cliente))
+    const { usuario, conta } = await service.autenticarViaSupabase(token)
+
+    expect(usuario.email).toBe('novo@google.com')
+    expect(usuario.authUserId).toBe(token)
+    expect(usuario.papel).toBe('admin')
+    expect(conta.nomeEmpresa).toBe('Fulano da Silva')
+    expect(conta.tipoNegocio).toBeNull()
+  })
+
+  it('linka uma conta existente (só com senha local) por email, no primeiro login via Google/reset', async () => {
+    const cliente = criarClienteFake()
+    const senhaHash = await hashSenha('senha12345')
+    const conta = cliente.semear('contas', [{ nome_empresa: 'Confeitaria da Ana', tipo_negocio: null, plano: 'startup', status: 'ativo', configuracoes_gerais: {} }])[0]!
+    const usuarioLocal = cliente.semear('usuarios', [
+      { conta_id: conta['id'], email: 'dono@confeitaria.com', senha_hash: senhaHash, auth_user_id: null, nome: 'Ana', papel: 'admin', cliente_id: null, status: 'ativo' },
+    ])[0]!
+
+    const { token } = cliente.auth.criarIdentidade('dono@confeitaria.com')
+    const service = new UserService(paraTipado(cliente))
+    const { usuario } = await service.autenticarViaSupabase(token)
+
+    expect(usuario.id).toBe(usuarioLocal['id'])
+    expect(usuario.authUserId).toBe(token)
+  })
+
+  it('reconhece a mesma identidade em logins seguintes, sem duplicar usuario', async () => {
+    const cliente = criarClienteFake()
+    const { token } = cliente.auth.criarIdentidade('repete@google.com')
+    const service = new UserService(paraTipado(cliente))
+
+    const primeiro = await service.autenticarViaSupabase(token)
+    const segundo = await service.autenticarViaSupabase(token)
+
+    expect(segundo.usuario.id).toBe(primeiro.usuario.id)
+    expect(cliente.linhasDe('usuarios')).toHaveLength(1)
+  })
+
+  it('sincroniza o hash local quando vem novaSenha (conclusão de "esqueci minha senha")', async () => {
+    const service = new UserService(criarClienteFakeTipado())
+    await service.criarUsuario('dono@confeitaria.com', 'senhaAntiga1', 'Confeitaria da Ana')
+
+    const cliente = criarClienteFake()
+    // Recria o mesmo cenário num client que expõe `.auth` de teste — o service usa o client injetado, então a identidade precisa existir nesse mesmo fake.
+    const senhaHash = await hashSenha('senhaAntiga1')
+    const conta = cliente.semear('contas', [{ nome_empresa: 'Confeitaria da Ana', tipo_negocio: null, plano: 'startup', status: 'ativo', configuracoes_gerais: {} }])[0]!
+    cliente.semear('usuarios', [
+      { conta_id: conta['id'], email: 'dono@confeitaria.com', senha_hash: senhaHash, auth_user_id: null, nome: 'Ana', papel: 'admin', cliente_id: null, status: 'ativo' },
+    ])
+    const { token } = cliente.auth.criarIdentidade('dono@confeitaria.com')
+    const serviceComAuth = new UserService(paraTipado(cliente))
+
+    await serviceComAuth.autenticarViaSupabase(token, 'senhaNova123')
+
+    const { usuario } = await serviceComAuth.autenticar('dono@confeitaria.com', 'senhaNova123')
+    expect(usuario.email).toBe('dono@confeitaria.com')
+  })
+
+  it('rejeita um token do Supabase inválido/expirado', async () => {
+    const service = new UserService(criarClienteFakeTipado())
+    await expect(service.autenticarViaSupabase('token-que-nao-existe')).rejects.toBeInstanceOf(ErroNaoAutorizado)
+  })
+
+  it('rejeita usuário inativo mesmo com identidade do Supabase válida', async () => {
+    const cliente = criarClienteFake()
+    const conta = cliente.semear('contas', [{ nome_empresa: 'X', tipo_negocio: null, plano: 'startup', status: 'ativo', configuracoes_gerais: {} }])[0]!
+    const { id: authUserId, token } = cliente.auth.criarIdentidade('inativo@x.com')
+    cliente.semear('usuarios', [
+      { conta_id: conta['id'], email: 'inativo@x.com', senha_hash: null, auth_user_id: authUserId, nome: 'X', papel: 'admin', cliente_id: null, status: 'inativo' },
+    ])
+
+    const service = new UserService(paraTipado(cliente))
+    await expect(service.autenticarViaSupabase(token)).rejects.toBeInstanceOf(ErroProibido)
+  })
+})
+
 describe('UserService.selecionarTipoNegocio', () => {
   it('só o admin da conta pode escolher o vertical', async () => {
     const cliente = criarClienteFake()
