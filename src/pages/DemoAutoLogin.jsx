@@ -40,7 +40,7 @@ export default function DemoAutoLogin() {
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-white tracking-tight">ALPHADATA</h1>
-          <p className="text-blue-100 mt-1 text-body">Ordens de Serviços</p>
+          <p className="text-blue-100 mt-1 text-body">Negócios</p>
         </div>
 
         <div className="bg-surface rounded-card shadow-cardHover p-8 text-center">

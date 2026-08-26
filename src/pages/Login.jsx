@@ -149,7 +149,7 @@ export default function Login({ apenasCadastro = false }) {
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-white tracking-tight">ALPHADATA</h1>
-          <p className="text-blue-100 mt-1 text-body">Ordens de Serviços</p>
+          <p className="text-blue-100 mt-1 text-body">Negócios</p>
         </div>
 
         <div className="bg-surface rounded-card shadow-cardHover p-6 sm:p-8">
@@ -299,7 +299,7 @@ export default function Login({ apenasCadastro = false }) {
                     className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn py-2.5 text-body font-semibold transition-colors disabled:opacity-60"
                   >
                     <IconLogin2 size={20} />
-                    {enviando ? 'Entrando...' : 'Entrar na ALPHADATA'}
+                    {enviando ? 'Entrando...' : 'Entrar no meu negócio'}
                   </button>
                 </form>
               ) : (
@@ -368,7 +368,7 @@ export default function Login({ apenasCadastro = false }) {
           )}
         </div>
 
-        <p className="text-center text-blue-100 text-label mt-6">© 2026 ALPHADATA - Ordens de Serviços</p>
+        <p className="text-center text-blue-100 text-label mt-6">© 2026 ALPHADATA - Negócios</p>
       </div>
     </div>
   )
