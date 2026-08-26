@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
+import { useBranding } from './useBranding'
 
 const AZUL_ALPHA = [0, 102, 204]
 
@@ -9,10 +10,10 @@ function timestamp() {
 }
 
 /**
- * Gera um PDF com cabeçalho ALPHADATA, filtros aplicados e uma tabela de dados.
+ * Gera um PDF com cabeçalho da marca da conta, filtros aplicados e uma tabela de dados.
  * colunas: string[] · linhas: array de arrays (mesma ordem das colunas)
  */
-function gerarPDF({ titulo, filtrosTexto = [], colunas, linhas, nomeArquivo }) {
+function gerarPDF({ titulo, filtrosTexto = [], colunas, linhas, nomeArquivo, nomeEmpresa }) {
   const doc = new jsPDF()
 
   doc.setFillColor(...AZUL_ALPHA)
@@ -20,7 +21,7 @@ function gerarPDF({ titulo, filtrosTexto = [], colunas, linhas, nomeArquivo }) {
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(16)
   doc.setFont('helvetica', 'bold')
-  doc.text('ALPHADATA', 14, 14)
+  doc.text(nomeEmpresa, 14, 14)
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
   doc.text(`Gerado em ${timestamp()}`, 196, 14, { align: 'right' })
@@ -61,10 +62,10 @@ function gerarPDF({ titulo, filtrosTexto = [], colunas, linhas, nomeArquivo }) {
 /**
  * Gera um Excel com 3 abas: Sumário (KPIs), Detalhes (tabela) e Gráficos (dados agregados).
  */
-function gerarExcel({ kpis = [], colunas, linhas, dadosGrafico = [], nomeArquivo }) {
+function gerarExcel({ kpis = [], colunas, linhas, dadosGrafico = [], nomeArquivo, nomeEmpresa }) {
   const wb = XLSX.utils.book_new()
 
-  const sumarioAoa = [['ALPHADATA - Sumário do Relatório'], [`Gerado em ${timestamp()}`], [], ['Indicador', 'Valor'], ...kpis.map((k) => [k.label, k.valor])]
+  const sumarioAoa = [[`${nomeEmpresa} - Sumário do Relatório`], [`Gerado em ${timestamp()}`], [], ['Indicador', 'Valor'], ...kpis.map((k) => [k.label, k.valor])]
   const wsSumario = XLSX.utils.aoa_to_sheet(sumarioAoa)
   wsSumario['!cols'] = [{ wch: 30 }, { wch: 20 }]
   XLSX.utils.book_append_sheet(wb, wsSumario, 'Sumário')
@@ -82,5 +83,9 @@ function gerarExcel({ kpis = [], colunas, linhas, dadosGrafico = [], nomeArquivo
 }
 
 export function usePDF() {
-  return { gerarPDF, gerarExcel }
+  const { nomeExibido } = useBranding()
+  return {
+    gerarPDF: (dados) => gerarPDF({ ...dados, nomeEmpresa: nomeExibido }),
+    gerarExcel: (dados) => gerarExcel({ ...dados, nomeEmpresa: nomeExibido }),
+  }
 }

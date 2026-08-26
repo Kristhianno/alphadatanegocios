@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { IconEye, IconStar } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useBranding } from '../../hooks/useBranding'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useClientes } from '../../hooks/useClientes'
 import Badge from '../../components/ui/Badge'
@@ -15,6 +16,7 @@ const labelClasse = 'text-label text-[#666] block mb-1'
 
 export default function Historico() {
   const { user } = useAuth()
+  const { nomeExibido } = useBranding()
   const { ordens } = useOrdensServico()
   const { clientes } = useClientes()
 
@@ -63,7 +65,7 @@ export default function Historico() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-h1 text-primary">Histórico de Ordens ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Histórico de Ordens {nomeExibido}</h1>
 
       <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap items-end gap-3">
         <div><label className={labelClasse}>De</label><input type="date" className={inputClasse} value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} /></div>

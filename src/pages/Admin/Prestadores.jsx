@@ -4,6 +4,7 @@ import { IconPlus, IconDotsVertical, IconHistory, IconEdit, IconTrash, IconStar 
 import { usePrestadores } from '../../hooks/usePrestadores'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useToast } from '../../hooks/useToast'
+import { useBranding } from '../../hooks/useBranding'
 import { ESPECIALIDADES } from '../../data/mock'
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
@@ -41,6 +42,7 @@ export default function Prestadores() {
   const { prestadores, addPrestador, updatePrestador, deletePrestador } = usePrestadores()
   const { ordens } = useOrdensServico()
   const { showToast } = useToast()
+  const { nomeExibido } = useBranding()
 
   const [filtroEspecialidade, setFiltroEspecialidade] = useState('')
   const [filtroStatus, setFiltroStatus] = useState('')
@@ -123,7 +125,7 @@ export default function Prestadores() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-h1 text-primary">Prestadores ALPHADATA</h1>
+        <h1 className="text-h1 text-primary">Prestadores {nomeExibido}</h1>
         <button onClick={abrirNovo} className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn px-4 py-2 text-body font-medium">
           <IconPlus size={18} /> Novo Prestador
         </button>

@@ -4,6 +4,7 @@ import { IconAlertTriangle, IconConfetti } from '@tabler/icons-react'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useClientes } from '../../hooks/useClientes'
 import { useToast } from '../../hooks/useToast'
+import { useBranding } from '../../hooks/useBranding'
 import { STATUS_OS, CONSENTIMENTO_ITENS } from '../../data/mock'
 import Checklist from '../../components/Checklist'
 import CameraCapture from '../../components/CameraCapture'
@@ -20,6 +21,7 @@ export default function Detalhes() {
   const { getById, updateOrdem } = useOrdensServico()
   const { clientes } = useClientes()
   const { showToast } = useToast()
+  const { nomeExibido } = useBranding()
 
   const ordem = getById(id)
   const [aba, setAba] = useState('Informações')
@@ -134,7 +136,7 @@ export default function Detalhes() {
                       updateOrdem(id, { consentimento: novo })
                     }}
                   />
-                  {texto}
+                  {texto.replace('ALPHADATA', nomeExibido)}
                 </label>
               ))}
             </div>
@@ -178,11 +180,11 @@ export default function Detalhes() {
         )}
       </div>
 
-      <Modal open={modalTermos} onClose={() => setModalTermos(false)} title="Termos de Serviço ALPHADATA" size="md">
+      <Modal open={modalTermos} onClose={() => setModalTermos(false)} title={`Termos de Serviço ${nomeExibido}`} size="md">
         <p className="text-body text-[#333] whitespace-pre-line">
           Ao autorizar este serviço, o cliente concorda com a execução do trabalho descrito nesta ordem, incluindo o
           registro fotográfico da execução e a coleta de assinatura digital como comprovante de conclusão.
-          A ALPHADATA garante a qualidade do serviço prestado conforme os padrões técnicos vigentes e se
+          A {nomeExibido} garante a qualidade do serviço prestado conforme os padrões técnicos vigentes e se
           compromete a manter a confidencialidade dos dados do cliente, em conformidade com a LGPD.
         </p>
       </Modal>

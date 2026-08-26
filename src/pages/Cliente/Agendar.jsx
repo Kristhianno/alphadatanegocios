@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconCalendarPlus } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useBranding } from '../../hooks/useBranding'
 import { useClientes } from '../../hooks/useClientes'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useToast } from '../../hooks/useToast'
@@ -22,6 +23,7 @@ const labelClasse = 'text-label text-[#666] block mb-1'
 
 export default function Agendar() {
   const { user } = useAuth()
+  const { nomeExibido } = useBranding()
   const { getById } = useClientes()
   const { addOrdem } = useOrdensServico()
   const { showToast } = useToast()
@@ -72,7 +74,7 @@ export default function Agendar() {
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
-      <h1 className="text-h1 text-primary">Agendar Novo Serviço ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Agendar Novo Serviço {nomeExibido}</h1>
 
       <form onSubmit={handleSubmit} className="bg-surface rounded-card shadow-card p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">

@@ -34,6 +34,12 @@ const schemaAtualizarPerfil = z.object({
   email: z.string().email().optional(),
 })
 
+/** ~260KB de imagem crua, já em base64 (data URL) — suficiente pra um logotipo, sem deixar o jsonb da conta inchar. */
+const schemaAtualizarBranding = z.object({
+  nomeEmpresa: z.string().trim().min(2, 'Informe o nome da empresa.').optional(),
+  logoUrl: z.string().trim().min(1).max(350_000, 'Imagem muito grande. Escolha um arquivo menor.').nullable().optional(),
+})
+
 const schemaTrocarSenha = z.object({
   senhaAtual: z.string().min(1, 'Informe a senha atual.'),
   novaSenha: z.string().min(8, 'A nova senha precisa de ao menos 8 caracteres.'),
@@ -121,9 +127,13 @@ export class UserService {
   /**
    * Define o vertical de negócio da conta. Só o admin que abriu a
    * conta pode fazer essa escolha (é uma decisão estrutural, não
-   * operacional).
+   * operacional). `descricaoPersonalizada` só se aplica a tipoNegocio
+   * === 'outro' — é o texto livre que o admin digitou pra descrever o
+   * negócio dele quando nenhuma vertical pronta encaixa; fica em
+   * `configuracoesGerais.tipoNegocioDescricao`, mesmo raciocínio do
+   * `logoUrl` em {@link atualizarBranding}.
    */
-  async selecionarTipoNegocio(userId: string, tipoNegocio: TipoNegocio): Promise<Conta> {
+  async selecionarTipoNegocio(userId: string, tipoNegocio: TipoNegocio, descricaoPersonalizada?: string): Promise<Conta> {
     if (!TIPOS_NEGOCIO_VALIDOS.includes(tipoNegocio)) {
       throw new ErroValidacao(`Tipo de negócio inválido: "${tipoNegocio}".`)
     }
@@ -140,7 +150,14 @@ export class UserService {
     }
 
     await this.contas.atualizar(conta.id, { tipoNegocio })
-    const contaComConfiguracoes = await this.criarConfiguracoesIniciais(userId, tipoNegocio)
+    let contaComConfiguracoes = await this.criarConfiguracoesIniciais(userId, tipoNegocio)
+
+    const descricao = descricaoPersonalizada?.trim()
+    if (tipoNegocio === 'outro' && descricao) {
+      contaComConfiguracoes = await this.contas.atualizar(conta.id, {
+        configuracoesGerais: { ...contaComConfiguracoes.configuracoesGerais, tipoNegocioDescricao: descricao },
+      })
+    }
 
     logger.info({ contaId: conta.id, tipoNegocio }, 'Tipo de negócio selecionado.')
     return contaComConfiguracoes
@@ -168,6 +185,36 @@ export class UserService {
     const validado = schemaAtualizarPerfil.parse(dados)
     await this.buscarUsuarioOuFalhar(userId)
     return this.usuarios.atualizar(userId, validado)
+  }
+
+  /**
+   * Personalização de marca da conta: nome fantasia (reaproveita
+   * `nomeEmpresa`) e logotipo (guardado em `configuracoesGerais.logoUrl`,
+   * sem coluna própria — mesmo raciocínio de {@link criarConfiguracoesIniciais}).
+   * Só o admin da conta altera, porque é branding pra toda a equipe, não
+   * uma preferência pessoal. `logoUrl` aceita `null` pra remover o logo
+   * salvo — por isso a checagem de presença usa `dados` (input bruto) e
+   * não `validado` (zod omite chaves opcionais ausentes do resultado).
+   */
+  async atualizarBranding(userId: string, dados: { nomeEmpresa?: string; logoUrl?: string | null }): Promise<Conta> {
+    const validado = schemaAtualizarBranding.parse(dados)
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+    if (usuario.papel !== 'admin') {
+      throw new ErroProibido('Apenas o administrador da conta pode personalizar a marca.')
+    }
+
+    const conta = await this.contas.buscarPorId(usuario.contaId)
+    if (!conta) throw new ErroNaoEncontrado('Conta', usuario.contaId)
+
+    const atualizacao: Partial<Conta> = {}
+    if (validado.nomeEmpresa !== undefined) atualizacao.nomeEmpresa = validado.nomeEmpresa
+    if ('logoUrl' in dados) {
+      atualizacao.configuracoesGerais = { ...conta.configuracoesGerais, logoUrl: validado.logoUrl ?? null }
+    }
+
+    const contaAtualizada = await this.contas.atualizar(conta.id, atualizacao)
+    logger.info({ contaId: conta.id }, 'Marca da conta personalizada (nome/logo).')
+    return contaAtualizada
   }
 
   /**

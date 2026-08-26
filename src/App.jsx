@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import DemoAutoLogin from './pages/DemoAutoLogin'
 import CadastroCliente from './pages/CadastroCliente'
 import TrocarSenha from './pages/TrocarSenha'
 import EmConstrucao from './pages/EmConstrucao'
@@ -13,6 +14,7 @@ import AdminClientes from './pages/Admin/Clientes'
 import AdminPrestadores from './pages/Admin/Prestadores'
 import AdminRelatorios from './pages/Admin/Relatorios'
 import AdminConfiguracoes from './pages/Admin/Configuracoes'
+import AdminPerfil from './pages/Admin/Perfil'
 import PedidosConfeitaria from './pages/Admin/PedidosConfeitaria'
 import EventosSalao from './pages/Admin/EventosSalao'
 import SessoesFotografia from './pages/Admin/SessoesFotografia'
@@ -63,6 +65,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<RaizApp />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/demo/:vertical" element={<DemoAutoLogin />} />
       <Route path="/cadastro-cliente/:token" element={<CadastroCliente />} />
       <Route path="/trocar-senha" element={<TrocarSenha />} />
 
@@ -73,6 +76,7 @@ export default function App() {
         <Route path="prestadores" element={<AdminPrestadores />} />
         <Route path="relatorios" element={<AdminRelatorios />} />
         <Route path="configuracoes" element={<AdminConfiguracoes />} />
+        <Route path="perfil" element={<AdminPerfil />} />
         <Route path="agendamentos" element={<AgendamentosVertical />} />
         <Route path="catalogo" element={<CatalogoVertical />} />
         <Route path="contratos" element={<ContratosVertical />} />

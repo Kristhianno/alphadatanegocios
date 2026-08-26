@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconMapPin, IconLayoutGrid, IconList, IconSearch } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useBranding } from '../../hooks/useBranding'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { STATUS_OS } from '../../data/mock'
 import Badge from '../../components/ui/Badge'
@@ -21,6 +22,7 @@ const labelClasse = 'text-label text-[#666] block mb-1'
 
 export default function MinhasOrdens() {
   const { user } = useAuth()
+  const { nomeExibido } = useBranding()
   const { ordens } = useOrdensServico()
   const navigate = useNavigate()
 
@@ -43,7 +45,7 @@ export default function MinhasOrdens() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-h1 text-primary">Minhas Ordens ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Minhas Ordens {nomeExibido}</h1>
 
       <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap items-end gap-3">
         <div className="flex-1 min-w-[180px]">

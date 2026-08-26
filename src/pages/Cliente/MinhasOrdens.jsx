@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { IconMapPin, IconUserCircle } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useBranding } from '../../hooks/useBranding'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useToast } from '../../hooks/useToast'
 import { STATUS_OS } from '../../data/mock'
@@ -15,6 +16,7 @@ const labelClasse = 'text-label text-[#666] block mb-1'
 
 export default function MinhasOrdens() {
   const { user } = useAuth()
+  const { nomeExibido } = useBranding()
   const { ordens, updateOrdem } = useOrdensServico()
   const { showToast } = useToast()
 
@@ -47,7 +49,7 @@ export default function MinhasOrdens() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-h1 text-primary">Minhas Ordens ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Minhas Ordens {nomeExibido}</h1>
 
       <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap items-end gap-3">
         <div>

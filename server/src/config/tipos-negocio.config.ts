@@ -67,7 +67,7 @@ const CONFEITARIA: TipoNegocioConfig = {
 
 const SALAO_FESTAS: TipoNegocioConfig = {
   tipo: 'salao_festas',
-  nome: 'Salão de Festas',
+  nome: 'Salão de Festas / Eventos',
   icone: '🎉',
   modulos: ['pacotes', 'eventos', 'equipe', 'equipamentos', 'financeiro'],
   menuItems: [

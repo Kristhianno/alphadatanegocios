@@ -45,10 +45,17 @@ router.patch('/perfil', autenticar, async (c) => {
   return c.json(usuario, 200)
 })
 
+/** Personalização de marca (nome fantasia + logo) — admin altera, reflete pra toda a equipe da conta. */
+router.patch('/conta', autenticar, requererPapel('admin'), async (c) => {
+  const dados = (await c.req.json()) as { nomeEmpresa?: string; logoUrl?: string | null }
+  const conta = await userService().atualizarBranding(c.get('usuarioAutenticado').id, dados)
+  return c.json(conta, 200)
+})
+
 /** Só o admin que abriu a conta escolhe o vertical — a própria UserService.selecionarTipoNegocio também garante isso, esta checagem aqui é só pra falhar mais cedo. */
 router.post('/selecionar-tipo-negocio', autenticar, requererPapel('admin'), async (c) => {
-  const { tipoNegocio } = (await c.req.json()) as Record<string, unknown>
-  const conta = await userService().selecionarTipoNegocio(c.get('usuarioAutenticado').id, tipoNegocio as TipoNegocio)
+  const { tipoNegocio, descricaoPersonalizada } = (await c.req.json()) as Record<string, unknown>
+  const conta = await userService().selecionarTipoNegocio(c.get('usuarioAutenticado').id, tipoNegocio as TipoNegocio, descricaoPersonalizada as string | undefined)
   return c.json(conta, 200)
 })
 

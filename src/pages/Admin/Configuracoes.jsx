@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '../../hooks/useToast'
+import { useBranding } from '../../hooks/useBranding'
 
 const STORAGE_KEY = 'alphadata_config'
-const PADRAO = { notifEmail: true, notifSMS: false, notifWhatsapp: true, nomeEmpresa: 'ALPHADATA', corPrimaria: '#0066CC' }
+const PADRAO = { notifEmail: true, notifSMS: false, notifWhatsapp: true, corPrimaria: '#0066CC' }
 
 export default function Configuracoes() {
   const { showToast } = useToast()
+  const { nomeExibido } = useBranding()
+
   const [config, setConfig] = useState(() => {
     try {
       return { ...PADRAO, ...JSON.parse(localStorage.getItem(STORAGE_KEY)) }
@@ -25,18 +28,9 @@ export default function Configuracoes() {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
-      <h1 className="text-h1 text-primary">Configurações ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Configurações {nomeExibido}</h1>
 
       <form onSubmit={salvar} className="bg-surface rounded-card shadow-card p-5 flex flex-col gap-5">
-        <div>
-          <label className="text-label text-[#666] block mb-1">Nome da Empresa</label>
-          <input
-            className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-            value={config.nomeEmpresa}
-            onChange={(e) => setConfig((c) => ({ ...c, nomeEmpresa: e.target.value }))}
-          />
-        </div>
-
         <div>
           <p className="text-label text-[#666] mb-2">Notificações do sistema</p>
           <div className="flex flex-col gap-2">

@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconLock, IconDownload, IconLogout, IconEdit } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useBranding } from '../../hooks/useBranding'
 import { useClientes } from '../../hooks/useClientes'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useToast } from '../../hooks/useToast'
 import { usePDF } from '../../hooks/usePDF'
 import Modal from '../../components/ui/Modal'
+import PasswordInput from '../../components/ui/PasswordInput'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-[#999]'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -17,6 +19,7 @@ function chavePreferencias(clienteId) {
 
 export default function Perfil() {
   const { user, logout, trocarSenha } = useAuth()
+  const { nomeExibido } = useBranding()
   const { getById, updateCliente } = useClientes()
   const { ordens } = useOrdensServico()
   const { showToast } = useToast()
@@ -94,7 +97,7 @@ export default function Perfil() {
 
   function baixarDadosLGPD() {
     gerarPDF({
-      titulo: 'Meus Dados (LGPD) — ALPHADATA',
+      titulo: `Meus Dados (LGPD) — ${nomeExibido}`,
       filtrosTexto: [],
       colunas: ['Campo', 'Valor'],
       linhas: [
@@ -119,7 +122,7 @@ export default function Perfil() {
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
-      <h1 className="text-h1 text-primary">Meu Perfil ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Meu Perfil {nomeExibido}</h1>
 
       {/* Seção 1: Dados Pessoais */}
       <form onSubmit={salvarDados} className="bg-surface rounded-card shadow-card p-5 flex flex-col gap-4">
@@ -253,9 +256,9 @@ export default function Perfil() {
         }
       >
         <div className="flex flex-col gap-3">
-          <div><label className={labelClasse}>Senha Atual</label><input type="password" className={inputClasse} value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} /></div>
-          <div><label className={labelClasse}>Nova Senha</label><input type="password" className={inputClasse} value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} /></div>
-          <div><label className={labelClasse}>Confirmar Nova Senha</label><input type="password" className={inputClasse} value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} /></div>
+          <div><label className={labelClasse}>Senha Atual</label><PasswordInput className={inputClasse} value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} /></div>
+          <div><label className={labelClasse}>Nova Senha</label><PasswordInput className={inputClasse} value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} /></div>
+          <div><label className={labelClasse}>Confirmar Nova Senha</label><PasswordInput className={inputClasse} value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} /></div>
           {erroSenha && <p className="text-danger text-label">{erroSenha}</p>}
         </div>
       </Modal>

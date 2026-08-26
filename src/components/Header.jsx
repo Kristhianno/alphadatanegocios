@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { IconMenu2, IconUserCircle, IconChevronDown, IconLogout, IconSettings, IconUser } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
+import BrandMark from './BrandMark'
 
-export default function Header({ titulo, onToggleSidebar }) {
+export default function Header({ onToggleSidebar }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [menuAberto, setMenuAberto] = useState(false)
@@ -13,6 +14,11 @@ export default function Header({ titulo, onToggleSidebar }) {
     navigate('/login')
   }
 
+  function irPara(rota) {
+    setMenuAberto(false)
+    navigate(rota)
+  }
+
   return (
     <header className="bg-primary text-white sticky top-0 z-30 shadow-card">
       <div className="flex items-center justify-between px-4 sm:px-6 h-16">
@@ -20,10 +26,8 @@ export default function Header({ titulo, onToggleSidebar }) {
           <button className="md:hidden p-1" onClick={onToggleSidebar} aria-label="Abrir menu">
             <IconMenu2 size={24} />
           </button>
-          <span className="text-logo font-bold tracking-tight whitespace-nowrap">ALPHADATA</span>
+          <BrandMark textClassName="text-logo font-bold tracking-tight whitespace-nowrap" />
         </div>
-
-        <h1 className="hidden md:block text-body font-semibold absolute left-1/2 -translate-x-1/2">{titulo}</h1>
 
         <div className="relative">
           <button
@@ -42,12 +46,14 @@ export default function Header({ titulo, onToggleSidebar }) {
                   <p className="text-body font-semibold truncate">{user?.nome}</p>
                   <p className="text-label text-[#999] truncate">{user?.papel}</p>
                 </div>
-                <button className="w-full flex items-center gap-2 px-4 py-2.5 text-body hover:bg-primary-light text-left">
+                <button onClick={() => irPara(`/${user?.userType}/perfil`)} className="w-full flex items-center gap-2 px-4 py-2.5 text-body hover:bg-primary-light text-left">
                   <IconUser size={18} /> Perfil
                 </button>
-                <button className="w-full flex items-center gap-2 px-4 py-2.5 text-body hover:bg-primary-light text-left">
-                  <IconSettings size={18} /> Configurações
-                </button>
+                {user?.userType === 'admin' && (
+                  <button onClick={() => irPara('/admin/configuracoes')} className="w-full flex items-center gap-2 px-4 py-2.5 text-body hover:bg-primary-light text-left">
+                    <IconSettings size={18} /> Configurações
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-body hover:bg-red-50 text-danger text-left border-t border-muted-dark"
@@ -59,7 +65,6 @@ export default function Header({ titulo, onToggleSidebar }) {
           )}
         </div>
       </div>
-      <h1 className="md:hidden text-center text-label font-semibold pb-2 -mt-1">{titulo}</h1>
     </header>
   )
 }

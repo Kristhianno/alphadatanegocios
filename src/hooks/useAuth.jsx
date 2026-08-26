@@ -37,6 +37,7 @@ function montarSessao(usuario, conta) {
     deveTrocarSenha: usuario.deveTrocarSenha,
     tipoNegocio: conta?.tipoNegocio ?? null,
     nomeEmpresa: conta?.nomeEmpresa ?? null,
+    logoUrl: conta?.configuracoesGerais?.logoUrl ?? null,
     tecnicoId: ponte.tecnicoId ?? null,
     clienteId: ponte.clienteId ?? usuario.clienteId ?? null,
   }
@@ -92,13 +93,35 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function selecionarTipoNegocio(tipoNegocio) {
+  async function selecionarTipoNegocio(tipoNegocio, descricaoPersonalizada) {
     try {
-      const conta = await api.post('/auth/selecionar-tipo-negocio', { tipoNegocio })
+      const conta = await api.post('/auth/selecionar-tipo-negocio', { tipoNegocio, descricaoPersonalizada })
       setUser((u) => (u ? { ...u, tipoNegocio: conta.tipoNegocio, nomeEmpresa: conta.nomeEmpresa } : u))
       return { ok: true }
     } catch (erro) {
       return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao definir o tipo de negócio.' }
+    }
+  }
+
+  /** Personalização de marca (nome fantasia + logo) — só admin chama, ver PATCH /auth/conta. */
+  async function atualizarBranding(dados) {
+    try {
+      const conta = await api.patch('/auth/conta', dados)
+      setUser((u) => (u ? { ...u, nomeEmpresa: conta.nomeEmpresa, logoUrl: conta.configuracoesGerais?.logoUrl ?? null } : u))
+      return { ok: true }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao salvar a personalização.' }
+    }
+  }
+
+  /** Dados pessoais do login (nome/email) — distinto de atualizarBranding, que é da conta/empresa. */
+  async function atualizarPerfil(dados) {
+    try {
+      const usuario = await api.patch('/auth/perfil', dados)
+      setUser((u) => (u ? { ...u, nome: usuario.nome, email: usuario.email } : u))
+      return { ok: true }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao salvar o perfil.' }
     }
   }
 
@@ -118,7 +141,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, carregando, login, registrar, selecionarTipoNegocio, trocarSenha, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, carregando, login, registrar, selecionarTipoNegocio, atualizarBranding, atualizarPerfil, trocarSenha, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   )

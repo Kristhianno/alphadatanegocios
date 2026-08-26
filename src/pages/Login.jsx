@@ -2,31 +2,29 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconLogin2, IconUserPlus, IconArrowLeft } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
+import { TAMANHO_MAX_LOGO_BYTES } from '../hooks/useBranding'
 import { api } from '../services/api'
+import { CONTAS_DEMO_VERTICAIS, CHAVE_DEMO_VERTICAL_FIXADO } from '../data/demoContas'
+import PasswordInput from '../components/ui/PasswordInput'
 
 // Cada tipo de negócio tem sua própria conta demo (dados reais no
 // banco, semeados por server/scripts/seed-*.ts) — a de manutenção é a
 // única com histórico rico de Ordens de Serviço (checklist/fotos/
 // assinatura, ainda mockado no frontend); as outras 3 mostram um
 // dashboard e cadastro de clientes reais, com o menu lateral já
-// refletindo os módulos daquele vertical (ver Sidebar.jsx).
-const VERTICAIS_DEMO = [
-  { label: 'Manutenção', email: 'admin@alphadata.com', senha: 'admin123' },
-  { label: 'Confeitaria', email: 'confeitaria@alphadata.com', senha: 'admin123' },
-  { label: 'Salão de Festas', email: 'salaodefestas@alphadata.com', senha: 'admin123' },
-  { label: 'Fotografia', email: 'fotografia@alphadata.com', senha: 'admin123' },
-]
-
+// refletindo os módulos daquele vertical (ver Sidebar.jsx). Pra mandar
+// pra um cliente só o nicho dele (sem ele ver os outros 3 aqui), use o
+// link /demo/:slug — ver DemoAutoLogin.jsx.
 const OUTROS_PAPEIS_DEMO = [
   { label: 'Técnico', email: 'tecnico@alphadata.com', senha: 'tecnico123' },
   { label: 'Cliente', email: 'cliente@alphadata.com', senha: 'cliente123' },
 ]
 
 export default function Login() {
-  const { login, registrar, selecionarTipoNegocio } = useAuth()
+  const { login, registrar, selecionarTipoNegocio, atualizarBranding } = useAuth()
   const navigate = useNavigate()
 
-  // 'entrar' | 'criar-conta' | 'escolher-negocio'
+  // 'entrar' | 'criar-conta' | 'escolher-negocio' | 'escolher-logo'
   const [modo, setModo] = useState('entrar')
 
   const [email, setEmail] = useState('')
@@ -38,6 +36,16 @@ export default function Login() {
   const [sessaoPendente, setSessaoPendente] = useState(null)
   const [tiposNegocio, setTiposNegocio] = useState([])
   const [tipoEscolhido, setTipoEscolhido] = useState(null)
+  const [mostrarCampoOutro, setMostrarCampoOutro] = useState(false)
+  const [descricaoOutro, setDescricaoOutro] = useState('')
+
+  const [logoPreview, setLogoPreview] = useState(null)
+  const [salvandoLogo, setSalvandoLogo] = useState(false)
+
+  // Se esse navegador já entrou uma vez por /demo/:vertical, trava a
+  // seção de teste nesse nicho só — inclusive depois de um logout.
+  const [verticalFixado] = useState(() => CONTAS_DEMO_VERTICAIS.find((v) => v.slug === localStorage.getItem(CHAVE_DEMO_VERTICAL_FIXADO)) ?? null)
+  const contasDemoParaExibir = verticalFixado ? [verticalFixado] : CONTAS_DEMO_VERTICAIS
 
   useEffect(() => {
     if (modo === 'escolher-negocio' && tiposNegocio.length === 0) {
@@ -88,13 +96,61 @@ export default function Login() {
     setModo('escolher-negocio')
   }
 
-  async function handleEscolherNegocio(tipo) {
+  async function handleEscolherNegocio(tipo, descricaoPersonalizada) {
     setErro('')
     setTipoEscolhido(tipo)
-    const resultado = await selecionarTipoNegocio(tipo)
+    const resultado = await selecionarTipoNegocio(tipo, descricaoPersonalizada)
     if (!resultado.ok) {
       setErro(resultado.error)
       setTipoEscolhido(null)
+      return
+    }
+    setModo('escolher-logo')
+  }
+
+  function handleClickTipo(t) {
+    if (t.tipo === 'outro') {
+      setErro('')
+      setMostrarCampoOutro(true)
+      return
+    }
+    handleEscolherNegocio(t.tipo)
+  }
+
+  function confirmarOutro(e) {
+    e.preventDefault()
+    if (!descricaoOutro.trim()) return
+    handleEscolherNegocio('outro', descricaoOutro.trim())
+  }
+
+  function selecionarLogo(e) {
+    const arquivo = e.target.files?.[0]
+    e.target.value = ''
+    if (!arquivo) return
+    if (!arquivo.type.startsWith('image/')) {
+      setErro('Escolha um arquivo de imagem.')
+      return
+    }
+    if (arquivo.size > TAMANHO_MAX_LOGO_BYTES) {
+      setErro('Imagem muito grande. Escolha um arquivo de até 300KB.')
+      return
+    }
+    setErro('')
+    const leitor = new FileReader()
+    leitor.onload = () => setLogoPreview(leitor.result)
+    leitor.readAsDataURL(arquivo)
+  }
+
+  async function confirmarLogo() {
+    if (!logoPreview) {
+      irParaDashboard(sessaoPendente)
+      return
+    }
+    setSalvandoLogo(true)
+    const resultado = await atualizarBranding({ logoUrl: logoPreview })
+    setSalvandoLogo(false)
+    if (!resultado.ok) {
+      setErro(resultado.error)
       return
     }
     irParaDashboard(sessaoPendente)
@@ -120,23 +176,95 @@ export default function Login() {
               <p className="text-h2 text-[#1a1a1a] mb-1">Qual é o seu tipo de negócio?</p>
               <p className="text-body text-[#666] mb-5">Isso define o menu e os módulos que você vai usar. Só pode ser escolhido uma vez.</p>
 
-              <div className="grid grid-cols-1 gap-2">
-                {tiposNegocio.map((t) => (
-                  <button
-                    key={t.tipo}
-                    type="button"
-                    disabled={!!tipoEscolhido}
-                    onClick={() => handleEscolherNegocio(t.tipo)}
-                    className="flex items-center gap-3 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60"
-                  >
-                    <span className="text-2xl leading-none">{t.icone}</span>
-                    <span className="text-body font-medium text-[#1a1a1a]">{tipoEscolhido === t.tipo ? 'Configurando...' : t.nome}</span>
-                  </button>
-                ))}
-                {tiposNegocio.length === 0 && !erro && <p className="text-body text-[#999] text-center py-4">Carregando opções...</p>}
-              </div>
+              {!mostrarCampoOutro ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {tiposNegocio.map((t) => (
+                    <button
+                      key={t.tipo}
+                      type="button"
+                      disabled={!!tipoEscolhido}
+                      onClick={() => handleClickTipo(t)}
+                      className="flex items-center gap-3 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60"
+                    >
+                      <span className="text-body font-medium text-[#1a1a1a]">{tipoEscolhido === t.tipo ? 'Configurando...' : t.nome}</span>
+                    </button>
+                  ))}
+                  {tiposNegocio.length === 0 && !erro && <p className="text-body text-[#999] text-center py-4">Carregando opções...</p>}
+                </div>
+              ) : (
+                <form onSubmit={confirmarOutro} className="flex flex-col gap-3">
+                  <div>
+                    <label className="text-label text-[#666] block mb-1">Qual é o tipo do seu negócio?</label>
+                    <input
+                      autoFocus
+                      required
+                      value={descricaoOutro}
+                      onChange={(e) => setDescricaoOutro(e.target.value)}
+                      placeholder="Ex: Pet Shop, Barbearia..."
+                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setMostrarCampoOutro(false); setDescricaoOutro(''); setErro('') }}
+                      className="flex-1 rounded-btn border border-muted-dark py-2.5 text-body text-[#666] hover:bg-muted"
+                    >
+                      Voltar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!!tipoEscolhido}
+                      className="flex-1 rounded-btn bg-primary hover:bg-primary-dark text-white py-2.5 text-body font-semibold disabled:opacity-60"
+                    >
+                      {tipoEscolhido ? 'Configurando...' : 'Confirmar'}
+                    </button>
+                  </div>
+                </form>
+              )}
 
               {erro && <p className="text-danger text-label mt-3">{erro}</p>}
+            </>
+          ) : modo === 'escolher-logo' ? (
+            <>
+              <p className="text-h2 text-[#1a1a1a] mb-1">Personalize sua marca</p>
+              <p className="text-body text-[#666] mb-5">
+                Escolha o logotipo do seu negócio — ele substitui "ALPHADATA" na plataforma pra você e sua equipe. Dá pra fazer isso depois também, em Configurações.
+              </p>
+
+              <div className="flex items-center gap-4 mb-5">
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logotipo" className="h-20 w-20 rounded-card object-cover border border-muted-dark" />
+                ) : (
+                  <div className="h-20 w-20 rounded-card border border-dashed border-muted-dark flex items-center justify-center text-label text-[#999] text-center px-1">
+                    sem logo
+                  </div>
+                )}
+                <label className="cursor-pointer rounded-btn px-3 py-1.5 text-label font-medium bg-muted border border-muted-dark hover:bg-primary-light text-center">
+                  Escolher imagem
+                  <input type="file" accept="image/*" className="hidden" onChange={selecionarLogo} />
+                </label>
+              </div>
+
+              {erro && <p className="text-danger text-label mb-3">{erro}</p>}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => irParaDashboard(sessaoPendente)}
+                  className="flex-1 rounded-btn border border-muted-dark py-2.5 text-body text-[#666] hover:bg-muted"
+                >
+                  Pular por enquanto
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmarLogo}
+                  disabled={salvandoLogo}
+                  className="flex-1 rounded-btn bg-primary hover:bg-primary-dark text-white py-2.5 text-body font-semibold disabled:opacity-60"
+                >
+                  {salvandoLogo ? 'Salvando...' : 'Concluir'}
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -170,8 +298,7 @@ export default function Login() {
                   </div>
                   <div>
                     <label className="text-label text-[#666] block mb-1">Senha</label>
-                    <input
-                      type="password"
+                    <PasswordInput
                       required
                       value={senha}
                       onChange={(e) => setSenha(e.target.value)}
@@ -192,9 +319,11 @@ export default function Login() {
                   </button>
 
                   <div className="pt-3 border-t border-muted-dark">
-                    <p className="text-label text-[#999] text-center mb-2">Testar um tipo de negócio (dados reais)</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {VERTICAIS_DEMO.map((v) => (
+                    <p className="text-label text-[#999] text-center mb-2">
+                      {verticalFixado ? 'Conta de demonstração' : 'Testar um tipo de negócio (dados reais)'}
+                    </p>
+                    <div className={`grid gap-2 ${verticalFixado ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {contasDemoParaExibir.map((v) => (
                         <button
                           key={v.email}
                           type="button"
@@ -206,19 +335,23 @@ export default function Login() {
                       ))}
                     </div>
 
-                    <p className="text-label text-[#999] text-center mt-3 mb-2">Outros papéis (conta de manutenção)</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {OUTROS_PAPEIS_DEMO.map((cred) => (
-                        <button
-                          key={cred.email}
-                          type="button"
-                          onClick={() => preencherDemo(cred)}
-                          className="rounded-btn border border-muted-dark py-1.5 text-label text-primary hover:bg-primary-light"
-                        >
-                          {cred.label}
-                        </button>
-                      ))}
-                    </div>
+                    {(!verticalFixado || verticalFixado.slug === 'manutencao') && (
+                      <>
+                        <p className="text-label text-[#999] text-center mt-3 mb-2">Outros papéis (conta de manutenção)</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {OUTROS_PAPEIS_DEMO.map((cred) => (
+                            <button
+                              key={cred.email}
+                              type="button"
+                              onClick={() => preencherDemo(cred)}
+                              className="rounded-btn border border-muted-dark py-1.5 text-label text-primary hover:bg-primary-light"
+                            >
+                              {cred.label}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </form>
               ) : (
@@ -246,8 +379,7 @@ export default function Login() {
                   </div>
                   <div>
                     <label className="text-label text-[#666] block mb-1">Senha</label>
-                    <input
-                      type="password"
+                    <PasswordInput
                       required
                       minLength={8}
                       value={senha}
@@ -272,7 +404,7 @@ export default function Login() {
             </>
           )}
 
-          {modo === 'escolher-negocio' && sessaoPendente && (
+          {modo === 'escolher-negocio' && sessaoPendente && !mostrarCampoOutro && (
             <button
               onClick={() => { setModo('entrar'); setSessaoPendente(null) }}
               className="flex items-center gap-1.5 text-label text-primary hover:underline mt-4"

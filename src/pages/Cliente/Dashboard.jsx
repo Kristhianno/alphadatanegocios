@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconCalendarEvent, IconListCheck, IconStar, IconHeadset, IconCalendarPlus } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useBranding } from '../../hooks/useBranding'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import KpiCard from '../../components/ui/KpiCard'
 import Badge from '../../components/ui/Badge'
@@ -10,6 +11,7 @@ import StarRating from '../../components/ui/StarRating'
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const { nomeExibido } = useBranding()
   const { ordens } = useOrdensServico()
   const navigate = useNavigate()
   const [modalSuporte, setModalSuporte] = useState(false)
@@ -33,7 +35,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-h1 text-primary">Bem-vindo à ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Bem-vindo à {nomeExibido}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <KpiCard
@@ -96,7 +98,7 @@ export default function Dashboard() {
         <IconCalendarPlus size={20} /> Agendar Novo Serviço
       </button>
 
-      <Modal open={modalSuporte} onClose={() => setModalSuporte(false)} title="Suporte ALPHADATA" size="sm">
+      <Modal open={modalSuporte} onClose={() => setModalSuporte(false)} title={`Suporte ${nomeExibido}`} size="sm">
         <div className="flex flex-col gap-2 text-body">
           <p><span className="text-[#666]">Telefone:</span> (11) 4002-8922</p>
           <p><span className="text-[#666]">Email:</span> suporte@alphadata.com</p>

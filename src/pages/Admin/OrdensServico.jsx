@@ -4,6 +4,7 @@ import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useClientes } from '../../hooks/useClientes'
 import { usePrestadores } from '../../hooks/usePrestadores'
 import { useToast } from '../../hooks/useToast'
+import { useBranding } from '../../hooks/useBranding'
 import { STATUS_OS } from '../../data/mock'
 import Kanban from '../../components/Kanban'
 import FormularioOS from '../../components/FormularioOS'
@@ -20,6 +21,7 @@ export default function OrdensServico() {
   const { clientes } = useClientes()
   const { prestadores } = usePrestadores()
   const { showToast } = useToast()
+  const { nomeExibido } = useBranding()
 
   const [filtros, setFiltros] = useState(FILTROS_INICIAIS)
   const [modalCriar, setModalCriar] = useState(false)
@@ -63,7 +65,7 @@ export default function OrdensServico() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-h1 text-primary">Ordens de Serviço ALPHADATA</h1>
+        <h1 className="text-h1 text-primary">Ordens de Serviço {nomeExibido}</h1>
         <button
           onClick={() => setModalCriar(true)}
           className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn px-4 py-2 text-body font-medium"
@@ -120,7 +122,7 @@ export default function OrdensServico() {
       />
 
       {/* Modal Nova Ordem */}
-      <Modal open={modalCriar} onClose={() => setModalCriar(false)} title="Nova Ordem ALPHADATA" size="lg">
+      <Modal open={modalCriar} onClose={() => setModalCriar(false)} title={`Nova Ordem ${nomeExibido}`} size="lg">
         <FormularioOS onSubmit={handleCriar} onCancel={() => setModalCriar(false)} />
       </Modal>
 

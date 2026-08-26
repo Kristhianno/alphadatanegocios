@@ -5,6 +5,7 @@ import { useClientes } from '../../hooks/useClientes'
 import { usePrestadores } from '../../hooks/usePrestadores'
 import { useToast } from '../../hooks/useToast'
 import { usePDF } from '../../hooks/usePDF'
+import { useBranding } from '../../hooks/useBranding'
 import { STATUS_OS } from '../../data/mock'
 import Badge from '../../components/ui/Badge'
 
@@ -29,6 +30,7 @@ export default function Relatorios() {
   const { prestadores } = usePrestadores()
   const { showToast } = useToast()
   const { gerarPDF, gerarExcel } = usePDF()
+  const { nomeExibido } = useBranding()
 
   const [filtros, setFiltros] = useState(FILTROS_INICIAIS)
   const [relatorios, setRelatorios] = useState(carregarRelatorios)
@@ -127,7 +129,7 @@ export default function Relatorios() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-h1 text-primary">Relatórios ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Relatórios {nomeExibido}</h1>
 
       <div className="bg-surface rounded-card shadow-card p-5">
         <h2 className="text-h2 text-[#1a1a1a] mb-4">Gerador de Relatórios</h2>

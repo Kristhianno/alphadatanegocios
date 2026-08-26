@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { IconCalendarEvent, IconCurrencyReal, IconTarget, IconClock, IconPlayerPlay, IconMapPin } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useBranding } from '../../hooks/useBranding'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { STATUS_OS, STATUS_CORES } from '../../data/mock'
 import KpiCard from '../../components/ui/KpiCard'
@@ -10,6 +11,7 @@ import Badge from '../../components/ui/Badge'
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const { nomeExibido } = useBranding()
   const { ordens } = useOrdensServico()
   const navigate = useNavigate()
 
@@ -38,7 +40,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6 pb-20">
-      <h1 className="text-h1 text-primary">Meu Dashboard ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Meu Dashboard {nomeExibido}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <KpiCard icon={IconCalendarEvent} valor={ordensHoje.length} label="Ordens Hoje" sublabel="Programadas para hoje" cor="azul" />

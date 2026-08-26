@@ -4,6 +4,7 @@ import { Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tool
 import { IconListCheck, IconCurrencyReal, IconUsers, IconTarget, IconFileTypePdf } from '@tabler/icons-react'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { usePrestadores } from '../../hooks/usePrestadores'
+import { useBranding } from '../../hooks/useBranding'
 import { STATUS_OS, STATUS_CORES, RECEITA_MENSAL } from '../../data/mock'
 import KpiCard from '../../components/ui/KpiCard'
 import Badge from '../../components/ui/Badge'
@@ -12,6 +13,7 @@ import DataTable from '../../components/ui/DataTable'
 export default function Dashboard() {
   const { ordens } = useOrdensServico()
   const { prestadores } = usePrestadores()
+  const { nomeExibido } = useBranding()
   const navigate = useNavigate()
 
   const mesAtual = new Date().getMonth()
@@ -45,7 +47,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-h1 text-primary">Dashboard ALPHADATA</h1>
+        <h1 className="text-h1 text-primary">Dashboard {nomeExibido}</h1>
         <button
           onClick={() => navigate('/admin/relatorios')}
           className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn px-4 py-2 text-body font-medium"

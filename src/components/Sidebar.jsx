@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
+import BrandMark from './BrandMark'
 
 const MENUS = {
   admin: [
@@ -114,7 +115,7 @@ export default function Sidebar({ userType, aberta, onClose }) {
         ${aberta ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
         <div className="flex items-center justify-between p-4 md:hidden">
-          <span className="text-logo font-bold text-primary">ALPHADATA</span>
+          <BrandMark textClassName="text-logo font-bold text-primary" />
           <button onClick={onClose} aria-label="Fechar menu"><IconX size={22} /></button>
         </div>
         <nav className="p-3 flex flex-col gap-1">

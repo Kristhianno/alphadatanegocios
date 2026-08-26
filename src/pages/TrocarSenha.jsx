@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconLock, IconKey } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
+import PasswordInput from '../components/ui/PasswordInput'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -61,15 +62,15 @@ export default function TrocarSenha() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label className={labelClasse}>{forcada ? 'Senha temporária' : 'Senha atual'}</label>
-              <input required type="password" className={inputClasse} value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
+              <PasswordInput required className={inputClasse} value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} />
             </div>
             <div>
               <label className={labelClasse}>Nova senha</label>
-              <input required type="password" minLength={8} className={inputClasse} value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} />
+              <PasswordInput required minLength={8} className={inputClasse} value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} />
             </div>
             <div>
               <label className={labelClasse}>Confirmar nova senha</label>
-              <input required type="password" minLength={8} className={inputClasse} value={confirmar} onChange={(e) => setConfirmar(e.target.value)} />
+              <PasswordInput required minLength={8} className={inputClasse} value={confirmar} onChange={(e) => setConfirmar(e.target.value)} />
             </div>
 
             {erro && <p className="text-danger text-label">{erro}</p>}

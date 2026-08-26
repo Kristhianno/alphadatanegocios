@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconLogout } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
+import { useBranding } from '../../hooks/useBranding'
 import { usePrestadores } from '../../hooks/usePrestadores'
 import { useToast } from '../../hooks/useToast'
 import StarRating from '../../components/ui/StarRating'
@@ -11,6 +12,7 @@ const labelClasse = 'text-label text-[#666] block mb-1'
 
 export default function Perfil() {
   const { user, logout } = useAuth()
+  const { nomeExibido } = useBranding()
   const { getById, updatePrestador } = usePrestadores()
   const { showToast } = useToast()
   const navigate = useNavigate()
@@ -33,7 +35,7 @@ export default function Perfil() {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
-      <h1 className="text-h1 text-primary">Meu Perfil ALPHADATA</h1>
+      <h1 className="text-h1 text-primary">Meu Perfil {nomeExibido}</h1>
 
       <div className="bg-surface rounded-card shadow-card p-5 flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-primary-light text-primary flex items-center justify-center text-2xl font-bold">

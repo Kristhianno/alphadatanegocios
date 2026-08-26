@@ -3,6 +3,7 @@ import { IconPlus, IconDotsVertical, IconHistory, IconEdit, IconTrash, IconMessa
 import { useClientes } from '../../hooks/useClientes'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useToast } from '../../hooks/useToast'
+import { useBranding } from '../../hooks/useBranding'
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
@@ -46,6 +47,7 @@ export default function Clientes() {
   const { clientes, addCliente, updateCliente, deleteCliente, gerarConviteCliente } = useClientes()
   const { ordens } = useOrdensServico()
   const { showToast } = useToast()
+  const { nomeExibido } = useBranding()
 
   const [busca, setBusca] = useState('')
   const [ordenarPor, setOrdenarPor] = useState('nome')
@@ -159,7 +161,7 @@ export default function Clientes() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-h1 text-primary">Clientes ALPHADATA</h1>
+        <h1 className="text-h1 text-primary">Clientes {nomeExibido}</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={handleGerarConvite}
