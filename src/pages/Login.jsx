@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { IconLogin2, IconUserPlus, IconArrowLeft, IconMail, IconLock, IconBuildingStore } from '@tabler/icons-react'
+import {
+  IconLogin2, IconUserPlus, IconArrowLeft, IconMail, IconLock,
+  IconBuildingStore, IconApps, IconUsers, IconPackage, IconChartBar, IconSettings,
+} from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { TAMANHO_MAX_LOGO_BYTES } from '../hooks/useBranding'
@@ -11,6 +14,14 @@ import fundoLogin from '../assets/login-fundo.jpeg'
 
 const inputComIconeClasse = 'w-full rounded-input border border-muted-dark pl-10 pr-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const iconeCampoClasse = 'absolute left-3 top-1/2 -translate-y-1/2 text-[#999] pointer-events-none'
+
+const FUNCIONALIDADES = [
+  { icon: IconApps, label: 'Gestão completa do seu negócio' },
+  { icon: IconUsers, label: 'Clientes, vendas e atendimentos' },
+  { icon: IconPackage, label: 'Estoque e produtos' },
+  { icon: IconChartBar, label: 'Relatórios e indicadores' },
+  { icon: IconSettings, label: 'Integrações e automação' },
+]
 
 function IconGoogle(props) {
   return (
@@ -168,10 +179,38 @@ export default function Login({ apenasCadastro = false }) {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 py-10 bg-cover bg-center"
+      className="min-h-screen bg-cover bg-center flex items-center justify-center p-4 py-10"
       style={{ backgroundImage: `url(${fundoLogin})` }}
     >
-      <div className="w-full max-w-md bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-6 sm:p-8">
+      <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-14">
+        {/* Mensagem de marketing — sempre visível; ganha um fundo translúcido
+            até "lg" (onde ainda pode cair sobre qualquer trecho do fundo),
+            e fica transparente em telas largas (onde sobra a ilustração
+            clara à esquerda do cartão, como na referência). */}
+        <div className="w-full max-w-md lg:max-w-lg lg:flex-1 bg-white/85 backdrop-blur-sm lg:bg-transparent lg:backdrop-blur-none rounded-card lg:rounded-none p-6 lg:p-0 text-center lg:text-left shadow-cardHover lg:shadow-none">
+          <div className="leading-none">
+            <span className="text-3xl sm:text-4xl font-extrabold text-[#2691d7]">ALPHADATA</span>{' '}
+            <span className="text-3xl sm:text-4xl font-extrabold text-[#191e29]">Negócios</span>
+          </div>
+          <p className="text-xl sm:text-2xl font-semibold text-[#191e29] mt-3">um sistema</p>
+          <p className="text-xl sm:text-2xl font-semibold text-[#2691d7] underline decoration-2 underline-offset-4 inline-block">vários negócios</p>
+          <p className="text-body text-[#444] mt-4 max-w-sm mx-auto lg:mx-0">
+            Soluções completas para simplificar, organizar e fazer seu negócio crescer.
+          </p>
+
+          <div className="hidden lg:grid grid-cols-3 xl:grid-cols-5 gap-4 mt-10 max-w-md">
+            {FUNCIONALIDADES.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex flex-col items-center text-center gap-2">
+                <div className="w-12 h-12 rounded-card bg-white shadow-card flex items-center justify-center text-[#2691d7]">
+                  <Icon size={22} />
+                </div>
+                <span className="text-label text-[#191e29]">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="w-full max-w-md shrink-0 bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-6 sm:p-8">
         <div className="flex justify-center mb-6">
           <AlphaDataLogo />
         </div>
@@ -427,6 +466,7 @@ export default function Login({ apenasCadastro = false }) {
           )}
 
           <p className="text-center text-[#999] text-label mt-6">© 2026 ALPHADATA - Negócios</p>
+        </div>
       </div>
     </div>
   )
