@@ -65,6 +65,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<RaizApp />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Login apenasCadastro />} />
       <Route path="/demo/:vertical" element={<DemoAutoLogin />} />
       <Route path="/cadastro-cliente/:token" element={<CadastroCliente />} />
       <Route path="/trocar-senha" element={<TrocarSenha />} />

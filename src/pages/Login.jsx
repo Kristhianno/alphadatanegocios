@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { IconLogin2, IconUserPlus, IconArrowLeft } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { TAMANHO_MAX_LOGO_BYTES } from '../hooks/useBranding'
@@ -20,12 +20,15 @@ const OUTROS_PAPEIS_DEMO = [
   { label: 'Cliente', email: 'cliente@alphadata.com', senha: 'cliente123' },
 ]
 
-export default function Login() {
+// Rota /cadastro usa apenasCadastro=true: link "limpo" pra mandar pra
+// gente de fora — só o formulário de criar conta, sem aba "Entrar" nem
+// as contas de demonstração (essas continuam só em /login e /demo/:slug).
+export default function Login({ apenasCadastro = false }) {
   const { login, registrar, selecionarTipoNegocio, atualizarBranding } = useAuth()
   const navigate = useNavigate()
 
   // 'entrar' | 'criar-conta' | 'escolher-negocio' | 'escolher-logo'
-  const [modo, setModo] = useState('entrar')
+  const [modo, setModo] = useState(apenasCadastro ? 'criar-conta' : 'entrar')
 
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -268,22 +271,24 @@ export default function Login() {
             </>
           ) : (
             <>
-              <div className="flex rounded-btn bg-muted p-1 mb-6">
-                <button
-                  onClick={() => { setModo('entrar'); setErro('') }}
-                  className={`flex-1 rounded-btn py-2 text-body font-medium transition-colors ${modo === 'entrar' ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
-                >
-                  Entrar
-                </button>
-                <button
-                  onClick={() => { setModo('criar-conta'); setErro('') }}
-                  className={`flex-1 rounded-btn py-2 text-body font-medium transition-colors ${modo === 'criar-conta' ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
-                >
-                  Criar conta
-                </button>
-              </div>
+              {!apenasCadastro && (
+                <div className="flex rounded-btn bg-muted p-1 mb-6">
+                  <button
+                    onClick={() => { setModo('entrar'); setErro('') }}
+                    className={`flex-1 rounded-btn py-2 text-body font-medium transition-colors ${modo === 'entrar' ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
+                  >
+                    Entrar
+                  </button>
+                  <button
+                    onClick={() => { setModo('criar-conta'); setErro('') }}
+                    className={`flex-1 rounded-btn py-2 text-body font-medium transition-colors ${modo === 'criar-conta' ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
+                  >
+                    Criar conta
+                  </button>
+                </div>
+              )}
 
-              {modo === 'entrar' ? (
+              {modo === 'entrar' && !apenasCadastro ? (
                 <form onSubmit={handleEntrar} className="flex flex-col gap-4">
                   <div>
                     <label className="text-label text-[#666] block mb-1">Email</label>
@@ -399,6 +404,12 @@ export default function Login() {
                     <IconUserPlus size={20} />
                     {enviando ? 'Criando conta...' : 'Criar minha conta'}
                   </button>
+
+                  {apenasCadastro && (
+                    <Link to="/login" className="text-label text-primary hover:underline text-center">
+                      Já tem uma conta? Entrar
+                    </Link>
+                  )}
                 </form>
               )}
             </>
