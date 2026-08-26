@@ -171,10 +171,10 @@ export default function Login({ apenasCadastro = false }) {
 
   return (
     <div
-      className="min-h-screen flex bg-cover bg-center"
+      className="min-h-screen relative bg-cover bg-center"
       style={{ backgroundImage: `url(${fundoLogin})` }}
     >
-      <div className="flex-1 flex items-center justify-center p-4 py-10">
+      <div className="absolute inset-0 z-10 flex items-center justify-center p-4 py-10">
       <div className="w-full max-w-2xl bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-6 sm:p-10">
         <div className="flex justify-center mb-6">
           <AlphaDataLogo />
@@ -437,7 +437,7 @@ export default function Login({ apenasCadastro = false }) {
       {/* Coluna de fotos à direita — imagens próprias (não é a mesma foto de
           fundo recortada por bg-cover), pra cada uma aparecer completa,
           nunca cortada pela metade. Some abaixo de "md" por falta de espaço. */}
-      <div className="hidden md:flex w-[38%] lg:w-[34%] flex-col">
+      <div className="hidden md:flex absolute inset-y-0 right-0 w-[38%] lg:w-[34%] flex-col">
         <img src={foto1} alt="" className="flex-1 w-full object-cover" />
         <img src={foto2} alt="" className="flex-1 w-full object-cover" />
         <img src={foto3} alt="" className="flex-1 w-full object-cover" />
