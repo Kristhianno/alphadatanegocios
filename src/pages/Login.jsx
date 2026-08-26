@@ -438,9 +438,9 @@ export default function Login({ apenasCadastro = false }) {
           fundo recortada por bg-cover), pra cada uma aparecer completa,
           nunca cortada pela metade. Some abaixo de "md" por falta de espaço. */}
       <div className="hidden md:flex absolute inset-y-0 right-0 w-[38%] lg:w-[34%] flex-col">
-        <img src={foto1} alt="" className="flex-1 w-full object-cover" />
-        <img src={foto2} alt="" className="flex-1 w-full object-cover" />
-        <img src={foto3} alt="" className="flex-1 w-full object-cover" />
+        <img src={foto1} alt="" className="flex-1 min-h-0 w-full object-cover" />
+        <img src={foto2} alt="" className="flex-1 min-h-0 w-full object-cover" />
+        <img src={foto3} alt="" className="flex-1 min-h-0 w-full object-cover" />
       </div>
     </div>
   )

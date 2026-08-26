@@ -4,6 +4,10 @@ import { IconAlertTriangle } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { CONTAS_DEMO_VERTICAIS, CHAVE_DEMO_VERTICAL_FIXADO } from '../data/demoContas'
 import AlphaDataLogo from '../components/AlphaDataLogo'
+import fundoLogin from '../assets/login-fundo.jpeg'
+import foto1 from '../assets/login-foto-1.jpeg'
+import foto2 from '../assets/login-foto-2.jpeg'
+import foto3 from '../assets/login-foto-3.jpeg'
 
 /**
  * Link de demonstração de um único nicho — pra mandar pro cliente sem
@@ -37,13 +41,16 @@ export default function DemoAutoLogin() {
   }, [conta, login, navigate])
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary via-blue-600 to-primary-dark">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
-          <AlphaDataLogo variant="branco" />
-        </div>
+    <div
+      className="min-h-screen relative bg-cover bg-center"
+      style={{ backgroundImage: `url(${fundoLogin})` }}
+    >
+      <div className="absolute inset-0 z-10 flex items-center justify-center p-4 py-10">
+        <div className="w-full max-w-md bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-8 text-center">
+          <div className="flex justify-center mb-6">
+            <AlphaDataLogo />
+          </div>
 
-        <div className="bg-surface rounded-card shadow-cardHover p-8 text-center">
           {!conta ? (
             <div className="flex flex-col items-center gap-3 py-4">
               <IconAlertTriangle size={40} className="text-danger" />
@@ -69,6 +76,12 @@ export default function DemoAutoLogin() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="hidden md:flex absolute inset-y-0 right-0 w-[38%] lg:w-[34%] flex-col">
+        <img src={foto1} alt="" className="flex-1 min-h-0 w-full object-cover" />
+        <img src={foto2} alt="" className="flex-1 min-h-0 w-full object-cover" />
+        <img src={foto3} alt="" className="flex-1 min-h-0 w-full object-cover" />
       </div>
     </div>
   )
