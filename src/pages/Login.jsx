@@ -1,27 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import {
-  IconLogin2, IconUserPlus, IconArrowLeft, IconMail, IconLock,
-  IconBuildingStore, IconApps, IconUsers, IconPackage, IconChartBar, IconSettings,
-} from '@tabler/icons-react'
+import { IconLogin2, IconUserPlus, IconArrowLeft, IconMail, IconLock, IconBuildingStore } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { TAMANHO_MAX_LOGO_BYTES } from '../hooks/useBranding'
 import { api } from '../services/api'
 import PasswordInput from '../components/ui/PasswordInput'
 import AlphaDataLogo from '../components/AlphaDataLogo'
-import LoginIllustration from '../components/LoginIllustration'
+import fundoLogin from '../assets/login-fundo.jpeg'
 
 const inputComIconeClasse = 'w-full rounded-input border border-muted-dark pl-10 pr-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const iconeCampoClasse = 'absolute left-3 top-1/2 -translate-y-1/2 text-[#999] pointer-events-none'
-
-const FUNCIONALIDADES = [
-  { icon: IconApps, label: 'Gestão completa do seu negócio' },
-  { icon: IconUsers, label: 'Clientes, vendas e atendimentos' },
-  { icon: IconPackage, label: 'Estoque e produtos' },
-  { icon: IconChartBar, label: 'Relatórios e indicadores' },
-  { icon: IconSettings, label: 'Integrações e automação' },
-]
 
 function IconGoogle(props) {
   return (
@@ -178,41 +167,14 @@ export default function Login({ apenasCadastro = false }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Painel de marketing — vira embutido no topo em telas pequenas */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-primary-light md:w-1/2 flex items-center justify-center px-6 py-10 md:p-16">
-        <LoginIllustration className="absolute inset-0 w-full h-full" />
-        <div className="relative z-10 max-w-md">
-          <div className="leading-none">
-            <span className="text-3xl sm:text-4xl font-extrabold text-[#2F7DE0]">ALPHADATA</span>
-            <br />
-            <span className="text-3xl sm:text-4xl font-extrabold text-[#1B2233]">Negócios</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-semibold text-[#1B2233] mt-4">um sistema</p>
-          <p className="text-xl sm:text-2xl font-semibold text-[#2F7DE0] underline decoration-2 underline-offset-4 inline-block">vários negócios</p>
-          <p className="text-body text-[#555] mt-4 max-w-xs">
-            Soluções completas para simplificar, organizar e fazer seu negócio crescer.
-          </p>
-
-          <div className="hidden sm:grid grid-cols-3 gap-4 mt-10">
-            {FUNCIONALIDADES.slice(0, 3).map(({ icon: Icon, label }) => (
-              <div key={label} className="flex flex-col items-center text-center gap-2">
-                <div className="w-12 h-12 rounded-card bg-white shadow-card flex items-center justify-center text-[#2F7DE0]">
-                  <Icon size={22} />
-                </div>
-                <span className="text-label text-[#1B2233]">{label}</span>
-              </div>
-            ))}
-          </div>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 py-10 bg-cover bg-center"
+      style={{ backgroundImage: `url(${fundoLogin})` }}
+    >
+      <div className="w-full max-w-md bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-6 sm:p-8">
+        <div className="flex justify-center mb-6">
+          <AlphaDataLogo />
         </div>
-      </div>
-
-      {/* Painel do formulário */}
-      <div className="flex-1 flex items-center justify-center p-4 py-10 bg-[#0E1A2B]">
-        <div className="w-full max-w-md bg-surface rounded-card shadow-cardHover p-6 sm:p-8">
-          <div className="flex justify-center mb-6">
-            <AlphaDataLogo />
-          </div>
 
           {modo === 'escolher-negocio' ? (
             <>
@@ -465,7 +427,6 @@ export default function Login({ apenasCadastro = false }) {
           )}
 
           <p className="text-center text-[#999] text-label mt-6">© 2026 ALPHADATA - Negócios</p>
-        </div>
       </div>
     </div>
   )
