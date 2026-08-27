@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { useToast } from '../../hooks/useToast'
 import { useBranding } from '../../hooks/useBranding'
 import { useAuth } from '../../hooks/useAuth'
-import { CHAVE_CONFIG, COR_PRIMARIA_PADRAO, aplicarCorPrimaria } from '../../utils/tema'
 
-const PADRAO = { notifEmail: true, notifSMS: false, notifWhatsapp: true, corPrimaria: COR_PRIMARIA_PADRAO }
+const CHAVE_CONFIG = 'alphadata_config'
+const PADRAO = { notifEmail: true, notifSMS: false, notifWhatsapp: true }
 
 // Espelha `nomeMarketing` de server/src/config/planos.config.ts, só pra exibição aqui.
 const NOME_MARKETING_PLANO = { startup: 'Starter', profissional: 'Pro', enterprise: 'Enterprise' }
@@ -71,11 +71,6 @@ export default function Configuracoes() {
     localStorage.setItem(CHAVE_CONFIG, JSON.stringify(config))
   }, [config])
 
-  function selecionarCor(cor) {
-    aplicarCorPrimaria(cor)
-    setConfig((c) => ({ ...c, corPrimaria: cor }))
-  }
-
   function salvar(e) {
     e.preventDefault()
     showToast('Configurações salvas com sucesso!')
@@ -101,14 +96,6 @@ export default function Configuracoes() {
                 {label}
               </label>
             ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-label text-[#666] block mb-1">Cor Primária</label>
-          <div className="flex items-center gap-3">
-            <input type="color" value={config.corPrimaria} onChange={(e) => selecionarCor(e.target.value)} className="w-12 h-9 rounded-input border border-muted-dark" />
-            <span className="text-body text-[#666]">{config.corPrimaria}</span>
           </div>
         </div>
 
