@@ -56,7 +56,7 @@ export default function Checkout() {
         </div>
         <div className="bg-surface rounded-card shadow-cardHover p-6 sm:p-8">
           <p className="text-h2 text-[#1a1a1a] mb-1">Seu teste grátis terminou</p>
-          <p className="text-body text-[#666] mb-6">Escolha um plano pra continuar usando o ALPHADATA. A cobrança começa imediatamente.</p>
+          <p className="text-body text-[#666] mb-6">Escolha um plano para continuar usando o ALPHADATA Negócios. A cobrança começa imediatamente.</p>
 
           {!planos && !erro && (
             <div className="flex justify-center py-8">
@@ -77,7 +77,9 @@ export default function Checkout() {
                     }`}
                   >
                     <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
-                    <span className="block text-label text-[#999]">{formatarPreco(p.precoMensalCentavos)}/mês</span>
+                    <span className="block text-label text-[#999]">
+                      {formatarPreco(ciclo === 'anual' ? p.precoAnualMensalCentavos : p.precoMensalCentavos)}/mês
+                    </span>
                   </button>
                 ))}
               </div>

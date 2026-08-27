@@ -451,7 +451,7 @@ export default function Login({ apenasCadastro = false }) {
                           >
                             <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
                             <span className="block text-label text-[#999]">
-                              {(p.precoMensalCentavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/mês
+                              {((cicloForm === 'anual' ? p.precoAnualMensalCentavos : p.precoMensalCentavos) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/mês
                             </span>
                           </button>
                         ))}
