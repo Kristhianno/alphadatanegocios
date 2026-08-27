@@ -9,10 +9,11 @@ function formatarPreco(centavos) {
   return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-// Tela obrigatória entre o onboarding e o dashboard pra quem veio de um
-// CTA de plano na landing (user.assinaturaPendente — ver Layout.jsx e
-// Login.jsx/irParaDashboard). Deixa trocar plano/ciclo antes de ir pro
-// Stripe, mas sempre parte do que foi escolhido na landing.
+// Só aparece quando o teste grátis local de 7 dias (sem cartão, ver
+// utils/trial.js e Configuracoes.jsx) já acabou e a conta ainda não tem
+// assinatura paga (user.assinaturaPendente — ver Layout.jsx/App.jsx).
+// Deixa escolher/trocar o plano/ciclo antes de ir pro Stripe, que aqui
+// sempre cobra na hora — sem novo período de teste (o de 7 dias já foi usado).
 export default function Checkout() {
   const { user, isAuthenticated, iniciarCheckout, logout } = useAuth()
   const navigate = useNavigate()
@@ -54,8 +55,8 @@ export default function Checkout() {
           <AlphaDataLogo variant="branco" />
         </div>
         <div className="bg-surface rounded-card shadow-cardHover p-6 sm:p-8">
-          <p className="text-h2 text-[#1a1a1a] mb-1">Só falta ativar seu teste grátis</p>
-          <p className="text-body text-[#666] mb-6">7 dias grátis, cancele quando quiser. Cobramos só depois que o teste terminar.</p>
+          <p className="text-h2 text-[#1a1a1a] mb-1">Seu teste grátis terminou</p>
+          <p className="text-body text-[#666] mb-6">Escolha um plano pra continuar usando o ALPHADATA. A cobrança começa imediatamente.</p>
 
           {!planos && !erro && (
             <div className="flex justify-center py-8">
@@ -105,7 +106,7 @@ export default function Checkout() {
                     <span className="font-semibold">{formatarPreco(preco)}/mês</span>
                     {ciclo === 'anual' && <span className="text-label text-[#666]"> — cobrado uma vez por ano</span>}
                   </p>
-                  <p className="text-label text-[#666] mt-0.5">7 dias grátis, depois cobrança automática. Cancele quando quiser.</p>
+                  <p className="text-label text-[#666] mt-0.5">Cobrança começa agora, no cartão informado. Cancele quando quiser.</p>
                 </div>
               )}
             </>

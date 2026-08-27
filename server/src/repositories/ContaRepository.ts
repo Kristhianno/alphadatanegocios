@@ -1,5 +1,6 @@
 import type { Cliente } from '../config/database.config.js'
 import type { Conta } from '../models/User.js'
+import { calcularAssinaturaPendente } from '../utils/assinatura.js'
 import { Repository, type LinhaBanco } from './Repository.js'
 
 export class ContaRepository extends Repository<Conta> {
@@ -8,7 +9,7 @@ export class ContaRepository extends Repository<Conta> {
   }
 
   protected paraDominio(linha: LinhaBanco): Conta {
-    return {
+    const base = {
       id: linha['id'] as string,
       nomeEmpresa: linha['nome_empresa'] as string,
       tipoNegocio: (linha['tipo_negocio'] as Conta['tipoNegocio']) ?? null,
@@ -23,6 +24,9 @@ export class ContaRepository extends Repository<Conta> {
       criadoEm: new Date(linha['criado_em'] as string),
       atualizadoEm: new Date(linha['atualizado_em'] as string),
     }
+    // Recalculado a cada leitura (não confia só no que está gravado) porque "o trial
+    // acabou" é um fato que muda sozinho com o relógio — ver utils/assinatura.ts.
+    return { ...base, assinaturaPendente: calcularAssinaturaPendente(base) }
   }
 
   protected paraLinha(dados: Partial<Conta>): LinhaBanco {

@@ -24,6 +24,11 @@ const schemaIniciarCheckout = z.object({
   plano: z.enum(['startup', 'profissional']).optional(),
   ciclo: z.enum(['mensal', 'anual']).optional(),
 })
+/** Troca de plano durante o trial (sem Stripe) — os dois são obrigatórios, diferente do checkout pago. */
+const schemaTrocarPlanoTrial = z.object({
+  plano: z.enum(['startup', 'profissional']),
+  ciclo: z.enum(['mensal', 'anual']),
+})
 
 router.post('/checkout', autenticar, requererPapel('admin'), carregarContexto, validar(schemaIniciarCheckout), async (c) => {
   const usuario = c.get('usuarioAutenticado')
@@ -35,6 +40,12 @@ router.post('/checkout', autenticar, requererPapel('admin'), carregarContexto, v
 router.post('/confirmar-checkout', autenticar, requererPapel('admin'), carregarContexto, validar(schemaConfirmarCheckout), async (c) => {
   const { sessionId } = c.get('dadosValidados') as z.infer<typeof schemaConfirmarCheckout>
   const conta = await billing().confirmarCheckout(c.get('conta').id, sessionId)
+  return c.json(conta, 200)
+})
+
+router.post('/trocar-plano-trial', autenticar, requererPapel('admin'), carregarContexto, validar(schemaTrocarPlanoTrial), async (c) => {
+  const { plano, ciclo } = c.get('dadosValidados') as z.infer<typeof schemaTrocarPlanoTrial>
+  const conta = await billing().trocarPlanoTrial(c.get('conta'), plano, ciclo)
   return c.json(conta, 200)
 })
 

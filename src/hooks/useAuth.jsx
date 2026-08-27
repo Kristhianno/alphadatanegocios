@@ -189,6 +189,17 @@ export function AuthProvider({ children }) {
     }
   }
 
+  /** Troca plano/ciclo direto, sem Stripe — só vale durante o trial (ver Admin/Configuracoes). */
+  async function trocarPlanoTrial(plano, ciclo) {
+    try {
+      const conta = await api.post('/billing/trocar-plano-trial', { plano, ciclo })
+      setUser((u) => (u ? { ...u, plano: conta.plano, cicloCobranca: conta.cicloCobranca } : u))
+      return { ok: true }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao trocar de plano. Tente novamente.' }
+    }
+  }
+
   function logout() {
     clearToken()
     setUser(null)
@@ -209,6 +220,7 @@ export function AuthProvider({ children }) {
         iniciarCheckout,
         confirmarCheckout,
         abrirPortalAssinatura,
+        trocarPlanoTrial,
         logout,
         isAuthenticated: !!user,
       }}

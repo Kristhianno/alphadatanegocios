@@ -60,7 +60,7 @@ export interface Conta {
  * de propósito — só é definido depois, em selecionarTipoNegocio().
  */
 export type NovaContaInput = Pick<Conta, 'nomeEmpresa'> &
-  Partial<Pick<Conta, 'plano' | 'configuracoesGerais' | 'cicloCobranca' | 'assinaturaPendente'>>
+  Partial<Pick<Conta, 'plano' | 'configuracoesGerais' | 'cicloCobranca' | 'assinaturaPendente' | 'trialTerminaEm'>>
 
 /**
  * Um login dentro de uma conta. Espelha 1:1 a tabela `usuarios`,

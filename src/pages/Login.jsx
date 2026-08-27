@@ -81,6 +81,12 @@ export default function Login({ apenasCadastro = false }) {
   const [logoPreview, setLogoPreview] = useState(null)
   const [salvandoLogo, setSalvandoLogo] = useState(false)
 
+  // Quem não veio de um CTA de plano na landing (planoEscolhido) ainda
+  // precisa poder escolher — mesmo pro teste grátis. Default Starter/mensal.
+  const [planos, setPlanos] = useState([])
+  const [planoForm, setPlanoForm] = useState('startup')
+  const [cicloForm, setCicloForm] = useState('mensal')
+
   useEffect(() => {
     if (modo === 'escolher-negocio' && tiposNegocio.length === 0) {
       api
@@ -89,6 +95,15 @@ export default function Login({ apenasCadastro = false }) {
         .catch(() => setErro('Não foi possível carregar os tipos de negócio.'))
     }
   }, [modo, tiposNegocio.length])
+
+  useEffect(() => {
+    if (modo === 'criar-conta' && !planoEscolhido && planos.length === 0) {
+      api
+        .get('/config/planos-disponiveis', { comAuth: false })
+        .then(setPlanos)
+        .catch(() => {})
+    }
+  }, [modo, planoEscolhido, planos.length])
 
   function irParaDashboard(sessao) {
     if (sessao.assinaturaPendente) {
@@ -124,7 +139,7 @@ export default function Login({ apenasCadastro = false }) {
       return
     }
     setEnviando(true)
-    const resultado = await registrar(email, senha, nomeEmpresa, planoEscolhido ?? undefined, cicloEscolhido ?? undefined)
+    const resultado = await registrar(email, senha, nomeEmpresa, planoEscolhido ?? planoForm, cicloEscolhido ?? cicloForm)
     setEnviando(false)
     if (!resultado.ok) {
       setErro(resultado.error)
@@ -339,8 +354,8 @@ export default function Login({ apenasCadastro = false }) {
                 {modo === 'entrar' && !apenasCadastro
                   ? 'Faça login para acessar seu negócio'
                   : planoEscolhido
-                    ? `Plano ${NOME_MARKETING_PLANO[planoEscolhido] ?? ''} escolhido — falta só criar sua conta para começar o teste grátis de 7 dias`
-                    : 'Comece a organizar seu negócio hoje'}
+                    ? `Plano ${NOME_MARKETING_PLANO[planoEscolhido] ?? ''} escolhido — falta só criar sua conta para começar o teste grátis de 7 dias, sem cartão de crédito`
+                    : 'Comece a organizar seu negócio hoje — 7 dias grátis, sem cartão de crédito'}
               </p>
 
               {!apenasCadastro && (
@@ -421,6 +436,41 @@ export default function Login({ apenasCadastro = false }) {
                 </form>
               ) : (
                 <form onSubmit={handleCriarConta} className="flex flex-col gap-4">
+                  {!planoEscolhido && planos.length > 0 && (
+                    <div>
+                      <label className="text-label text-[#666] block mb-1">Escolha seu plano</label>
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        {planos.map((p) => (
+                          <button
+                            key={p.plano}
+                            type="button"
+                            onClick={() => setPlanoForm(p.plano)}
+                            className={`rounded-card border px-3 py-2 text-left transition-colors ${
+                              planoForm === p.plano ? 'border-primary bg-primary-light' : 'border-muted-dark hover:bg-muted'
+                            }`}
+                          >
+                            <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
+                            <span className="block text-label text-[#999]">
+                              {(p.precoMensalCentavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/mês
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex rounded-btn bg-muted p-1">
+                        {[['mensal', 'Mensal'], ['anual', 'Anual']].map(([valor, rotulo]) => (
+                          <button
+                            key={valor}
+                            type="button"
+                            onClick={() => setCicloForm(valor)}
+                            className={`flex-1 rounded-btn py-1.5 text-label font-medium transition-colors ${cicloForm === valor ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
+                          >
+                            {rotulo}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <label className="text-label text-[#666] block mb-1">Nome da empresa</label>
                     <div className="relative">

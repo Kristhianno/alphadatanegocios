@@ -19,6 +19,9 @@ import { logger } from '../utils/logger.js'
 
 const TIPOS_NEGOCIO_VALIDOS = ['confeitaria', 'salao_festas', 'fotografia_video', 'manutencao', 'outro'] as const
 
+/** Duração do teste grátis (local, sem Stripe) — ver criarUsuario/autenticarViaSupabase. */
+const DURACAO_TRIAL_MS = 7 * 24 * 60 * 60 * 1000
+
 const schemaCriarUsuario = z.object({
   email: z.string().email('Email inválido.'),
   senha: z.string().min(8, 'A senha precisa de ao menos 8 caracteres.'),
@@ -77,16 +80,16 @@ export class UserService {
    * primeiro login, com papel 'admin'. tipoNegocio é escolhido depois,
    * em {@link selecionarTipoNegocio} — por isso não é parâmetro aqui.
    *
-   * `plano`/`ciclo` vêm preenchidos quando o cadastro nasceu de um CTA
-   * de plano na landing page (senão a conta nasce em 'startup', sem
-   * ciclo definido). De um jeito ou de outro toda conta nova nasce com
-   * `assinaturaPendente: true`, que trava o dashboard (Layout.jsx) até
-   * o checkout no Stripe ser concluído — disparado só depois do
-   * onboarding (ver Login.jsx/irParaDashboard e Checkout.jsx), onde dá
-   * pra escolher/trocar plano e ciclo antes de pagar. Garante que toda
-   * conta sempre passa pelo teste grátis de 7 dias via Stripe, então
-   * sempre tem um `stripeCustomerId` — sem isso o Customer Portal
-   * (upgrade/downgrade em Admin/Configuracoes) não tem o que gerenciar.
+   * `plano`/`ciclo` já vêm escolhidos pela pessoa no formulário de
+   * cadastro (ver Login.jsx) — sempre com um valor, mesmo pra quem não
+   * veio de um CTA de plano na landing (default 'startup'/'mensal'
+   * neste caso). O teste grátis de 7 dias roda inteiramente local, sem
+   * Stripe e sem pedir cartão: `trialTerminaEm` é gravado aqui mesmo,
+   * na hora do cadastro. `Conta.assinaturaPendente` (ver
+   * ContaRepository.paraDominio/utils/assinatura.ts) só vira `true`
+   * sozinho quando esse prazo passa sem uma assinatura paga ativa —
+   * é isso que trava o dashboard (Layout.jsx) e manda pra `/checkout`
+   * pedir cartão e escolher o plano final.
    */
   async criarUsuario(
     email: string,
@@ -104,8 +107,8 @@ export class UserService {
       nomeEmpresa: dados.nomeEmpresa,
       plano: dados.plano ?? 'startup',
       configuracoesGerais: {},
-      cicloCobranca: dados.ciclo,
-      assinaturaPendente: true,
+      cicloCobranca: dados.ciclo ?? 'mensal',
+      trialTerminaEm: new Date(Date.now() + DURACAO_TRIAL_MS),
     })
     const senhaHash = await hashSenha(dados.senha)
     let usuario = await this.usuarios.criar({
@@ -211,9 +214,16 @@ export class UserService {
     } else {
       const nomeFallback = identidade.email.split('@')[0] ?? 'Minha Empresa'
       const nomeEmpresa = (identidade.user_metadata?.['full_name'] as string | undefined)?.trim() || nomeFallback
-      // Mesmo raciocínio de criarUsuario: toda conta nova nasce com assinaturaPendente
-      // pra sempre passar pela escolha de plano/ciclo (Checkout.jsx) antes do dashboard.
-      conta = await this.contas.criar({ nomeEmpresa, plano: 'startup', configuracoesGerais: {}, assinaturaPendente: true })
+      // Mesmo raciocínio de criarUsuario: teste grátis local de 7 dias, sem Stripe.
+      // Plano/ciclo nascem no default (Starter/mensal) — dá pra trocar em
+      // Configurações a qualquer momento durante o trial, sem precisar de cartão.
+      conta = await this.contas.criar({
+        nomeEmpresa,
+        plano: 'startup',
+        configuracoesGerais: {},
+        cicloCobranca: 'mensal',
+        trialTerminaEm: new Date(Date.now() + DURACAO_TRIAL_MS),
+      })
       usuario = await this.usuarios.criar({
         contaId: conta.id,
         authUserId: identidade.id,

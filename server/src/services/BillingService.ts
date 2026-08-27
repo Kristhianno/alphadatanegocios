@@ -1,15 +1,20 @@
 /**
- * Comunicação com o Stripe: checkout do teste grátis de 7 dias, sync
- * de assinatura (checkout concluído + mudanças feitas no Customer
- * Portal) e abertura do Portal. `sincronizarAssinatura` é o único
- * lugar que escreve status/plano/ciclo vindos do Stripe na `Conta` —
- * chamado tanto por POST /billing/confirmar-checkout (assim que o
- * usuário volta do Checkout) quanto pelo webhook (fonte de verdade
- * assíncrona, cobre aba fechada antes de voltar e mudanças feitas
- * depois, direto no Portal). Sempre busca a subscription de novo no
- * Stripe (com o produto expandido) em vez de confiar no objeto que
- * veio dentro do evento do webhook — o metadata do produto (plano) só
- * vem populado com o expand.
+ * Comunicação com o Stripe: checkout pago (depois que o teste grátis
+ * local de 7 dias acaba, ver utils/assinatura.ts), sync de assinatura
+ * (checkout concluído + mudanças feitas no Customer Portal) e abertura
+ * do Portal. O teste grátis em si não passa por aqui — é só uma data
+ * (`Conta.trialTerminaEm`) gravada no cadastro; nenhuma cobrança nem
+ * cartão entram em jogo até esse prazo passar (ver trocarPlanoTrial,
+ * pra trocar de plano ENQUANTO o teste ainda está ativo).
+ *
+ * `sincronizarAssinatura` é o único lugar que escreve status/plano/ciclo
+ * vindos do Stripe na `Conta` — chamado tanto por POST
+ * /billing/confirmar-checkout (assim que o usuário volta do Checkout)
+ * quanto pelo webhook (fonte de verdade assíncrona, cobre aba fechada
+ * antes de voltar e mudanças feitas depois, direto no Portal). Sempre
+ * busca a subscription de novo no Stripe (com o produto expandido) em
+ * vez de confiar no objeto que veio dentro do evento do webhook — o
+ * metadata do produto (plano) só vem populado com o expand.
  */
 import Stripe from 'stripe'
 import type { Cliente } from '../config/database.config.js'
@@ -17,6 +22,7 @@ import { PLANOS_COM_CHECKOUT, obterStripePriceId } from '../config/planos.config
 import { getAppUrl, getStripe } from '../config/stripe.config.js'
 import type { CicloCobranca, Conta, Plano, StatusConta } from '../models/User.js'
 import { ContaRepository } from '../repositories/ContaRepository.js'
+import { trialAindaAtivo } from '../utils/assinatura.js'
 import { ErroProibido, ErroValidacao } from '../errors/AppError.js'
 import { logger } from '../utils/logger.js'
 
@@ -42,9 +48,12 @@ export class BillingService {
   }
 
   /**
-   * Cria a Checkout Session do teste grátis — conta já existe e já
-   * passou pelo onboarding (ver Login.jsx). `override` deixa a tela de
-   * /checkout trocar o plano/ciclo escolhido na landing antes de pagar
+   * Cria a Checkout Session de pagamento — só faz sentido depois que o
+   * teste grátis local acabou (ou pra contas antigas sem assinatura
+   * real, ver criarSessaoPortal). Sem `trial_period_days`: cobra
+   * imediatamente ao concluir, porque os 7 dias grátis já foram usados
+   * localmente antes de chegar aqui (ver utils/assinatura.ts). `override`
+   * deixa a tela de /checkout trocar o plano/ciclo antes de pagar
    * (persiste na conta antes de montar a sessão).
    */
   async criarSessaoCheckout(
@@ -74,7 +83,7 @@ export class BillingService {
     const params: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       line_items: [{ price: obterStripePriceId(contaAtual.plano, contaAtual.cicloCobranca), quantity: 1 }],
-      subscription_data: { trial_period_days: 7, metadata: { contaId: conta.id } },
+      subscription_data: { metadata: { contaId: conta.id } },
       client_reference_id: conta.id,
       success_url: `${appUrl}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/checkout`,
@@ -88,6 +97,27 @@ export class BillingService {
     const session = await getStripe().checkout.sessions.create(params)
     if (!session.url) throw new Error('Stripe não retornou a URL da sessão de checkout.')
     return { url: session.url }
+  }
+
+  /**
+   * Troca plano/ciclo direto na conta, sem Stripe — só vale ENQUANTO o
+   * teste grátis ainda está rodando e a conta ainda não tem uma
+   * assinatura real (nenhum cartão envolvido). Depois que o trial
+   * acaba, ou se já existe `stripeCustomerId`, a troca de plano passa a
+   * ser via criarSessaoCheckout/criarSessaoPortal — daí sim envolve
+   * pagamento.
+   */
+  async trocarPlanoTrial(conta: Conta, plano: Plano, ciclo: CicloCobranca): Promise<Conta> {
+    if (conta.stripeCustomerId) {
+      throw new ErroValidacao('Esta conta já tem uma assinatura no Stripe — use "Mudar de plano" para trocar por lá.')
+    }
+    if (!trialAindaAtivo(conta.trialTerminaEm)) {
+      throw new ErroValidacao('Seu teste grátis terminou — escolha um plano e informe os dados de pagamento para continuar.')
+    }
+    if (!PLANOS_COM_CHECKOUT.includes(plano)) {
+      throw new ErroValidacao(`O plano "${plano}" não tem checkout self-service — fale com o time comercial.`)
+    }
+    return this.contas.atualizar(conta.id, { plano, cicloCobranca: ciclo })
   }
 
   /** Chamado pela página /checkout/sucesso assim que o usuário volta do Stripe. */
@@ -104,10 +134,11 @@ export class BillingService {
 
   /**
    * Abre o Customer Portal — troca de cartão e upgrade/downgrade de plano em uma tela só
-   * (configurado em stripe-setup.ts). Contas antigas, criadas antes do checkout virar
-   * obrigatório pra toda conta nova (ver UserService.criarUsuario), podem chegar aqui sem
-   * `stripeCustomerId` — nesse caso manda pro checkout do plano atual em vez de falhar, pra
-   * sempre existir uma assinatura real pra gerenciar depois.
+   * (configurado em stripe-setup.ts). Só faz sentido pra quem já tem uma assinatura real no
+   * Stripe; sem `stripeCustomerId` (trial expirado sem nunca ter pago, ou conta antiga de
+   * antes do trial local existir) manda pro checkout do plano atual em vez de falhar, pra
+   * sempre existir uma assinatura real pra gerenciar depois. Trocar de plano AINDA no trial
+   * (sem cartão) é trocarPlanoTrial, não este método — ver Configuracoes.jsx.
    */
   async criarSessaoPortal(conta: Conta, emailAdmin: string): Promise<{ url: string }> {
     if (!conta.stripeCustomerId) {
