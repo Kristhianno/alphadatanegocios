@@ -7,11 +7,6 @@ import {
   IconMail,
   IconLock,
   IconBuildingStore,
-  IconLayoutGrid,
-  IconUsers,
-  IconPackage,
-  IconChartBar,
-  IconPlugConnected,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -27,17 +22,6 @@ import foto3 from '../assets/login-foto-3.jpeg'
 
 const inputComIconeClasse = 'w-full rounded-input border border-muted-dark pl-10 pr-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const iconeCampoClasse = 'absolute left-3 top-1/2 -translate-y-1/2 text-[#999] pointer-events-none'
-
-// Painel de marketing ao lado do cartão (só aparece em telas bem largas,
-// ver classe 2xl: abaixo disso não sobra espaço decente ao lado do
-// cartão maior + coluna de fotos, então o cartão fica sozinho centralizado).
-const PAINEL_RECURSOS = [
-  { Icon: IconLayoutGrid, texto: 'Gestão completa do seu negócio' },
-  { Icon: IconUsers, texto: 'Clientes, vendas e atendimentos' },
-  { Icon: IconPackage, texto: 'Estoque e produtos' },
-  { Icon: IconChartBar, texto: 'Relatórios e indicadores' },
-  { Icon: IconPlugConnected, texto: 'Integrações e automação' },
-]
 
 function IconGoogle(props) {
   return (
@@ -213,40 +197,6 @@ export default function Login({ apenasCadastro = false }) {
       style={{ backgroundImage: `url(${fundoLogin})` }}
     >
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-10 2xl:px-16 py-10 md:pr-[38%] lg:pr-[34%]">
-      <div className="w-full max-w-6xl flex items-center justify-center gap-6 xl:gap-10 2xl:gap-16">
-
-        {/* Painel de marketing — replica o template topNEGOCIOS.png. Some
-            abaixo de min-[900px] (não sobra espaço nem pro cartão sozinho
-            direito); dali pra cima encolhe em 3 passos (900/xl/2xl) em vez
-            de simplesmente aparecer inteiro só a partir de uma tela enorme. */}
-        <div className="hidden min-[900px]:flex flex-col shrink-0 w-[260px] xl:w-[320px] 2xl:w-[400px] bg-white/55 backdrop-blur-md rounded-card p-5 xl:p-6 2xl:p-7">
-          <div className="mb-5 2xl:mb-8">
-            <AlphaDataLogo />
-          </div>
-          <p className="text-3xl 2xl:text-5xl font-extrabold leading-none text-[#12203a]">Negócios</p>
-          <p className="text-xl 2xl:text-3xl font-extrabold leading-tight text-[#12203a] mt-2 2xl:mt-3">um sistema</p>
-          <p className="text-xl 2xl:text-3xl font-extrabold leading-tight text-primary relative inline-block w-fit">
-            vários negócios
-            <svg className="absolute left-0 -bottom-1 2xl:-bottom-1.5 w-full" height="8" viewBox="0 0 200 8" fill="none" preserveAspectRatio="none">
-              <path d="M2 5.5C40 1 120 1 198 5.5" stroke="#0066CC" strokeWidth="3" strokeLinecap="round" />
-            </svg>
-          </p>
-          <p className="text-label 2xl:text-body text-[#555] mt-4 2xl:mt-6 leading-relaxed">
-            Soluções completas para simplificar, organizar e fazer seu negócio crescer.
-          </p>
-
-          <div className="grid grid-cols-2 gap-x-4 2xl:gap-x-6 gap-y-4 2xl:gap-y-6 mt-6 2xl:mt-12">
-            {PAINEL_RECURSOS.map(({ Icon, texto }) => (
-              <div key={texto} className="flex flex-col items-start gap-1.5 2xl:gap-2">
-                <div className="h-8 w-8 2xl:h-11 2xl:w-11 rounded-input bg-primary-light flex items-center justify-center text-primary">
-                  <Icon size={18} />
-                </div>
-                <span className="text-label text-[#555] leading-snug">{texto}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Cartão de login/cadastro */}
         <div className="w-full max-w-2xl bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-6 sm:p-10">
         <div className="flex justify-center mb-6">
@@ -515,8 +465,6 @@ export default function Login({ apenasCadastro = false }) {
 
           <p className="text-center text-[#999] text-label mt-6">© 2026 ALPHADATA - Negócios</p>
         </div>
-
-      </div>
       </div>
 
       {/* Coluna de fotos à direita — imagens próprias (não é a mesma foto de
