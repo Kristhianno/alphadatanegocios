@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import { SalaoFestasService } from '../../../src/services/tipo-especifico/SalaoFestasService.js'
-import { ErroNaoEncontrado, ErroValidacao } from '../../../src/errors/AppError.js'
+import { ErroNaoEncontrado, ErroProibido, ErroValidacao } from '../../../src/errors/AppError.js'
 import { criarClienteFake, paraTipado } from '../../helpers/fakeSupabase.js'
 
 function prepararUsuario(cliente: ReturnType<typeof criarClienteFake>) {
@@ -130,6 +130,67 @@ describe('SalaoFestasService.calcularLucroEvento', () => {
     })
 
     expect(await service.calcularLucroEvento(evento.id)).toBe(0)
+  })
+})
+
+describe('SalaoFestasService.confirmarOrcamento', () => {
+  it('o evento nasce com status "orcamento"', async () => {
+    const cliente = criarClienteFake()
+    const userId = prepararUsuario(cliente)
+    const service = new SalaoFestasService(paraTipado(cliente))
+    const evento = await service.criarEvento(userId, {
+      clienteId: randomUUID(),
+      nomeEvento: 'Festa',
+      tipoEvento: 'outro',
+      dataEvento: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    })
+    expect(evento.status).toBe('orcamento')
+  })
+
+  it('rejeita quando o evento não pertence ao clienteId informado', async () => {
+    const cliente = criarClienteFake()
+    const userId = prepararUsuario(cliente)
+    const service = new SalaoFestasService(paraTipado(cliente))
+    const evento = await service.criarEvento(userId, {
+      clienteId: randomUUID(),
+      nomeEvento: 'Festa',
+      tipoEvento: 'outro',
+      dataEvento: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    })
+
+    await expect(service.confirmarOrcamento(evento.id, randomUUID())).rejects.toBeInstanceOf(ErroProibido)
+  })
+
+  it('confirma e transiciona o status pra "confirmado"', async () => {
+    const cliente = criarClienteFake()
+    const userId = prepararUsuario(cliente)
+    const service = new SalaoFestasService(paraTipado(cliente))
+    const clienteId = randomUUID()
+    const evento = await service.criarEvento(userId, {
+      clienteId,
+      nomeEvento: 'Festa',
+      tipoEvento: 'outro',
+      dataEvento: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    })
+
+    const confirmado = await service.confirmarOrcamento(evento.id, clienteId)
+    expect(confirmado.status).toBe('confirmado')
+  })
+
+  it('rejeita confirmar um evento que já não está mais em "orcamento"', async () => {
+    const cliente = criarClienteFake()
+    const userId = prepararUsuario(cliente)
+    const service = new SalaoFestasService(paraTipado(cliente))
+    const clienteId = randomUUID()
+    const evento = await service.criarEvento(userId, {
+      clienteId,
+      nomeEvento: 'Festa',
+      tipoEvento: 'outro',
+      dataEvento: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    })
+    await service.confirmarOrcamento(evento.id, clienteId)
+
+    await expect(service.confirmarOrcamento(evento.id, clienteId)).rejects.toBeInstanceOf(ErroValidacao)
   })
 })
 

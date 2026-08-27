@@ -4,9 +4,9 @@ import { useAuth } from '../../hooks/useAuth'
 import { usePersisted } from '../../hooks/usePersisted'
 import { useToast } from '../../hooks/useToast'
 import {
-  CONTRATOS_CONFEITARIA, CONTRATOS_SALAO, CONTRATOS_FOTOGRAFIA,
-  CLIENTES_CONFEITARIA, CLIENTES_SALAO, CLIENTES_FOTOGRAFIA,
-  PRODUTOS_CONFEITARIA, PACOTES_SALAO, PACOTES_FOTOGRAFIA,
+  CONTRATOS_CONFEITARIA, CONTRATOS_SALAO, CONTRATOS_FOTOGRAFIA, CONTRATOS_MANUTENCAO,
+  CLIENTES_CONFEITARIA, CLIENTES_SALAO, CLIENTES_FOTOGRAFIA, CLIENTES,
+  PRODUTOS_CONFEITARIA, PACOTES_SALAO, PACOTES_FOTOGRAFIA, TIPOS_SERVICO,
   STATUS_CONTRATO,
 } from '../../data/mock'
 import DataTable from '../../components/ui/DataTable'
@@ -33,6 +33,10 @@ const CONFIG_POR_VERTICAL = {
   fotografia_video: {
     storageKey: 'alphadata_contratos_fotografia', mock: CONTRATOS_FOTOGRAFIA, prefixoId: 'CTR-FT',
     clientes: CLIENTES_FOTOGRAFIA, pacotes: PACOTES_FOTOGRAFIA, campoPreco: 'precoBase', tituloItem: 'Pacote',
+  },
+  manutencao: {
+    storageKey: 'alphadata_contratos_manutencao', mock: CONTRATOS_MANUTENCAO, prefixoId: 'CTR-MN',
+    clientes: CLIENTES, pacotes: TIPOS_SERVICO, campoPreco: 'max', tituloItem: 'Tipo de Serviço',
   },
 }
 

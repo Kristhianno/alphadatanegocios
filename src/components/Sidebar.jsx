@@ -5,6 +5,7 @@ import {
   IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX, IconApps,
   IconCalendarEvent, IconCategory, IconClipboardList, IconBook2, IconPackage,
   IconConfetti, IconUsersGroup, IconCamera, IconVideo, IconPhoto, IconContract,
+  IconReportMoney, IconCalculator,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
@@ -14,6 +15,9 @@ const MENUS = {
   admin: [
     { to: '/admin/dashboard', label: 'Dashboard', icon: IconChartBar },
     { to: '/admin/ordens', label: 'Ordens de Serviço', icon: IconListCheck },
+    { to: '/admin/orcamentos', label: 'Orçamentos', icon: IconCalculator },
+    { to: '/admin/contratos', label: 'Contratos', icon: IconContract },
+    { to: '/admin/financeiro', label: 'Financeiro', icon: IconReportMoney },
     { to: '/admin/clientes', label: 'Clientes', icon: IconUsers },
     { to: '/admin/prestadores', label: 'Prestadores', icon: IconUserBolt },
     { to: '/admin/relatorios', label: 'Relatórios', icon: IconFileTypePdf },
@@ -28,6 +32,8 @@ const MENUS = {
   cliente: [
     { to: '/cliente/dashboard', label: 'Dashboard', icon: IconHome },
     { to: '/cliente/minhas-ordens', label: 'Minhas Ordens', icon: IconList },
+    { to: '/cliente/orcamentos', label: 'Orçamentos', icon: IconCalculator },
+    { to: '/cliente/contratos', label: 'Contratos', icon: IconContract },
     { to: '/cliente/agendar', label: 'Agendar', icon: IconCalendarPlus },
     { to: '/cliente/perfil', label: 'Perfil', icon: IconUser },
   ],
@@ -46,6 +52,8 @@ const ROTAS_REAIS_POR_ID_ADMIN = {
   agendamentos: '/admin/agendamentos',
   servicos: '/admin/catalogo',
   contratos: '/admin/contratos',
+  financeiro: '/admin/financeiro',
+  orcamentos: '/admin/orcamentos',
   pedidos: '/admin/confeitaria/pedidos',
   receitas: '/admin/confeitaria/receitas',
   estoque: '/admin/confeitaria/estoque',
@@ -70,6 +78,7 @@ const ROTAS_REAIS_POR_ID_CLIENTE = {
   eventos: '/cliente/meus-registros',
   sessoes: '/cliente/meus-registros',
   contratos: '/cliente/contratos',
+  orcamentos: '/cliente/orcamentos',
 }
 
 // Um ícone por item — antes todos caíam no mesmo IconApps genérico.
@@ -79,6 +88,8 @@ const ICONES_POR_ID = {
   agendamentos: IconCalendarEvent,
   servicos: IconCategory,
   contratos: IconContract,
+  financeiro: IconReportMoney,
+  orcamentos: IconCalculator,
   pedidos: IconClipboardList,
   receitas: IconBook2,
   estoque: IconPackage,

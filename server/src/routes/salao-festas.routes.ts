@@ -2,9 +2,10 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { getSupabase } from '../config/database.config.js'
 import { SalaoFestasService } from '../services/tipo-especifico/SalaoFestasService.js'
-import { autenticar } from '../middleware/auth.middleware.js'
+import { autenticar, requererPapel } from '../middleware/auth.middleware.js'
 import { carregarContexto, exigirTipoNegocio } from '../middleware/contexto-negocio.middleware.js'
 import { validar, validarUuidParam } from '../middleware/validacao.middleware.js'
+import { ErroProibido } from '../errors/AppError.js'
 import type { AppEnv } from '../types/hono.js'
 
 const router = new Hono<AppEnv>()
@@ -51,6 +52,14 @@ router.post('/eventos/:eventoId/checklist', ...protegido, validarUuidParam('even
 router.post('/eventos/:eventoId/finalizar', ...protegido, validarUuidParam('eventoId'), validar(schemaFinalizar), async (c) => {
   const { fotos } = c.get('dadosValidados') as z.infer<typeof schemaFinalizar>
   const evento = await salaoFestasService().finalizarEvento(c.req.param('eventoId') as string, fotos)
+  return c.json(evento, 200)
+})
+
+/** O próprio cliente confirma — clienteId vem do JWT, nunca do body, mesmo motivo documentado em manutencao.routes.ts. */
+router.post('/eventos/:eventoId/confirmar-orcamento', ...protegido, requererPapel('cliente'), validarUuidParam('eventoId'), async (c) => {
+  const clienteId = c.get('usuarioAutenticado').clienteId
+  if (!clienteId) throw new ErroProibido('Este login não está vinculado a um cliente.')
+  const evento = await salaoFestasService().confirmarOrcamento(c.req.param('eventoId') as string, clienteId)
   return c.json(evento, 200)
 })
 

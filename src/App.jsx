@@ -25,6 +25,8 @@ import SessoesFotografia from './pages/Admin/SessoesFotografia'
 import AgendamentosVertical from './pages/Admin/AgendamentosVertical'
 import CatalogoVertical from './pages/Admin/CatalogoVertical'
 import ContratosVertical from './pages/Admin/ContratosVertical'
+import Financeiro from './pages/Admin/Financeiro'
+import AdminOrcamentos from './pages/Admin/Orcamentos'
 import ReceitasConfeitaria from './pages/Admin/ReceitasConfeitaria'
 import EstoqueConfeitaria from './pages/Admin/EstoqueConfeitaria'
 import EquipeEquipamentosSalao from './pages/Admin/EquipeEquipamentosSalao'
@@ -45,6 +47,7 @@ import ClienteAgendamentos from './pages/Cliente/Agendamentos'
 import ClienteMeusRegistros from './pages/Cliente/MeusRegistros'
 import ClienteCatalogo from './pages/Cliente/Catalogo'
 import ClienteContratos from './pages/Cliente/Contratos'
+import ClienteOrcamentos from './pages/Cliente/Orcamentos'
 
 /** Manutenção mantém o dashboard mockado rico (gráficos, KPIs de OS); os outros 3 verticais usam o dashboard genérico com dados reais da API. */
 function AdminDashboardRoteado() {
@@ -95,6 +98,8 @@ export default function App() {
         <Route path="agendamentos" element={<AgendamentosVertical />} />
         <Route path="catalogo" element={<CatalogoVertical />} />
         <Route path="contratos" element={<ContratosVertical />} />
+        <Route path="financeiro" element={<Financeiro />} />
+        <Route path="orcamentos" element={<AdminOrcamentos />} />
         <Route path="confeitaria/pedidos" element={<PedidosConfeitaria />} />
         <Route path="confeitaria/receitas" element={<ReceitasConfeitaria />} />
         <Route path="confeitaria/estoque" element={<EstoqueConfeitaria />} />
@@ -123,6 +128,7 @@ export default function App() {
         <Route path="meus-registros" element={<ClienteMeusRegistros />} />
         <Route path="catalogo" element={<ClienteCatalogo />} />
         <Route path="contratos" element={<ClienteContratos />} />
+        <Route path="orcamentos" element={<ClienteOrcamentos />} />
         <Route path="em-construcao/:modulo" element={<EmConstrucao />} />
       </Route>
 

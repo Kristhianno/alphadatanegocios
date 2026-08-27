@@ -134,6 +134,28 @@ export class ManutencaoService {
     return orcamento
   }
 
+  /**
+   * Lista todos os orçamentos da conta do usuário logado, com os dados
+   * do chamado embutidos via PostgREST — mesma distinção equipe
+   * interna/cliente de listarChamados (nunca deixa um cliente ver
+   * orçamento de chamado de outro cliente da mesma conta).
+   */
+  async listarOrcamentos(userId: string): Promise<(LinhaOrcamento & { chamados_manutencao: Pick<LinhaChamado, 'id' | 'conta_id' | 'cliente_id' | 'descricao' | 'categoria_manutencao' | 'status'> })[]> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+
+    let query = this.client
+      .from('orcamentos')
+      .select('*, chamados_manutencao!inner(id, conta_id, cliente_id, descricao, categoria_manutencao, status)')
+      .eq('chamados_manutencao.conta_id', usuario.contaId)
+    if (usuario.papel === 'cliente') {
+      if (!usuario.clienteId) return []
+      query = query.eq('chamados_manutencao.cliente_id', usuario.clienteId)
+    }
+    const { data, error } = await query.order('criado_em', { ascending: false })
+    if (error) throw new ErroValidacao(`Falha ao listar orçamentos: ${error.message}`)
+    return data as unknown as (LinhaOrcamento & { chamados_manutencao: Pick<LinhaChamado, 'id' | 'conta_id' | 'cliente_id' | 'descricao' | 'categoria_manutencao' | 'status'> })[]
+  }
+
   /** Busca o orçamento pendente mais recente de um chamado, validando que o chamado pertence a este cliente. Usado tanto pra exibir o valor antes de aceitar quanto por aceitarOrcamento. */
   async buscarOrcamentoPendente(chamadoId: string, clienteId: string): Promise<LinhaOrcamento | null> {
     const chamado = await this.buscarChamadoOuFalhar(chamadoId)

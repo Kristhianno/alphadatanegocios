@@ -60,6 +60,12 @@ router.get('/chamados', ...base, async (c) => {
   return c.json(chamados, 200)
 })
 
+/** Sem restrição de papel: equipe interna vê todos os orçamentos da conta, cliente só os próprios — a distinção é resolvida dentro do service, igual GET /chamados. */
+router.get('/orcamentos', ...base, async (c) => {
+  const orcamentos = await manutencaoService().listarOrcamentos(c.get('usuarioAutenticado').id)
+  return c.json(orcamentos, 200)
+})
+
 router.post('/chamados/:chamadoId/orcamento', ...soEquipeInterna, validarUuidParam('chamadoId'), async (c) => {
   const orcamento = await manutencaoService().gerarOrcamento(c.req.param('chamadoId') as string)
   return c.json(orcamento, 201)

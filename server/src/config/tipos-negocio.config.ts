@@ -33,6 +33,14 @@ function itemContratos(): MenuItem {
   return { id: 'contratos', label: 'Contratos', icone: '📜', rota: '/contratos' }
 }
 
+function itemFinanceiro(): MenuItem {
+  return { id: 'financeiro', label: 'Financeiro', icone: '💰', rota: '/financeiro', papeis: [...EQUIPE_INTERNA] }
+}
+
+function itemOrcamentos(): MenuItem {
+  return { id: 'orcamentos', label: 'Orçamentos', icone: '🧮', rota: '/orcamentos' }
+}
+
 function itemServicos(label: string): MenuItem {
   return { id: 'servicos', label, icone: '🗂️', rota: '/servicos' }
 }
@@ -69,14 +77,16 @@ const SALAO_FESTAS: TipoNegocioConfig = {
   tipo: 'salao_festas',
   nome: 'Salão de Festas / Eventos',
   icone: '🎉',
-  modulos: ['pacotes', 'eventos', 'equipe', 'equipamentos', 'financeiro'],
+  modulos: ['pacotes', 'eventos', 'equipe', 'equipamentos', 'financeiro', 'orcamentos'],
   menuItems: [
     itemDashboard(),
     itemAgendamentos(),
     itemServicos('Pacotes'),
     { id: 'eventos', label: 'Eventos', icone: '🎪', rota: '/salao-festas/eventos' },
     { id: 'equipe-equipamentos', label: 'Equipe e Equipamentos', icone: '🧰', rota: '/salao-festas/eventos', papeis: [...EQUIPE_INTERNA] },
+    itemOrcamentos(),
     itemContratos(),
+    itemFinanceiro(),
     itemClientes(),
   ],
   relatorios: ['lucro-por-evento'],
@@ -124,13 +134,16 @@ const MANUTENCAO: TipoNegocioConfig = {
   tipo: 'manutencao',
   nome: 'Manutenções Gerais',
   icone: '🔧',
-  modulos: ['chamados', 'orcamentos', 'ordens', 'tecnicos', 'preventivas'],
+  modulos: ['chamados', 'orcamentos', 'ordens', 'tecnicos', 'preventivas', 'contratos', 'financeiro'],
   menuItems: [
     itemDashboard(),
     itemAgendamentos(),
     itemServicos('Tipos de Serviço'),
     { id: 'chamados', label: 'Chamados', icone: '🛎️', rota: '/manutencao/chamados' },
     { id: 'preventivas', label: 'Manutenções Preventivas', icone: '🗓️', rota: '/manutencao/preventivas', papeis: [...EQUIPE_INTERNA] },
+    itemOrcamentos(),
+    itemContratos(),
+    itemFinanceiro(),
     itemClientes(),
   ],
   relatorios: ['chamados-por-prioridade', 'valor-orcamentos'],

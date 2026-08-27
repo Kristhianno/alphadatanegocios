@@ -9,7 +9,7 @@ import type { Database, Json } from '../../types/database.types.js'
 import { UsuarioRepository } from '../../repositories/UsuarioRepository.js'
 import { executarOuFalhar } from '../../utils/supabaseHelpers.js'
 import { arredondarMoeda } from '../../utils/calculadores.js'
-import { ErroNaoEncontrado, ErroValidacao } from '../../errors/AppError.js'
+import { ErroNaoEncontrado, ErroProibido, ErroValidacao } from '../../errors/AppError.js'
 import { logger } from '../../utils/logger.js'
 
 type Tabelas = Database['public']['Tables']
@@ -123,6 +123,32 @@ export class SalaoFestasService {
     const { data, error } = await query.order('data_evento', { ascending: false })
     if (error) throw new ErroValidacao(`Falha ao listar eventos: ${error.message}`)
     return data.map((linha) => this.linhaParaEvento(linha))
+  }
+
+  /**
+   * O evento já nasce em `status: 'orcamento'` (ver criarEvento), com
+   * `valorTotal` calculado a partir do pacote — ou seja, o "orçamento"
+   * de um evento é o próprio evento nesse estado inicial, não uma
+   * entidade separada. Confirmar é o cliente aceitando esse valor,
+   * mesma ideia de ManutencaoService.aceitarOrcamento: transiciona pra
+   * 'confirmado', validando posse e o status atual.
+   */
+  async confirmarOrcamento(eventoId: string, clienteId: string): Promise<Evento> {
+    const evento = await this.buscarEventoOuFalhar(eventoId)
+    if (evento.cliente_id !== clienteId) {
+      throw new ErroProibido('Este evento não pertence a este cliente.')
+    }
+    if (evento.status !== 'orcamento') {
+      throw new ErroValidacao(`Só é possível confirmar um evento com status "orcamento" (atual: "${evento.status}").`)
+    }
+
+    const linha = await executarOuFalhar<LinhaEvento>(
+      'eventos',
+      'confirmarOrcamento',
+      this.client.from('eventos').update({ status: 'confirmado' }).eq('id', eventoId).select().single()
+    )
+    logger.info({ eventoId, clienteId }, 'Orçamento do evento confirmado pelo cliente.')
+    return this.linhaParaEvento(linha)
   }
 
   /**

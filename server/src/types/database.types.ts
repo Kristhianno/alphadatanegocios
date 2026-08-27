@@ -509,6 +509,62 @@ export type Database = {
           },
         ]
       }
+      lancamentos_financeiros: {
+        Row: {
+          atualizado_em: string
+          categoria: string | null
+          conta_id: string
+          criado_em: string
+          data_pagamento: string | null
+          data_prevista: string | null
+          descricao: string
+          id: string
+          referencia_id: string | null
+          referencia_tipo: string | null
+          status: string
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          categoria?: string | null
+          conta_id: string
+          criado_em?: string
+          data_pagamento?: string | null
+          data_prevista?: string | null
+          descricao: string
+          id?: string
+          referencia_id?: string | null
+          referencia_tipo?: string | null
+          status?: string
+          tipo: string
+          valor: number
+        }
+        Update: {
+          atualizado_em?: string
+          categoria?: string | null
+          conta_id?: string
+          criado_em?: string
+          data_pagamento?: string | null
+          data_prevista?: string | null
+          descricao?: string
+          id?: string
+          referencia_id?: string | null
+          referencia_tipo?: string | null
+          status?: string
+          tipo?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lancamentos_financeiros_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contratos_evento: {
         Row: {
           assinado_em: string | null

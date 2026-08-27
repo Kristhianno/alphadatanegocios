@@ -576,6 +576,9 @@ export const CONTRATOS_SALAO = gerarContratos(
 export const CONTRATOS_FOTOGRAFIA = gerarContratos(
   14, CLIENTES_FOTOGRAFIA, PACOTES_FOTOGRAFIA, 'precoBase', 'CTR-FT'
 )
+export const CONTRATOS_MANUTENCAO = gerarContratos(
+  14, CLIENTES, TIPOS_SERVICO, 'max', 'CTR-MN'
+)
 
 // =====================================================================
 // ESTOQUE DE INGREDIENTES — Confeitaria e Salgados
