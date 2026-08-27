@@ -44,6 +44,7 @@ import ClientePerfil from './pages/Cliente/Perfil'
 import ClienteAgendamentos from './pages/Cliente/Agendamentos'
 import ClienteMeusRegistros from './pages/Cliente/MeusRegistros'
 import ClienteCatalogo from './pages/Cliente/Catalogo'
+import ClienteContratos from './pages/Cliente/Contratos'
 
 /** Manutenção mantém o dashboard mockado rico (gráficos, KPIs de OS); os outros 3 verticais usam o dashboard genérico com dados reais da API. */
 function AdminDashboardRoteado() {
@@ -121,6 +122,7 @@ export default function App() {
         <Route path="agendamentos" element={<ClienteAgendamentos />} />
         <Route path="meus-registros" element={<ClienteMeusRegistros />} />
         <Route path="catalogo" element={<ClienteCatalogo />} />
+        <Route path="contratos" element={<ClienteContratos />} />
         <Route path="em-construcao/:modulo" element={<EmConstrucao />} />
       </Route>
 

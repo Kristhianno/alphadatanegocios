@@ -61,8 +61,7 @@ const ROTAS_REAIS_POR_ID_ADMIN = {
 // então itens só de equipe interna (receitas, estoque, clientes, etc)
 // nunca chegam aqui. "pedidos"/"eventos"/"sessoes" caem todos na mesma
 // tela genérica MeusRegistros, que decide o recurso pelo tipoNegocio da
-// conta. Item sem entrada aqui (ex: "contratos", que ainda não tem API)
-// cai no fallback de "em construção".
+// conta. Item sem entrada aqui cai no fallback de "em construção".
 const ROTAS_REAIS_POR_ID_CLIENTE = {
   dashboard: '/cliente/dashboard',
   agendamentos: '/cliente/agendamentos',
@@ -70,6 +69,7 @@ const ROTAS_REAIS_POR_ID_CLIENTE = {
   pedidos: '/cliente/meus-registros',
   eventos: '/cliente/meus-registros',
   sessoes: '/cliente/meus-registros',
+  contratos: '/cliente/contratos',
 }
 
 // Um ícone por item — antes todos caíam no mesmo IconApps genérico.
