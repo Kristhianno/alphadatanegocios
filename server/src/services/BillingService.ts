@@ -102,10 +102,16 @@ export class BillingService {
     return this.sincronizarAssinatura(contaId, subscriptionId)
   }
 
-  /** Abre o Customer Portal — troca de cartão e upgrade/downgrade de plano em uma tela só (configurado em stripe-setup.ts). */
-  async criarSessaoPortal(conta: Conta): Promise<{ url: string }> {
+  /**
+   * Abre o Customer Portal — troca de cartão e upgrade/downgrade de plano em uma tela só
+   * (configurado em stripe-setup.ts). Contas antigas, criadas antes do checkout virar
+   * obrigatório pra toda conta nova (ver UserService.criarUsuario), podem chegar aqui sem
+   * `stripeCustomerId` — nesse caso manda pro checkout do plano atual em vez de falhar, pra
+   * sempre existir uma assinatura real pra gerenciar depois.
+   */
+  async criarSessaoPortal(conta: Conta, emailAdmin: string): Promise<{ url: string }> {
     if (!conta.stripeCustomerId) {
-      throw new ErroValidacao('Esta conta ainda não tem uma assinatura ativa no Stripe.')
+      return this.criarSessaoCheckout(conta, emailAdmin, { ciclo: conta.cicloCobranca ?? 'mensal' })
     }
     const session = await getStripe().billingPortal.sessions.create({
       customer: conta.stripeCustomerId,

@@ -215,6 +215,14 @@ export default function Login({ apenasCadastro = false }) {
       className="min-h-screen relative bg-cover bg-center"
       style={{ backgroundImage: `url(${fundoLogin})` }}
     >
+      <Link
+        to="/"
+        aria-label="Voltar para a página inicial"
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 flex items-center justify-center h-10 w-10 rounded-full bg-surface/90 backdrop-blur-sm shadow-card text-[#333] hover:bg-surface transition-colors"
+      >
+        <IconArrowLeft size={20} />
+      </Link>
+
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-10 2xl:px-16 py-10 md:pr-[38%] lg:pr-[34%]">
         {/* Cartão de login/cadastro */}
         <div className="w-full max-w-2xl bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-6 sm:p-10">

@@ -39,7 +39,8 @@ router.post('/confirmar-checkout', autenticar, requererPapel('admin'), carregarC
 })
 
 router.post('/portal', autenticar, requererPapel('admin'), carregarContexto, async (c) => {
-  const resultado = await billing().criarSessaoPortal(c.get('conta'))
+  const usuario = c.get('usuarioAutenticado')
+  const resultado = await billing().criarSessaoPortal(c.get('conta'), usuario.email)
   return c.json(resultado, 200)
 })
 

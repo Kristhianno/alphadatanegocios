@@ -77,13 +77,16 @@ export class UserService {
    * primeiro login, com papel 'admin'. tipoNegocio é escolhido depois,
    * em {@link selecionarTipoNegocio} — por isso não é parâmetro aqui.
    *
-   * `plano`/`ciclo` só vêm preenchidos quando o cadastro nasceu de um
-   * CTA de plano na landing page: a conta já nasce com esse plano e
+   * `plano`/`ciclo` vêm preenchidos quando o cadastro nasceu de um CTA
+   * de plano na landing page (senão a conta nasce em 'startup', sem
+   * ciclo definido). De um jeito ou de outro toda conta nova nasce com
    * `assinaturaPendente: true`, que trava o dashboard (Layout.jsx) até
-   * o checkout no Stripe ser concluído (POST /billing/checkout,
-   * disparado só depois do onboarding — ver Login.jsx). Sem esses dois
-   * campos, o comportamento é idêntico ao de sempre: plano 'startup',
-   * sem cobrança nenhuma.
+   * o checkout no Stripe ser concluído — disparado só depois do
+   * onboarding (ver Login.jsx/irParaDashboard e Checkout.jsx), onde dá
+   * pra escolher/trocar plano e ciclo antes de pagar. Garante que toda
+   * conta sempre passa pelo teste grátis de 7 dias via Stripe, então
+   * sempre tem um `stripeCustomerId` — sem isso o Customer Portal
+   * (upgrade/downgrade em Admin/Configuracoes) não tem o que gerenciar.
    */
   async criarUsuario(
     email: string,
@@ -101,7 +104,8 @@ export class UserService {
       nomeEmpresa: dados.nomeEmpresa,
       plano: dados.plano ?? 'startup',
       configuracoesGerais: {},
-      ...(dados.plano ? { cicloCobranca: dados.ciclo, assinaturaPendente: true } : {}),
+      cicloCobranca: dados.ciclo,
+      assinaturaPendente: true,
     })
     const senhaHash = await hashSenha(dados.senha)
     let usuario = await this.usuarios.criar({
@@ -207,7 +211,9 @@ export class UserService {
     } else {
       const nomeFallback = identidade.email.split('@')[0] ?? 'Minha Empresa'
       const nomeEmpresa = (identidade.user_metadata?.['full_name'] as string | undefined)?.trim() || nomeFallback
-      conta = await this.contas.criar({ nomeEmpresa, plano: 'startup', configuracoesGerais: {} })
+      // Mesmo raciocínio de criarUsuario: toda conta nova nasce com assinaturaPendente
+      // pra sempre passar pela escolha de plano/ciclo (Checkout.jsx) antes do dashboard.
+      conta = await this.contas.criar({ nomeEmpresa, plano: 'startup', configuracoesGerais: {}, assinaturaPendente: true })
       usuario = await this.usuarios.criar({
         contaId: conta.id,
         authUserId: identidade.id,
