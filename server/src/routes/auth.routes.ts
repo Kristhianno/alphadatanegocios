@@ -70,8 +70,13 @@ router.patch('/conta', autenticar, requererPapel('admin'), async (c) => {
 
 /** Só o admin que abriu a conta escolhe o vertical — a própria UserService.selecionarTipoNegocio também garante isso, esta checagem aqui é só pra falhar mais cedo. */
 router.post('/selecionar-tipo-negocio', autenticar, requererPapel('admin'), async (c) => {
-  const { tipoNegocio, descricaoPersonalizada } = (await c.req.json()) as Record<string, unknown>
-  const conta = await userService().selecionarTipoNegocio(c.get('usuarioAutenticado').id, tipoNegocio as TipoNegocio, descricaoPersonalizada as string | undefined)
+  const { tipoNegocio, descricaoPersonalizada, segmentoEscolhido } = (await c.req.json()) as Record<string, unknown>
+  const conta = await userService().selecionarTipoNegocio(
+    c.get('usuarioAutenticado').id,
+    tipoNegocio as TipoNegocio,
+    descricaoPersonalizada as string | undefined,
+    segmentoEscolhido as string | undefined,
+  )
   return c.json(conta, 200)
 })
 

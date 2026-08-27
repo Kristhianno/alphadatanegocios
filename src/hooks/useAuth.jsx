@@ -106,9 +106,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function selecionarTipoNegocio(tipoNegocio, descricaoPersonalizada) {
+  async function selecionarTipoNegocio(tipoNegocio, descricaoPersonalizada, segmentoEscolhido) {
     try {
-      const conta = await api.post('/auth/selecionar-tipo-negocio', { tipoNegocio, descricaoPersonalizada })
+      const conta = await api.post('/auth/selecionar-tipo-negocio', { tipoNegocio, descricaoPersonalizada, segmentoEscolhido })
       setUser((u) => (u ? { ...u, tipoNegocio: conta.tipoNegocio, nomeEmpresa: conta.nomeEmpresa } : u))
       return { ok: true }
     } catch (erro) {

@@ -26,8 +26,10 @@ export interface MenuItem {
 
 export interface TipoNegocioConfig {
   tipo: TipoNegocio
-  /** Nome amigável, ex: "Confeitaria e Salgados". */
+  /** Nome amigável da macro-categoria exibida no card do seletor, ex: "Alimentação & Encomendas". */
   nome: string
+  /** Exemplos de nichos atendidos por essa macro-categoria, exibido como subtítulo no card do seletor. Ausente em 'outro'. */
+  subtitulo?: string
   /** Emoji ou nome de ícone usado no seletor de tipo de negócio do login. */
   icone: string
   /** Módulos habilitados para este vertical, ex: ["catalogo", "receitas", "pedidos"]. */

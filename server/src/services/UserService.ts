@@ -225,9 +225,18 @@ export class UserService {
    * === 'outro' — é o texto livre que o admin digitou pra descrever o
    * negócio dele quando nenhuma vertical pronta encaixa; fica em
    * `configuracoesGerais.tipoNegocioDescricao`, mesmo raciocínio do
-   * `logoUrl` em {@link atualizarBranding}.
+   * `logoUrl` em {@link atualizarBranding}. `segmentoEscolhido` é o
+   * rótulo amigável do card clicado no seletor (ex: "Alimentação &
+   * Encomendas") — `tipoNegocio` continua sendo o template técnico
+   * (`confeitaria`) que resolve módulos/menu; o rótulo só fica
+   * guardado em `configuracoesGerais.segmentoEscolhido` pra referência.
    */
-  async selecionarTipoNegocio(userId: string, tipoNegocio: TipoNegocio, descricaoPersonalizada?: string): Promise<Conta> {
+  async selecionarTipoNegocio(
+    userId: string,
+    tipoNegocio: TipoNegocio,
+    descricaoPersonalizada?: string,
+    segmentoEscolhido?: string,
+  ): Promise<Conta> {
     if (!TIPOS_NEGOCIO_VALIDOS.includes(tipoNegocio)) {
       throw new ErroValidacao(`Tipo de negócio inválido: "${tipoNegocio}".`)
     }
@@ -246,10 +255,15 @@ export class UserService {
     await this.contas.atualizar(conta.id, { tipoNegocio })
     let contaComConfiguracoes = await this.criarConfiguracoesIniciais(userId, tipoNegocio)
 
+    const configuracoesExtras: Record<string, unknown> = {}
     const descricao = descricaoPersonalizada?.trim()
-    if (tipoNegocio === 'outro' && descricao) {
+    if (tipoNegocio === 'outro' && descricao) configuracoesExtras.tipoNegocioDescricao = descricao
+    const segmento = segmentoEscolhido?.trim()
+    if (segmento) configuracoesExtras.segmentoEscolhido = segmento
+
+    if (Object.keys(configuracoesExtras).length > 0) {
       contaComConfiguracoes = await this.contas.atualizar(conta.id, {
-        configuracoesGerais: { ...contaComConfiguracoes.configuracoesGerais, tipoNegocioDescricao: descricao },
+        configuracoesGerais: { ...contaComConfiguracoes.configuracoesGerais, ...configuracoesExtras },
       })
     }
 

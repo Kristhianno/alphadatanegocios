@@ -119,10 +119,10 @@ export default function Login({ apenasCadastro = false }) {
     setModo('escolher-negocio')
   }
 
-  async function handleEscolherNegocio(tipo, descricaoPersonalizada) {
+  async function handleEscolherNegocio(tipo, descricaoPersonalizada, segmentoEscolhido) {
     setErro('')
     setTipoEscolhido(tipo)
-    const resultado = await selecionarTipoNegocio(tipo, descricaoPersonalizada)
+    const resultado = await selecionarTipoNegocio(tipo, descricaoPersonalizada, segmentoEscolhido)
     if (!resultado.ok) {
       setErro(resultado.error)
       setTipoEscolhido(null)
@@ -137,13 +137,13 @@ export default function Login({ apenasCadastro = false }) {
       setMostrarCampoOutro(true)
       return
     }
-    handleEscolherNegocio(t.tipo)
+    handleEscolherNegocio(t.tipo, undefined, t.nome)
   }
 
   function confirmarOutro(e) {
     e.preventDefault()
     if (!descricaoOutro.trim()) return
-    handleEscolherNegocio('outro', descricaoOutro.trim())
+    handleEscolherNegocio('outro', descricaoOutro.trim(), descricaoOutro.trim())
   }
 
   function selecionarLogo(e) {
@@ -216,9 +216,14 @@ export default function Login({ apenasCadastro = false }) {
                       type="button"
                       disabled={!!tipoEscolhido}
                       onClick={() => handleClickTipo(t)}
-                      className="flex items-center gap-3 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60"
+                      className="flex flex-col items-start gap-0.5 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60"
                     >
-                      <span className="text-body font-medium text-[#1a1a1a]">{tipoEscolhido === t.tipo ? 'Configurando...' : t.nome}</span>
+                      <span className="text-body font-medium text-[#1a1a1a]">
+                        {tipoEscolhido === t.tipo ? 'Configurando...' : t.nome}
+                      </span>
+                      {tipoEscolhido !== t.tipo && t.subtitulo && (
+                        <span className="text-label text-[#999]">{t.subtitulo}</span>
+                      )}
                     </button>
                   ))}
                   {tiposNegocio.length === 0 && !erro && <p className="text-body text-[#999] text-center py-4">Carregando opções...</p>}
