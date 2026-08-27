@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
+import { aplicarCorPrimaria, lerCorPrimariaSalva } from './utils/tema'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import CallbackSupabase from './pages/CallbackSupabase'
@@ -56,6 +58,11 @@ function RaizApp() {
 
 export default function App() {
   const { carregando } = useAuth()
+
+  useEffect(() => {
+    const corSalva = lerCorPrimariaSalva()
+    if (corSalva) aplicarCorPrimaria(corSalva)
+  }, [])
 
   // Evita um "flash" pro /login antes de terminar de restaurar a sessão
   // (o token já existe no localStorage, mas GET /auth/me ainda não voltou).
