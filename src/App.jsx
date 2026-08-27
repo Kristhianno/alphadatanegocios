@@ -10,6 +10,7 @@ import TrocarSenha from './pages/TrocarSenha'
 import Checkout from './pages/Checkout'
 import CheckoutSucesso from './pages/CheckoutSucesso'
 import EmConstrucao from './pages/EmConstrucao'
+import Privacidade from './pages/Privacidade'
 
 import AdminDashboard from './pages/Admin/Dashboard'
 import AdminDashboardVertical from './pages/Admin/DashboardVertical'
@@ -86,6 +87,7 @@ export default function App() {
       <Route path="/trocar-senha" element={<TrocarSenha />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
+      <Route path="/privacidade" element={<Privacidade />} />
 
       <Route path="/admin" element={<Layout userType="admin" />}>
         <Route path="dashboard" element={<AdminDashboardRoteado />} />

@@ -245,6 +245,7 @@ export default function Landing() {
       <footer className="border-t border-muted-dark py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-3">
           <AlphaDataLogo />
+          <a href="/privacidade" className="text-label text-[#999] hover:text-primary">Política de Privacidade e Cookies</a>
           <p className="text-label text-[#999]">© 2026 ALPHADATA - Negócios</p>
         </div>
       </footer>
