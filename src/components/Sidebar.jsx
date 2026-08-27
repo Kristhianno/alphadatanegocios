@@ -40,7 +40,7 @@ const MENUS = {
 // item tem uma tela real (mockada) — "Agendamentos" e "Catálogo/
 // Pacotes" são telas genéricas reaproveitadas entre os 3 (a forma é a
 // mesma, só o dataset muda); o resto é específico de cada vertical.
-const ROTAS_REAIS_POR_ID = {
+const ROTAS_REAIS_POR_ID_ADMIN = {
   dashboard: '/admin/dashboard',
   clientes: '/admin/clientes',
   agendamentos: '/admin/agendamentos',
@@ -54,6 +54,22 @@ const ROTAS_REAIS_POR_ID = {
   sessoes: '/admin/fotografia/sessoes',
   'producoes-video': '/admin/fotografia/producoes-video',
   portfolio: '/admin/fotografia/portfolio',
+}
+
+// Espelha o menu dinâmico acima, mas pro papel 'cliente': o backend já
+// filtra menuItems por MenuItem.papeis (ver GET /config/tipo-negocio),
+// então itens só de equipe interna (receitas, estoque, clientes, etc)
+// nunca chegam aqui. "pedidos"/"eventos"/"sessoes" caem todos na mesma
+// tela genérica MeusRegistros, que decide o recurso pelo tipoNegocio da
+// conta. Item sem entrada aqui (ex: "contratos", que ainda não tem API)
+// cai no fallback de "em construção".
+const ROTAS_REAIS_POR_ID_CLIENTE = {
+  dashboard: '/cliente/dashboard',
+  agendamentos: '/cliente/agendamentos',
+  servicos: '/cliente/catalogo',
+  pedidos: '/cliente/meus-registros',
+  eventos: '/cliente/meus-registros',
+  sessoes: '/cliente/meus-registros',
 }
 
 // Um ícone por item — antes todos caíam no mesmo IconApps genérico.
@@ -88,7 +104,7 @@ export default function Sidebar({ userType, aberta, onClose }) {
   const { user } = useAuth()
   const [menuDinamico, setMenuDinamico] = useState(null)
 
-  const precisaMenuDinamico = userType === 'admin' && user?.tipoNegocio && user.tipoNegocio !== 'manutencao'
+  const precisaMenuDinamico = (userType === 'admin' || userType === 'cliente') && user?.tipoNegocio && user.tipoNegocio !== 'manutencao'
 
   useEffect(() => {
     if (!precisaMenuDinamico) {
@@ -109,9 +125,12 @@ export default function Sidebar({ userType, aberta, onClose }) {
     }
   }, [precisaMenuDinamico])
 
+  const mapaRotas = userType === 'cliente' ? ROTAS_REAIS_POR_ID_CLIENTE : ROTAS_REAIS_POR_ID_ADMIN
+  const prefixoEmConstrucao = userType === 'cliente' ? '/cliente/em-construcao' : '/admin/em-construcao'
+
   const itens = menuDinamico
     ? menuDinamico.map((item) => ({
-        to: ROTAS_REAIS_POR_ID[item.id] ?? `/admin/em-construcao/${encodeURIComponent(item.label)}`,
+        to: mapaRotas[item.id] ?? `${prefixoEmConstrucao}/${encodeURIComponent(item.label)}`,
         label: item.label,
         icon: ICONES_POR_ID[item.id] ?? ICONE_PADRAO,
       }))

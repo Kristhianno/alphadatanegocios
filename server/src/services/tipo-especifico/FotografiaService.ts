@@ -91,6 +91,27 @@ export class FotografiaService {
     return this.linhaParaSessao(linha)
   }
 
+  /**
+   * Lista sessões da conta do usuário logado — se quem chama tem papel
+   * 'cliente', filtra automaticamente só as sessões dele (mesmo padrão
+   * de ManutencaoService.listarChamados: nunca deixa um cliente listar
+   * sessões de outro cliente da mesma conta).
+   */
+  async listarSessoes(userId: string, filtros: { status?: string } = {}): Promise<SessaoFoto[]> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+
+    let query = this.client.from('sessoes_foto').select('*').eq('conta_id', usuario.contaId)
+    if (usuario.papel === 'cliente') {
+      if (!usuario.clienteId) return []
+      query = query.eq('cliente_id', usuario.clienteId)
+    }
+    if (filtros.status) query = query.eq('status', filtros.status)
+
+    const { data, error } = await query.order('data_sessao', { ascending: false })
+    if (error) throw new ErroValidacao(`Falha ao listar sessões: ${error.message}`)
+    return data.map((linha) => this.linhaParaSessao(linha))
+  }
+
   async uploadFotosOriginal(sessaoId: string, fotos: string[]): Promise<number> {
     if (fotos.length === 0) throw new ErroValidacao('Envie ao menos uma foto.')
     await this.buscarSessaoOuFalhar(sessaoId)

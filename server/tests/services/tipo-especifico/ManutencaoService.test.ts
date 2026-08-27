@@ -91,6 +91,40 @@ describe('ManutencaoService.aceitarOrcamento', () => {
   })
 })
 
+describe('ManutencaoService.buscarOrcamentoPendente', () => {
+  it('rejeita quando o chamado não pertence ao clienteId informado', async () => {
+    const cliente = criarClienteFake()
+    const { userId } = prepararUsuario(cliente, 'cliente', randomUUID())
+    const service = new ManutencaoService(paraTipado(cliente))
+    const chamado = await service.criarChamado(userId, 'corretiva', 'Torneira pingando')
+    await service.gerarOrcamento(chamado.id)
+
+    await expect(service.buscarOrcamentoPendente(chamado.id, randomUUID())).rejects.toBeInstanceOf(ErroProibido)
+  })
+
+  it('retorna null quando não há orçamento pendente', async () => {
+    const cliente = criarClienteFake()
+    const clienteId = randomUUID()
+    const { userId } = prepararUsuario(cliente, 'cliente', clienteId)
+    const service = new ManutencaoService(paraTipado(cliente))
+    const chamado = await service.criarChamado(userId, 'corretiva', 'Torneira pingando')
+
+    expect(await service.buscarOrcamentoPendente(chamado.id, clienteId)).toBeNull()
+  })
+
+  it('retorna o orçamento pendente quando o chamado pertence ao cliente', async () => {
+    const cliente = criarClienteFake()
+    const clienteId = randomUUID()
+    const { userId } = prepararUsuario(cliente, 'cliente', clienteId)
+    const service = new ManutencaoService(paraTipado(cliente))
+    const chamado = await service.criarChamado(userId, 'corretiva', 'Torneira pingando')
+    const gerado = await service.gerarOrcamento(chamado.id)
+
+    const orcamento = await service.buscarOrcamentoPendente(chamado.id, clienteId)
+    expect(orcamento?.id).toBe(gerado.id)
+  })
+})
+
 describe('ManutencaoService.registrarMaterialsUsados', () => {
   it('rejeita quando o estoque disponível é menor que a quantidade pedida', async () => {
     const cliente = criarClienteFake()

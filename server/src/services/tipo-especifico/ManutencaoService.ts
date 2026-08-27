@@ -134,13 +134,14 @@ export class ManutencaoService {
     return orcamento
   }
 
-  async aceitarOrcamento(chamadoId: string, clienteId: string): Promise<LinhaOrcamento> {
+  /** Busca o orçamento pendente mais recente de um chamado, validando que o chamado pertence a este cliente. Usado tanto pra exibir o valor antes de aceitar quanto por aceitarOrcamento. */
+  async buscarOrcamentoPendente(chamadoId: string, clienteId: string): Promise<LinhaOrcamento | null> {
     const chamado = await this.buscarChamadoOuFalhar(chamadoId)
     if (chamado.cliente_id !== clienteId) {
       throw new ErroProibido('Este chamado não pertence a este cliente.')
     }
 
-    const { data: orcamento, error: erroOrcamento } = await this.client
+    const { data, error } = await this.client
       .from('orcamentos')
       .select('*')
       .eq('chamado_id', chamadoId)
@@ -148,7 +149,13 @@ export class ManutencaoService {
       .order('criado_em', { ascending: false })
       .limit(1)
       .maybeSingle()
-    if (erroOrcamento || !orcamento) throw new ErroNaoEncontrado('Orçamento pendente', chamadoId)
+    if (error) throw new ErroValidacao(`Falha ao buscar orçamento: ${error.message}`)
+    return data
+  }
+
+  async aceitarOrcamento(chamadoId: string, clienteId: string): Promise<LinhaOrcamento> {
+    const orcamento = await this.buscarOrcamentoPendente(chamadoId, clienteId)
+    if (!orcamento) throw new ErroNaoEncontrado('Orçamento pendente', chamadoId)
 
     const atualizado = await executarOuFalhar<LinhaOrcamento>(
       'orcamentos',

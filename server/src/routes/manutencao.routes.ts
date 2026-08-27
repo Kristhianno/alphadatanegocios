@@ -65,6 +65,13 @@ router.post('/chamados/:chamadoId/orcamento', ...soEquipeInterna, validarUuidPar
   return c.json(orcamento, 201)
 })
 
+router.get('/chamados/:chamadoId/orcamento', ...soCliente, validarUuidParam('chamadoId'), async (c) => {
+  const clienteId = c.get('usuarioAutenticado').clienteId
+  if (!clienteId) throw new ErroProibido('Este login não está vinculado a um cliente.')
+  const orcamento = await manutencaoService().buscarOrcamentoPendente(c.req.param('chamadoId') as string, clienteId)
+  return c.json(orcamento, 200)
+})
+
 router.post('/chamados/:chamadoId/orcamento/aceitar', ...soCliente, validarUuidParam('chamadoId'), async (c) => {
   const clienteId = c.get('usuarioAutenticado').clienteId
   if (!clienteId) throw new ErroProibido('Este login não está vinculado a um cliente.')

@@ -20,6 +20,13 @@ router.post('/eventos', ...protegido, async (c) => {
   return c.json(evento, 201)
 })
 
+/** Sem restrição de papel: equipe interna vê todos os eventos da conta, cliente só os próprios — a distinção é resolvida dentro do service, como em manutencao.routes.ts. */
+router.get('/eventos', ...protegido, async (c) => {
+  const status = c.req.query('status')
+  const eventos = await salaoFestasService().listarEventos(c.get('usuarioAutenticado').id, status ? { status } : {})
+  return c.json(eventos, 200)
+})
+
 router.post('/eventos/:eventoId/equipe', ...protegido, validarUuidParam('eventoId'), validar(schemaEquipe), async (c) => {
   const { cargo, quantidade } = c.get('dadosValidados') as z.infer<typeof schemaEquipe>
   await salaoFestasService().adicionarEquipeEvento(c.req.param('eventoId') as string, cargo, quantidade)

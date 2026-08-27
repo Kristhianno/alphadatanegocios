@@ -23,6 +23,13 @@ router.post('/sessoes', ...protegido, async (c) => {
   return c.json(sessao, 201)
 })
 
+/** Sem restrição de papel: equipe interna vê todas as sessões da conta, cliente só as próprias — a distinção é resolvida dentro do service, como em manutencao.routes.ts. */
+router.get('/sessoes', ...protegido, async (c) => {
+  const status = c.req.query('status')
+  const sessoes = await fotografiaService().listarSessoes(c.get('usuarioAutenticado').id, status ? { status } : {})
+  return c.json(sessoes, 200)
+})
+
 router.post('/sessoes/:sessaoId/fotos', ...protegido, validarUuidParam('sessaoId'), validar(schemaFotos), async (c) => {
   const { fotos } = c.get('dadosValidados') as z.infer<typeof schemaFotos>
   const quantidade = await fotografiaService().uploadFotosOriginal(c.req.param('sessaoId') as string, fotos)

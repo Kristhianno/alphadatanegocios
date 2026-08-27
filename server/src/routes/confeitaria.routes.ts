@@ -29,6 +29,13 @@ router.post('/pedidos', ...protegido, async (c) => {
   return c.json(pedido, 201)
 })
 
+/** Sem restrição de papel: equipe interna vê todos os pedidos da conta, cliente só os próprios — a distinção é resolvida dentro do service, como em manutencao.routes.ts. */
+router.get('/pedidos', ...protegido, async (c) => {
+  const status = c.req.query('status')
+  const pedidos = await confeitariaService().listarPedidos(c.get('usuarioAutenticado').id, status ? { status } : {})
+  return c.json(pedidos, 200)
+})
+
 router.post('/pedidos/:pedidoId/ordem-producao', ...protegido, validarUuidParam('pedidoId'), async (c) => {
   const ordem = await confeitariaService().gerarOrdenProducaoComChecklist(c.req.param('pedidoId') as string)
   return c.json(ordem, 201)

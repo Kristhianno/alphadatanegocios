@@ -16,6 +16,13 @@ function prepararConta(cliente: ReturnType<typeof criarClienteFake>) {
   return { contaId: conta['id'] as string, userId: usuario['id'] as string }
 }
 
+function prepararUsuarioCliente(cliente: ReturnType<typeof criarClienteFake>, contaId: string, clienteId: string) {
+  const usuario = cliente.semear('usuarios', [
+    { conta_id: contaId, email: `${clienteId}@x.com`, senha_hash: 'h', nome: 'Cliente', papel: 'cliente', cliente_id: clienteId, status: 'ativo' },
+  ])[0]!
+  return usuario['id'] as string
+}
+
 describe('AgendamentoService.criarAgendamento', () => {
   it('respeita a validação do vertical (confeitaria exige 24h de antecedência)', async () => {
     const cliente = criarClienteFake()
@@ -98,5 +105,56 @@ describe('AgendamentoService.listarAgendamentos', () => {
     const confirmados = await service.listarAgendamentos(userId, { status: 'confirmado' })
     expect(confirmados).toHaveLength(1)
     expect(confirmados[0]?.id).toBe(a1.id)
+  })
+
+  it('um usuário papel "cliente" só vê os próprios agendamentos, mesmo pedindo todos', async () => {
+    const cliente = criarClienteFake()
+    const { userId: userIdAdmin, contaId } = prepararConta(cliente)
+    const service = new AgendamentoService(paraTipado(cliente))
+
+    const meu = await service.criarAgendamento(userIdAdmin, 'confeitaria', {
+      clienteId: CLIENTE_ID_1,
+      dataHoraInicio: new Date(Date.now() + 48 * 3_600_000).toISOString(),
+    })
+    await service.criarAgendamento(userIdAdmin, 'confeitaria', {
+      clienteId: CLIENTE_ID_2,
+      dataHoraInicio: new Date(Date.now() + 72 * 3_600_000).toISOString(),
+    })
+
+    const userIdCliente = prepararUsuarioCliente(cliente, contaId, CLIENTE_ID_1)
+    const meus = await service.listarAgendamentos(userIdCliente)
+    expect(meus).toHaveLength(1)
+    expect(meus[0]?.id).toBe(meu.id)
+  })
+
+  it('um usuário papel "cliente" não consegue ver agendamentos de outro cliente forçando clienteId no filtro', async () => {
+    const cliente = criarClienteFake()
+    const { userId: userIdAdmin, contaId } = prepararConta(cliente)
+    const service = new AgendamentoService(paraTipado(cliente))
+
+    await service.criarAgendamento(userIdAdmin, 'confeitaria', {
+      clienteId: CLIENTE_ID_2,
+      dataHoraInicio: new Date(Date.now() + 48 * 3_600_000).toISOString(),
+    })
+
+    const userIdCliente = prepararUsuarioCliente(cliente, contaId, CLIENTE_ID_1)
+    const resultado = await service.listarAgendamentos(userIdCliente, { clienteId: CLIENTE_ID_2 })
+    expect(resultado).toHaveLength(0)
+  })
+
+  it('um login "cliente" sem clienteId vinculado não vê nenhum agendamento', async () => {
+    const cliente = criarClienteFake()
+    const { userId: userIdAdmin, contaId } = prepararConta(cliente)
+    const service = new AgendamentoService(paraTipado(cliente))
+    await service.criarAgendamento(userIdAdmin, 'confeitaria', {
+      clienteId: CLIENTE_ID_1,
+      dataHoraInicio: new Date(Date.now() + 48 * 3_600_000).toISOString(),
+    })
+
+    const usuarioSemCliente = cliente.semear('usuarios', [
+      { conta_id: contaId, email: 'sem-cliente@x.com', senha_hash: 'h', nome: 'Cliente', papel: 'cliente', cliente_id: null, status: 'ativo' },
+    ])[0]!
+    const resultado = await service.listarAgendamentos(usuarioSemCliente['id'] as string)
+    expect(resultado).toHaveLength(0)
   })
 })

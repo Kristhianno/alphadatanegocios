@@ -12,6 +12,13 @@ function prepararUsuario(cliente: ReturnType<typeof criarClienteFake>) {
   return { contaId: conta['id'] as string, userId: usuario['id'] as string }
 }
 
+function prepararUsuarioCliente(cliente: ReturnType<typeof criarClienteFake>, contaId: string, clienteId: string) {
+  const usuario = cliente.semear('usuarios', [
+    { conta_id: contaId, email: `${clienteId}@x.com`, senha_hash: 'h', nome: 'Cliente', papel: 'cliente', cliente_id: clienteId, status: 'ativo' },
+  ])[0]!
+  return usuario['id'] as string
+}
+
 describe('ConfeitariaService.atualizarMovimentacaoEstoque', () => {
   it('rejeita quantidade zero', async () => {
     const cliente = criarClienteFake()
@@ -117,5 +124,35 @@ describe('ConfeitariaService.criarPedidoConfeitaria', () => {
       itens: [{ produtoId: produto['id'], quantidade: 1 }],
     })
     expect(pedido2.numero).toBe('PED-0002')
+  })
+})
+
+describe('ConfeitariaService.listarPedidos', () => {
+  it('um usuário papel "cliente" só vê os próprios pedidos, mesmo pedindo todos', async () => {
+    const cliente = criarClienteFake()
+    const { userId: userIdAdmin, contaId } = prepararUsuario(cliente)
+    const produto = cliente.semear('catalogo_produtos', [{ nome: 'Bolo', preco_venda: 50 }])[0]!
+    const service = new ConfeitariaService(paraTipado(cliente))
+
+    const clienteId1 = randomUUID()
+    const meuPedido = await service.criarPedidoConfeitaria(userIdAdmin, { clienteId: clienteId1, itens: [{ produtoId: produto['id'], quantidade: 1 }] })
+    await service.criarPedidoConfeitaria(userIdAdmin, { clienteId: randomUUID(), itens: [{ produtoId: produto['id'], quantidade: 1 }] })
+
+    const userIdCliente = prepararUsuarioCliente(cliente, contaId, clienteId1)
+    const meusPedidos = await service.listarPedidos(userIdCliente)
+    expect(meusPedidos).toHaveLength(1)
+    expect(meusPedidos[0]?.id).toBe(meuPedido.id)
+  })
+
+  it('equipe interna vê todos os pedidos da conta', async () => {
+    const cliente = criarClienteFake()
+    const { userId } = prepararUsuario(cliente)
+    const produto = cliente.semear('catalogo_produtos', [{ nome: 'Bolo', preco_venda: 50 }])[0]!
+    const service = new ConfeitariaService(paraTipado(cliente))
+
+    await service.criarPedidoConfeitaria(userId, { clienteId: randomUUID(), itens: [{ produtoId: produto['id'], quantidade: 1 }] })
+    await service.criarPedidoConfeitaria(userId, { clienteId: randomUUID(), itens: [{ produtoId: produto['id'], quantidade: 1 }] })
+
+    expect(await service.listarPedidos(userId)).toHaveLength(2)
   })
 })

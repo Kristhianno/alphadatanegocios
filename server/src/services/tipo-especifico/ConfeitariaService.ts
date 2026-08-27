@@ -201,6 +201,27 @@ export class ConfeitariaService {
     return this.linhaParaPedido(pedido)
   }
 
+  /**
+   * Lista pedidos da conta do usuário logado — se quem chama tem papel
+   * 'cliente', filtra automaticamente só os pedidos dele (mesmo padrão
+   * de ManutencaoService.listarChamados: nunca deixa um cliente listar
+   * pedidos de outro cliente da mesma conta).
+   */
+  async listarPedidos(userId: string, filtros: { status?: string } = {}): Promise<PedidoConfeitaria[]> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+
+    let query = this.client.from('pedidos_confeitaria').select('*').eq('conta_id', usuario.contaId)
+    if (usuario.papel === 'cliente') {
+      if (!usuario.clienteId) return []
+      query = query.eq('cliente_id', usuario.clienteId)
+    }
+    if (filtros.status) query = query.eq('status', filtros.status)
+
+    const { data, error } = await query.order('criado_em', { ascending: false })
+    if (error) throw new ErroValidacao(`Falha ao listar pedidos: ${error.message}`)
+    return data.map((linha) => this.linhaParaPedido(linha))
+  }
+
   async criarOrdenProducao(pedidoId: string): Promise<OrdemProducao> {
     const contaId = await this.contaDoPedido(pedidoId)
 

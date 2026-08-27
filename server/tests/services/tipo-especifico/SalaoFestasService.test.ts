@@ -12,6 +12,21 @@ function prepararUsuario(cliente: ReturnType<typeof criarClienteFake>) {
   return usuario['id'] as string
 }
 
+function prepararContaComAdminEId(cliente: ReturnType<typeof criarClienteFake>) {
+  const conta = cliente.semear('contas', [{ nome_empresa: 'Salão X', tipo_negocio: 'salao_festas', plano: 'startup', status: 'ativo', configuracoes_gerais: {} }])[0]!
+  const admin = cliente.semear('usuarios', [
+    { conta_id: conta['id'], email: 'admin2@x.com', senha_hash: 'h', nome: 'Admin', papel: 'admin', cliente_id: null, status: 'ativo' },
+  ])[0]!
+  return { contaId: conta['id'] as string, userIdAdmin: admin['id'] as string }
+}
+
+function prepararUsuarioCliente(cliente: ReturnType<typeof criarClienteFake>, contaId: string, clienteId: string) {
+  const usuario = cliente.semear('usuarios', [
+    { conta_id: contaId, email: `${clienteId}@x.com`, senha_hash: 'h', nome: 'Cliente', papel: 'cliente', cliente_id: clienteId, status: 'ativo' },
+  ])[0]!
+  return usuario['id'] as string
+}
+
 describe('SalaoFestasService.criarEvento', () => {
   it('sem pacote, valorTotal começa em 0', async () => {
     const cliente = criarClienteFake()
@@ -115,5 +130,43 @@ describe('SalaoFestasService.calcularLucroEvento', () => {
     })
 
     expect(await service.calcularLucroEvento(evento.id)).toBe(0)
+  })
+})
+
+describe('SalaoFestasService.listarEventos', () => {
+  it('um usuário papel "cliente" só vê os próprios eventos, mesmo pedindo todos', async () => {
+    const cliente = criarClienteFake()
+    const { contaId, userIdAdmin } = prepararContaComAdminEId(cliente)
+    const service = new SalaoFestasService(paraTipado(cliente))
+
+    const clienteId1 = randomUUID()
+    const meuEvento = await service.criarEvento(userIdAdmin, {
+      clienteId: clienteId1,
+      nomeEvento: 'Aniversário da Ana',
+      tipoEvento: 'aniversario',
+      dataEvento: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    })
+    await service.criarEvento(userIdAdmin, {
+      clienteId: randomUUID(),
+      nomeEvento: 'Casamento',
+      tipoEvento: 'casamento',
+      dataEvento: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+    })
+
+    const userIdCliente = prepararUsuarioCliente(cliente, contaId, clienteId1)
+    const meusEventos = await service.listarEventos(userIdCliente)
+    expect(meusEventos).toHaveLength(1)
+    expect(meusEventos[0]?.id).toBe(meuEvento.id)
+  })
+
+  it('equipe interna vê todos os eventos da conta', async () => {
+    const cliente = criarClienteFake()
+    const userId = prepararUsuario(cliente)
+    const service = new SalaoFestasService(paraTipado(cliente))
+
+    await service.criarEvento(userId, { clienteId: randomUUID(), nomeEvento: 'Festa A', tipoEvento: 'outro', dataEvento: new Date(Date.now() + 86_400_000).toISOString() })
+    await service.criarEvento(userId, { clienteId: randomUUID(), nomeEvento: 'Festa B', tipoEvento: 'outro', dataEvento: new Date(Date.now() + 86_400_000).toISOString() })
+
+    expect(await service.listarEventos(userId)).toHaveLength(2)
   })
 })

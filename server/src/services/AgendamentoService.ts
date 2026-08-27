@@ -69,12 +69,25 @@ export class AgendamentoService {
     return agendamento
   }
 
+  /**
+   * Lista agendamentos da conta do usuário logado — se quem chama tem
+   * papel 'cliente', o filtro de cliente_id vem sempre do próprio
+   * usuário (nunca do parâmetro `filtros.clienteId`), pro mesmo motivo
+   * documentado em ManutencaoService.listarChamados: um cliente não
+   * pode listar agendamentos de outro cliente da mesma conta.
+   */
   async listarAgendamentos(userId: string, filtros: FiltrosAgendamento = {}): Promise<Agendamento[]> {
     const usuario = await this.buscarUsuarioOuFalhar(userId)
     const filtroBanco: Record<string, unknown> = { conta_id: usuario.contaId }
     if (filtros.status) filtroBanco['status'] = filtros.status
-    if (filtros.clienteId) filtroBanco['cliente_id'] = filtros.clienteId
     if (filtros.responsavelId) filtroBanco['responsavel_id'] = filtros.responsavelId
+
+    if (usuario.papel === 'cliente') {
+      if (!usuario.clienteId) return []
+      filtroBanco['cliente_id'] = usuario.clienteId
+    } else if (filtros.clienteId) {
+      filtroBanco['cliente_id'] = filtros.clienteId
+    }
 
     return this.agendamentos.listar(filtroBanco, { ordenarPor: 'data_hora_inicio', ascendente: true })
   }

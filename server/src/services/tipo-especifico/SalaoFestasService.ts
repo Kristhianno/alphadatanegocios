@@ -105,6 +105,27 @@ export class SalaoFestasService {
   }
 
   /**
+   * Lista eventos da conta do usuário logado — se quem chama tem papel
+   * 'cliente', filtra automaticamente só os eventos dele (mesmo padrão
+   * de ManutencaoService.listarChamados: nunca deixa um cliente listar
+   * eventos de outro cliente da mesma conta).
+   */
+  async listarEventos(userId: string, filtros: { status?: string } = {}): Promise<Evento[]> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+
+    let query = this.client.from('eventos').select('*').eq('conta_id', usuario.contaId)
+    if (usuario.papel === 'cliente') {
+      if (!usuario.clienteId) return []
+      query = query.eq('cliente_id', usuario.clienteId)
+    }
+    if (filtros.status) query = query.eq('status', filtros.status)
+
+    const { data, error } = await query.order('data_evento', { ascending: false })
+    if (error) throw new ErroValidacao(`Falha ao listar eventos: ${error.message}`)
+    return data.map((linha) => this.linhaParaEvento(linha))
+  }
+
+  /**
    * Adiciona uma "vaga" de equipe para o evento (ex: "3x Garçom"). O
    * nome do integrante específico ainda não existe nesse ponto — a
    * escalação de pessoas fica pra depois, então `nome` recebe o

@@ -20,10 +20,14 @@ router.get('/tipos-negocio-disponiveis', (c) => c.json(listarSegmentosOnboarding
 /** Pública: alimenta os cards de preço da landing e a tela de checkout, sem hardcode de valores no frontend. */
 router.get('/planos-disponiveis', (c) => c.json(listarPlanosComCheckout(), 200))
 
+/** menuItems é filtrado por papel: MenuItem.papeis omitido = visível pra todos; com papeis definido, só aparece pra quem está na lista (ex: 'estoque' some do menu de quem loga como 'cliente'). */
 router.get('/tipo-negocio', autenticar, carregarContexto, (c) => {
   const conta = c.get('conta')
   if (!conta.tipoNegocio) throw new ErroProibido('Esta conta ainda não escolheu um tipo de negócio.')
-  return c.json(getConfigTipoNegocio(conta.tipoNegocio), 200)
+  const config = getConfigTipoNegocio(conta.tipoNegocio)
+  const papel = c.get('usuarioAutenticado').papel
+  const menuItems = config.menuItems.filter((item) => !item.papeis || item.papeis.includes(papel))
+  return c.json({ ...config, menuItems }, 200)
 })
 
 router.get('/plano', autenticar, carregarContexto, (c) => c.json(getConfigPlano(c.get('conta').plano), 200))
