@@ -30,6 +30,8 @@ export type StatusUsuario = 'ativo' | 'inativo' | 'suspenso'
 /**
  * O tenant do SaaS: uma empresa assinante. Espelha 1:1 a tabela `contas`.
  */
+export type CicloCobranca = 'mensal' | 'anual'
+
 export interface Conta {
   id: string
   nomeEmpresa: string
@@ -39,6 +41,16 @@ export interface Conta {
   status: StatusConta
   /** Preferências livres (tema, notificações, integrações) sem coluna própria. */
   configuracoesGerais: Record<string, unknown>
+  /** Periodicidade da assinatura escolhida no checkout. Nulo até a conta escolher um plano. */
+  cicloCobranca: CicloCobranca | null
+  /** Id do Customer no Stripe — preenchido após o primeiro checkout. */
+  stripeCustomerId: string | null
+  /** Id da Subscription no Stripe — preenchido após o primeiro checkout. */
+  stripeSubscriptionId: string | null
+  /** Fim do período de teste grátis de 7 dias (trial_end da subscription no Stripe). */
+  trialTerminaEm: Date | null
+  /** true quando a conta veio de um CTA de plano na landing e ainda não completou o checkout — bloqueia o dashboard (ver Layout.jsx). */
+  assinaturaPendente: boolean
   criadoEm: Date
   atualizadoEm: Date
 }
@@ -47,7 +59,8 @@ export interface Conta {
  * Dados necessários para abrir uma nova conta. tipoNegocio fica de fora
  * de propósito — só é definido depois, em selecionarTipoNegocio().
  */
-export type NovaContaInput = Pick<Conta, 'nomeEmpresa'> & Partial<Pick<Conta, 'plano' | 'configuracoesGerais'>>
+export type NovaContaInput = Pick<Conta, 'nomeEmpresa'> &
+  Partial<Pick<Conta, 'plano' | 'configuracoesGerais' | 'cicloCobranca' | 'assinaturaPendente'>>
 
 /**
  * Um login dentro de uma conta. Espelha 1:1 a tabela `usuarios`,

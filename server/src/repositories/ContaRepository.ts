@@ -15,6 +15,11 @@ export class ContaRepository extends Repository<Conta> {
       plano: linha['plano'] as Conta['plano'],
       status: linha['status'] as Conta['status'],
       configuracoesGerais: (linha['configuracoes_gerais'] as Record<string, unknown>) ?? {},
+      cicloCobranca: (linha['ciclo_cobranca'] as Conta['cicloCobranca']) ?? null,
+      stripeCustomerId: (linha['stripe_customer_id'] as string) ?? null,
+      stripeSubscriptionId: (linha['stripe_subscription_id'] as string) ?? null,
+      trialTerminaEm: linha['trial_termina_em'] ? new Date(linha['trial_termina_em'] as string) : null,
+      assinaturaPendente: (linha['assinatura_pendente'] as boolean) ?? false,
       criadoEm: new Date(linha['criado_em'] as string),
       atualizadoEm: new Date(linha['atualizado_em'] as string),
     }
@@ -27,6 +32,17 @@ export class ContaRepository extends Repository<Conta> {
     if (dados.plano !== undefined) linha['plano'] = dados.plano
     if (dados.status !== undefined) linha['status'] = dados.status
     if (dados.configuracoesGerais !== undefined) linha['configuracoes_gerais'] = dados.configuracoesGerais
+    if (dados.cicloCobranca !== undefined) linha['ciclo_cobranca'] = dados.cicloCobranca
+    if (dados.stripeCustomerId !== undefined) linha['stripe_customer_id'] = dados.stripeCustomerId
+    if (dados.stripeSubscriptionId !== undefined) linha['stripe_subscription_id'] = dados.stripeSubscriptionId
+    if (dados.trialTerminaEm !== undefined) linha['trial_termina_em'] = dados.trialTerminaEm
+    if (dados.assinaturaPendente !== undefined) linha['assinatura_pendente'] = dados.assinaturaPendente
     return linha
+  }
+
+  /** Usado pelo webhook do Stripe pra achar a conta dona de uma subscription já vinculada. */
+  async buscarPorStripeSubscriptionId(stripeSubscriptionId: string): Promise<Conta | null> {
+    const [conta] = await this.listar({ stripe_subscription_id: stripeSubscriptionId }, { limite: 1 })
+    return conta ?? null
   }
 }

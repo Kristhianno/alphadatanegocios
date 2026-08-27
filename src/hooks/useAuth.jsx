@@ -40,6 +40,11 @@ function montarSessao(usuario, conta) {
     logoUrl: conta?.configuracoesGerais?.logoUrl ?? null,
     tecnicoId: ponte.tecnicoId ?? null,
     clienteId: ponte.clienteId ?? usuario.clienteId ?? null,
+    // Assinatura (Stripe) — ver BillingService no backend.
+    plano: conta?.plano ?? null,
+    cicloCobranca: conta?.cicloCobranca ?? null,
+    trialTerminaEm: conta?.trialTerminaEm ?? null,
+    assinaturaPendente: conta?.assinaturaPendente ?? false,
   }
 }
 
@@ -94,9 +99,10 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function registrar(email, senha, nomeEmpresa) {
+  /** `plano`/`ciclo` só vêm preenchidos quando o cadastro nasceu de um CTA de plano na landing (ver Login.jsx). */
+  async function registrar(email, senha, nomeEmpresa, plano, ciclo) {
     try {
-      const { token, usuario, conta } = await api.post('/auth/registrar', { email, senha, nomeEmpresa }, { comAuth: false })
+      const { token, usuario, conta } = await api.post('/auth/registrar', { email, senha, nomeEmpresa, plano, ciclo }, { comAuth: false })
       setToken(token)
       const sessao = montarSessao(usuario, conta)
       setUser(sessao)
@@ -148,13 +154,65 @@ export function AuthProvider({ children }) {
     }
   }
 
+  /** Cria a Checkout Session do teste grátis (7 dias) — chamado por Checkout.jsx, depois do onboarding. `plano`/`ciclo` são opcionais, pra trocar o que foi escolhido na landing antes de pagar. */
+  async function iniciarCheckout(plano, ciclo) {
+    try {
+      const { url } = await api.post('/billing/checkout', { plano, ciclo })
+      return { ok: true, url }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao iniciar o checkout. Tente novamente.' }
+    }
+  }
+
+  /** Chamado por CheckoutSucesso.jsx ao voltar do Stripe — grava a assinatura na conta e libera o dashboard. */
+  async function confirmarCheckout(sessionId) {
+    try {
+      const conta = await api.post('/billing/confirmar-checkout', { sessionId })
+      setUser((u) =>
+        u
+          ? { ...u, plano: conta.plano, cicloCobranca: conta.cicloCobranca, trialTerminaEm: conta.trialTerminaEm, assinaturaPendente: conta.assinaturaPendente }
+          : u,
+      )
+      return { ok: true }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao confirmar a assinatura. Tente novamente.' }
+    }
+  }
+
+  /** Abre o Customer Portal do Stripe (trocar cartão, mudar de plano) — botão em Admin/Configuracoes. */
+  async function abrirPortalAssinatura() {
+    try {
+      const { url } = await api.post('/billing/portal', {})
+      return { ok: true, url }
+    } catch (erro) {
+      return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao abrir o gerenciamento de assinatura.' }
+    }
+  }
+
   function logout() {
     clearToken()
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, carregando, login, entrarComSupabase, registrar, selecionarTipoNegocio, atualizarBranding, atualizarPerfil, trocarSenha, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        carregando,
+        login,
+        entrarComSupabase,
+        registrar,
+        selecionarTipoNegocio,
+        atualizarBranding,
+        atualizarPerfil,
+        trocarSenha,
+        iniciarCheckout,
+        confirmarCheckout,
+        abrirPortalAssinatura,
+        logout,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

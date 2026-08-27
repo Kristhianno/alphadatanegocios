@@ -20,6 +20,10 @@ import foto1 from '../assets/login-foto-1.jpeg'
 import foto2 from '../assets/login-foto-2.jpeg'
 import foto3 from '../assets/login-foto-3.jpeg'
 
+// Nomes de marketing dos planos (landing/checkout) — espelha `nomeMarketing`
+// de server/src/config/planos.config.ts, só pra exibição aqui no cadastro.
+const NOME_MARKETING_PLANO = { startup: 'Starter', profissional: 'Pro' }
+
 const inputComIconeClasse = 'w-full rounded-input border border-muted-dark pl-10 pr-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const iconeCampoClasse = 'absolute left-3 top-1/2 -translate-y-1/2 text-[#999] pointer-events-none'
 
@@ -52,6 +56,13 @@ export default function Login({ apenasCadastro = false }) {
   // que um cadastro normal usa, só que chegando aqui já autenticada.
   const sessaoPendenteInicial = location.state?.sessaoPendente ?? null
 
+  // Vindo do CTA de um plano na landing (ver Landing.jsx) — carrega o
+  // plano/ciclo escolhido pro cadastro, que segue pro checkout do
+  // Stripe assim que o onboarding (escolher-negocio/escolher-logo)
+  // terminar (ver irParaDashboard abaixo).
+  const planoEscolhido = location.state?.plano ?? null
+  const cicloEscolhido = location.state?.ciclo ?? null
+
   // 'entrar' | 'criar-conta' | 'escolher-negocio' | 'escolher-logo'
   const [modo, setModo] = useState(sessaoPendenteInicial ? 'escolher-negocio' : apenasCadastro ? 'criar-conta' : 'entrar')
 
@@ -80,6 +91,10 @@ export default function Login({ apenasCadastro = false }) {
   }, [modo, tiposNegocio.length])
 
   function irParaDashboard(sessao) {
+    if (sessao.assinaturaPendente) {
+      navigate('/checkout', { replace: true })
+      return
+    }
     navigate(sessao.deveTrocarSenha ? '/trocar-senha' : `/${sessao.userType}/dashboard`, { replace: true })
   }
 
@@ -109,7 +124,7 @@ export default function Login({ apenasCadastro = false }) {
       return
     }
     setEnviando(true)
-    const resultado = await registrar(email, senha, nomeEmpresa)
+    const resultado = await registrar(email, senha, nomeEmpresa, planoEscolhido ?? undefined, cicloEscolhido ?? undefined)
     setEnviando(false)
     if (!resultado.ok) {
       setErro(resultado.error)
@@ -313,7 +328,11 @@ export default function Login({ apenasCadastro = false }) {
                 {modo === 'entrar' && !apenasCadastro ? 'Bem-vindo de volta!' : 'Crie sua conta'}
               </p>
               <p className="text-body text-[#666] text-center mb-6">
-                {modo === 'entrar' && !apenasCadastro ? 'Faça login para acessar seu negócio' : 'Comece a organizar seu negócio hoje'}
+                {modo === 'entrar' && !apenasCadastro
+                  ? 'Faça login para acessar seu negócio'
+                  : planoEscolhido
+                    ? `Plano ${NOME_MARKETING_PLANO[planoEscolhido] ?? ''} escolhido — falta só criar sua conta para começar o teste grátis de 7 dias`
+                    : 'Comece a organizar seu negócio hoje'}
               </p>
 
               {!apenasCadastro && (

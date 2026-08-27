@@ -6,7 +6,7 @@
  * de existir qualquer token.
  */
 import { Hono } from 'hono'
-import { getConfigPlano } from '../config/planos.config.js'
+import { getConfigPlano, listarPlanosComCheckout } from '../config/planos.config.js'
 import { getConfigTipoNegocio, listarSegmentosOnboarding } from '../utils/config-factory.js'
 import { autenticar } from '../middleware/auth.middleware.js'
 import { carregarContexto } from '../middleware/contexto-negocio.middleware.js'
@@ -16,6 +16,9 @@ import type { AppEnv } from '../types/hono.js'
 const router = new Hono<AppEnv>()
 
 router.get('/tipos-negocio-disponiveis', (c) => c.json(listarSegmentosOnboarding(), 200))
+
+/** Pública: alimenta os cards de preço da landing e a tela de checkout, sem hardcode de valores no frontend. */
+router.get('/planos-disponiveis', (c) => c.json(listarPlanosComCheckout(), 200))
 
 router.get('/tipo-negocio', autenticar, carregarContexto, (c) => {
   const conta = c.get('conta')

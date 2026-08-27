@@ -10,7 +10,7 @@ import { getSupabase } from '../config/database.config.js'
 import { UserService } from '../services/UserService.js'
 import { autenticar, requererPapel } from '../middleware/auth.middleware.js'
 import { assinarToken } from '../utils/jwt.js'
-import type { Conta, TipoNegocio, Usuario } from '../models/User.js'
+import type { CicloCobranca, Conta, Plano, TipoNegocio, Usuario } from '../models/User.js'
 import type { AppEnv } from '../types/hono.js'
 
 const router = new Hono<AppEnv>()
@@ -21,8 +21,14 @@ function emitirResposta(usuario: Usuario, conta: Conta) {
 }
 
 router.post('/registrar', async (c) => {
-  const { email, senha, nomeEmpresa } = (await c.req.json()) as Record<string, unknown>
-  const { conta, usuario } = await userService().criarUsuario(email as string, senha as string, nomeEmpresa as string)
+  const { email, senha, nomeEmpresa, plano, ciclo } = (await c.req.json()) as Record<string, unknown>
+  const { conta, usuario } = await userService().criarUsuario(
+    email as string,
+    senha as string,
+    nomeEmpresa as string,
+    plano as Plano | undefined,
+    ciclo as CicloCobranca | undefined,
+  )
   const token = await assinarToken({ sub: usuario.id, contaId: conta.id, papel: usuario.papel, email: usuario.email, clienteId: usuario.clienteId })
   return c.json({ token, ...emitirResposta(usuario, conta) }, 201)
 })

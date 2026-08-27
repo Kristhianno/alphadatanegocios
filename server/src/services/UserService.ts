@@ -9,7 +9,8 @@
  */
 import { z } from 'zod'
 import type { Cliente } from '../config/database.config.js'
-import type { Conta, TipoNegocio, Usuario } from '../models/User.js'
+import { PLANOS_COM_CHECKOUT } from '../config/planos.config.js'
+import type { CicloCobranca, Conta, Plano, TipoNegocio, Usuario } from '../models/User.js'
 import { ContaRepository } from '../repositories/ContaRepository.js'
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js'
 import { hashSenha, verificarSenha } from '../utils/senha.js'
@@ -22,6 +23,9 @@ const schemaCriarUsuario = z.object({
   email: z.string().email('Email inválido.'),
   senha: z.string().min(8, 'A senha precisa de ao menos 8 caracteres.'),
   nomeEmpresa: z.string().trim().min(2, 'Informe o nome da empresa.'),
+  /** Presentes quando o cadastro veio de um CTA de plano na landing — ver POST /auth/registrar. */
+  plano: z.enum(PLANOS_COM_CHECKOUT as [Plano, ...Plano[]]).optional(),
+  ciclo: z.enum(['mensal', 'anual']).optional(),
 })
 
 const schemaAutenticar = z.object({
@@ -72,14 +76,33 @@ export class UserService {
    * Cadastro inicial: abre a conta (sem vertical ainda) e cria o
    * primeiro login, com papel 'admin'. tipoNegocio é escolhido depois,
    * em {@link selecionarTipoNegocio} — por isso não é parâmetro aqui.
+   *
+   * `plano`/`ciclo` só vêm preenchidos quando o cadastro nasceu de um
+   * CTA de plano na landing page: a conta já nasce com esse plano e
+   * `assinaturaPendente: true`, que trava o dashboard (Layout.jsx) até
+   * o checkout no Stripe ser concluído (POST /billing/checkout,
+   * disparado só depois do onboarding — ver Login.jsx). Sem esses dois
+   * campos, o comportamento é idêntico ao de sempre: plano 'startup',
+   * sem cobrança nenhuma.
    */
-  async criarUsuario(email: string, senha: string, nomeEmpresa: string): Promise<{ conta: Conta; usuario: Usuario }> {
-    const dados = schemaCriarUsuario.parse({ email, senha, nomeEmpresa })
+  async criarUsuario(
+    email: string,
+    senha: string,
+    nomeEmpresa: string,
+    plano?: Plano,
+    ciclo?: CicloCobranca,
+  ): Promise<{ conta: Conta; usuario: Usuario }> {
+    const dados = schemaCriarUsuario.parse({ email, senha, nomeEmpresa, plano, ciclo })
 
     const existente = await this.usuarios.buscarComCredenciaisPorEmail(dados.email)
     if (existente) throw new ErroConflito(`Já existe uma conta com o email "${dados.email}".`)
 
-    const conta = await this.contas.criar({ nomeEmpresa: dados.nomeEmpresa, plano: 'startup', configuracoesGerais: {} })
+    const conta = await this.contas.criar({
+      nomeEmpresa: dados.nomeEmpresa,
+      plano: dados.plano ?? 'startup',
+      configuracoesGerais: {},
+      ...(dados.plano ? { cicloCobranca: dados.ciclo, assinaturaPendente: true } : {}),
+    })
     const senhaHash = await hashSenha(dados.senha)
     let usuario = await this.usuarios.criar({
       contaId: conta.id,

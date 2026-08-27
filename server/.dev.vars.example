@@ -2,3 +2,14 @@ SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=replace-with-service-role-secret
 LOG_LEVEL=info
 JWT_SECRET=replace-with-a-long-random-secret
+
+# Billing (Stripe) — ver server/scripts/stripe-setup.ts pra criar produtos/preços
+# e imprimir os 4 STRIPE_PRICE_*. APP_URL é a origem pública do frontend, usada
+# pra montar success_url/cancel_url/return_url do Checkout e do Customer Portal.
+STRIPE_SECRET_KEY=sk_test_replace-with-your-test-secret-key
+STRIPE_WEBHOOK_SECRET=whsec_replace-with-your-webhook-signing-secret
+STRIPE_PRICE_STARTUP_MENSAL=price_replace
+STRIPE_PRICE_STARTUP_ANUAL=price_replace
+STRIPE_PRICE_PROFISSIONAL_MENSAL=price_replace
+STRIPE_PRICE_PROFISSIONAL_ANUAL=price_replace
+APP_URL=http://localhost:5173

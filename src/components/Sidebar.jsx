@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import {
   IconChartBar, IconListCheck, IconUsers, IconUserBolt, IconFileTypePdf, IconSettings,
   IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX, IconApps,
@@ -74,6 +74,16 @@ const ICONES_POR_ID = {
 }
 const ICONE_PADRAO = IconApps
 
+// Espelha `nomeMarketing` de server/src/config/planos.config.ts, só pra exibição aqui.
+const NOME_MARKETING_PLANO = { startup: 'Starter', profissional: 'Pro', enterprise: 'Enterprise' }
+
+function diasRestantesTrial(trialTerminaEm) {
+  if (!trialTerminaEm) return null
+  const diff = new Date(trialTerminaEm).getTime() - Date.now()
+  if (diff <= 0) return null
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+}
+
 export default function Sidebar({ userType, aberta, onClose }) {
   const { user } = useAuth()
   const [menuDinamico, setMenuDinamico] = useState(null)
@@ -111,7 +121,7 @@ export default function Sidebar({ userType, aberta, onClose }) {
     <>
       {aberta && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={onClose} />}
       <aside
-        className={`bg-muted border-r border-muted-dark w-64 shrink-0 fixed md:sticky top-0 md:top-16 h-screen md:h-[calc(100vh-4rem)] z-40 md:z-0 transition-transform
+        className={`bg-muted border-r border-muted-dark w-64 shrink-0 fixed md:sticky top-0 md:top-16 h-screen md:h-[calc(100vh-4rem)] z-40 md:z-0 transition-transform flex flex-col
         ${aberta ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
         <div className="flex items-center justify-between p-4 md:hidden">
@@ -135,6 +145,21 @@ export default function Sidebar({ userType, aberta, onClose }) {
             </NavLink>
           ))}
         </nav>
+
+        {userType === 'admin' && user?.plano && (
+          <Link
+            to="/admin/configuracoes"
+            onClick={onClose}
+            className="mt-auto m-3 rounded-card bg-surface border border-muted-dark p-3 text-label hover:border-primary transition-colors"
+          >
+            <p className="font-semibold text-[#1a1a1a]">Plano {NOME_MARKETING_PLANO[user.plano] ?? user.plano}</p>
+            {diasRestantesTrial(user.trialTerminaEm) != null ? (
+              <p className="text-primary mt-0.5">{diasRestantesTrial(user.trialTerminaEm)} dias de teste grátis</p>
+            ) : (
+              <p className="text-[#999] mt-0.5">Gerenciar assinatura</p>
+            )}
+          </Link>
+        )}
       </aside>
     </>
   )

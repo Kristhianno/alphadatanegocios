@@ -18,6 +18,8 @@ import confeitariaRoutes from './routes/confeitaria.routes.js'
 import salaoFestasRoutes from './routes/salao-festas.routes.js'
 import fotografiaRoutes from './routes/fotografia.routes.js'
 import manutencaoRoutes from './routes/manutencao.routes.js'
+import billingRoutes from './routes/billing.routes.js'
+import leadsRoutes from './routes/leads.routes.js'
 import { tratarErro } from './middleware/erro.middleware.js'
 import type { AppEnv } from './types/hono.js'
 
@@ -57,6 +59,8 @@ app.route('/confeitaria', confeitariaRoutes)
 app.route('/salao-festas', salaoFestasRoutes)
 app.route('/fotografia', fotografiaRoutes)
 app.route('/manutencao', manutencaoRoutes)
+app.route('/billing', billingRoutes)
+app.route('/leads', leadsRoutes)
 
 app.notFound((c) => c.json({ erro: { codigo: 'ROTA_NAO_ENCONTRADA', mensagem: `Rota "${c.req.method} ${c.req.path}" não existe.` } }, 404))
 

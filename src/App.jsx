@@ -3,11 +3,14 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { aplicarCorPrimaria, lerCorPrimariaSalva, resetarCorPrimaria } from './utils/tema'
 import Layout from './components/Layout'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
 import CallbackSupabase from './pages/CallbackSupabase'
 import DemoAutoLogin from './pages/DemoAutoLogin'
 import CadastroCliente from './pages/CadastroCliente'
 import TrocarSenha from './pages/TrocarSenha'
+import Checkout from './pages/Checkout'
+import CheckoutSucesso from './pages/CheckoutSucesso'
 import EmConstrucao from './pages/EmConstrucao'
 
 import AdminDashboard from './pages/Admin/Dashboard'
@@ -51,9 +54,11 @@ function RaizApp() {
   const { isAuthenticated, user } = useAuth()
   if (isAuthenticated) {
     if (!user.tipoNegocio) return <Navigate to="/login" replace state={{ sessaoPendente: user }} />
+    if (user.assinaturaPendente) return <Navigate to="/checkout" replace />
     return <Navigate to={user.deveTrocarSenha ? '/trocar-senha' : `/${user.userType}/dashboard`} replace />
   }
-  return <Navigate to="/login" replace />
+  // Visitante sem sessão: a raiz é a landing page pública, não mais um redirect direto pro /login.
+  return <Landing />
 }
 
 export default function App() {
@@ -86,6 +91,8 @@ export default function App() {
       <Route path="/demo/:vertical" element={<DemoAutoLogin />} />
       <Route path="/cadastro-cliente/:token" element={<CadastroCliente />} />
       <Route path="/trocar-senha" element={<TrocarSenha />} />
+      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
 
       <Route path="/admin" element={<Layout userType="admin" />}>
         <Route path="dashboard" element={<AdminDashboardRoteado />} />
