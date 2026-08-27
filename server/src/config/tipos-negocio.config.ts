@@ -39,8 +39,7 @@ function itemServicos(label: string): MenuItem {
 
 const CONFEITARIA: TipoNegocioConfig = {
   tipo: 'confeitaria',
-  nome: 'Alimentação & Encomendas',
-  subtitulo: 'Confeitaria, Salgados, Marmitas, Padarias Artesanais, Docerias',
+  nome: 'Confeitaria e Salgados',
   icone: '🧁',
   modulos: ['catalogo', 'receitas', 'pedidos', 'producao', 'estoque'],
   menuItems: [
@@ -68,8 +67,7 @@ const CONFEITARIA: TipoNegocioConfig = {
 
 const SALAO_FESTAS: TipoNegocioConfig = {
   tipo: 'salao_festas',
-  nome: 'Espaços & Locação de Estruturas',
-  subtitulo: 'Salão de Festas, Coworking, Locação de Brinquedos, Chácaras, Quadras',
+  nome: 'Salão de Festas / Eventos',
   icone: '🎉',
   modulos: ['pacotes', 'eventos', 'equipe', 'equipamentos', 'financeiro'],
   menuItems: [
@@ -98,8 +96,7 @@ const SALAO_FESTAS: TipoNegocioConfig = {
 
 const FOTOGRAFIA_VIDEO: TipoNegocioConfig = {
   tipo: 'fotografia_video',
-  nome: 'Serviços Criativos & Produção',
-  subtitulo: 'Fotografia, Vídeo, Design Gráfico, Tatuadores, Estúdios',
+  nome: 'Fotografia e Vídeo',
   icone: '📷',
   modulos: ['pacotes', 'sessoes', 'edicao', 'portfolio', 'galeria'],
   menuItems: [
@@ -125,8 +122,7 @@ const FOTOGRAFIA_VIDEO: TipoNegocioConfig = {
 
 const MANUTENCAO: TipoNegocioConfig = {
   tipo: 'manutencao',
-  nome: 'Ordens de Serviço & Manutenção',
-  subtitulo: 'Manutenções Gerais, Assistência Técnica, Ar Condicionado, Oficinas',
+  nome: 'Manutenções Gerais',
   icone: '🔧',
   modulos: ['chamados', 'orcamentos', 'ordens', 'tecnicos', 'preventivas'],
   menuItems: [

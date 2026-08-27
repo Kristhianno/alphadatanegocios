@@ -119,10 +119,14 @@ export default function Login({ apenasCadastro = false }) {
     setModo('escolher-negocio')
   }
 
-  async function handleEscolherNegocio(tipo, descricaoPersonalizada, segmentoEscolhido) {
+  // `segmentoId` identifica o card na UI (pode haver mais de um card pro
+  // mesmo tipoNegocio técnico, ex: "Saúde & Bem-Estar" e "Espaços & Locação"
+  // caem ambos em salao_festas) — por isso não dá pra usar tipoNegocio
+  // como chave de qual botão está "Configurando...".
+  async function handleEscolherNegocio(segmentoId, tipoNegocio, descricaoPersonalizada, segmentoNome) {
     setErro('')
-    setTipoEscolhido(tipo)
-    const resultado = await selecionarTipoNegocio(tipo, descricaoPersonalizada, segmentoEscolhido)
+    setTipoEscolhido(segmentoId)
+    const resultado = await selecionarTipoNegocio(tipoNegocio, descricaoPersonalizada, segmentoNome)
     if (!resultado.ok) {
       setErro(resultado.error)
       setTipoEscolhido(null)
@@ -132,18 +136,18 @@ export default function Login({ apenasCadastro = false }) {
   }
 
   function handleClickTipo(t) {
-    if (t.tipo === 'outro') {
+    if (t.tipoNegocio === 'outro') {
       setErro('')
       setMostrarCampoOutro(true)
       return
     }
-    handleEscolherNegocio(t.tipo, undefined, t.nome)
+    handleEscolherNegocio(t.id, t.tipoNegocio, undefined, t.nome)
   }
 
   function confirmarOutro(e) {
     e.preventDefault()
     if (!descricaoOutro.trim()) return
-    handleEscolherNegocio('outro', descricaoOutro.trim(), descricaoOutro.trim())
+    handleEscolherNegocio('outro', 'outro', descricaoOutro.trim(), descricaoOutro.trim())
   }
 
   function selecionarLogo(e) {
@@ -212,16 +216,16 @@ export default function Login({ apenasCadastro = false }) {
                 <div className="grid grid-cols-1 gap-2">
                   {tiposNegocio.map((t) => (
                     <button
-                      key={t.tipo}
+                      key={t.id}
                       type="button"
                       disabled={!!tipoEscolhido}
                       onClick={() => handleClickTipo(t)}
                       className="flex flex-col items-start gap-0.5 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60"
                     >
                       <span className="text-body font-medium text-[#1a1a1a]">
-                        {tipoEscolhido === t.tipo ? 'Configurando...' : t.nome}
+                        {tipoEscolhido === t.id ? 'Configurando...' : t.nome}
                       </span>
-                      {tipoEscolhido !== t.tipo && t.subtitulo && (
+                      {tipoEscolhido !== t.id && t.subtitulo && (
                         <span className="text-label text-[#999]">{t.subtitulo}</span>
                       )}
                     </button>

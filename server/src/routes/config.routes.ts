@@ -7,7 +7,7 @@
  */
 import { Hono } from 'hono'
 import { getConfigPlano } from '../config/planos.config.js'
-import { getConfigTipoNegocio, listarTiposNegocioDisponiveis } from '../utils/config-factory.js'
+import { getConfigTipoNegocio, listarSegmentosOnboarding } from '../utils/config-factory.js'
 import { autenticar } from '../middleware/auth.middleware.js'
 import { carregarContexto } from '../middleware/contexto-negocio.middleware.js'
 import { ErroProibido } from '../errors/AppError.js'
@@ -15,7 +15,7 @@ import type { AppEnv } from '../types/hono.js'
 
 const router = new Hono<AppEnv>()
 
-router.get('/tipos-negocio-disponiveis', (c) => c.json(listarTiposNegocioDisponiveis(), 200))
+router.get('/tipos-negocio-disponiveis', (c) => c.json(listarSegmentosOnboarding(), 200))
 
 router.get('/tipo-negocio', autenticar, carregarContexto, (c) => {
   const conta = c.get('conta')

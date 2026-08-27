@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getConfigTipoNegocio, listarTiposNegocioDisponiveis } from '../../src/utils/config-factory.js'
+import { getConfigTipoNegocio, listarSegmentosOnboarding } from '../../src/utils/config-factory.js'
 
 const TODOS_OS_TIPOS = ['confeitaria', 'salao_festas', 'fotografia_video', 'manutencao', 'outro'] as const
 
@@ -29,10 +29,18 @@ describe('getConfigTipoNegocio', () => {
   })
 })
 
-describe('listarTiposNegocioDisponiveis', () => {
-  it('lista os 5 verticais, um de cada', () => {
-    const lista = listarTiposNegocioDisponiveis()
-    expect(lista).toHaveLength(5)
-    expect(new Set(lista.map((c) => c.tipo)).size).toBe(5)
+describe('listarSegmentosOnboarding', () => {
+  it('lista os cards do seletor, cada um mapeando pra um tipoNegocio válido', () => {
+    const lista = listarSegmentosOnboarding()
+    expect(lista.length).toBeGreaterThan(0)
+    for (const segmento of lista) {
+      expect(segmento.nome.length).toBeGreaterThan(0)
+      expect(TODOS_OS_TIPOS).toContain(segmento.tipoNegocio)
+    }
+  })
+
+  it('inclui o card de fallback "outro"', () => {
+    const lista = listarSegmentosOnboarding()
+    expect(lista.some((s) => s.tipoNegocio === 'outro')).toBe(true)
   })
 })
