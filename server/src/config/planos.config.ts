@@ -38,7 +38,11 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     precoAnualTotalCentavos: 59_880,
     limiteUsuarios: 3,
     limiteAgendamentosMes: 100,
-    recursos: ['1 vertical de negócio', 'Agendamentos e catálogo', 'Suporte por email'],
+    recursos: [
+      'Ordens de serviço com checklist, fotos e assinatura do cliente',
+      'Agenda em tempo real e catálogo de serviços',
+      'Suporte por email',
+    ],
   },
   profissional: {
     plano: 'profissional',
@@ -49,7 +53,11 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     precoAnualTotalCentavos: 143_880,
     limiteUsuarios: 15,
     limiteAgendamentosMes: 1_000,
-    recursos: ['1 vertical de negócio', 'Relatórios do vertical', 'Suporte prioritário'],
+    recursos: [
+      'Tudo do Starter, para equipes maiores',
+      'Relatórios com exportação em PDF e planilha',
+      'Suporte prioritário',
+    ],
   },
   enterprise: {
     plano: 'enterprise',
@@ -60,7 +68,11 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     precoAnualTotalCentavos: null,
     limiteUsuarios: 100,
     limiteAgendamentosMes: null,
-    recursos: ['1 vertical de negócio', 'Relatórios avançados', 'Suporte dedicado'],
+    recursos: [
+      'Tudo do Pro, para operações maiores',
+      'Relatórios avançados',
+      'Suporte dedicado',
+    ],
   },
 }
 

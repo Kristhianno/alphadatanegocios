@@ -28,7 +28,7 @@ function PricingCard({ config, ciclo, destaque, onEscolher }) {
       {destaque && <span className="self-start text-label font-semibold bg-white/20 rounded-btn px-2 py-0.5 mb-3">Mais popular</span>}
       <p className="text-h2 mb-1">{config.nomeMarketing}</p>
       <p className={`text-body mb-5 ${destaque ? 'text-blue-100' : 'text-[#666]'}`}>
-        Até {config.limiteUsuarios} usuários{config.limiteAgendamentosMes ? ` · ${config.limiteAgendamentosMes} agendamentos/mês` : ''}
+        Agendamentos e ordens de serviço ilimitados
       </p>
 
       <p className="mb-1">
