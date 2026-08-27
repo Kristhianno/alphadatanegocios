@@ -45,7 +45,7 @@ export default function DemoAutoLogin() {
       className="min-h-screen relative bg-cover bg-center"
       style={{ backgroundImage: `url(${fundoLogin})` }}
     >
-      <div className="absolute inset-0 z-10 flex items-center justify-center p-4 py-10">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-10">
         <div className="w-full max-w-md bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-8 text-center">
           <div className="flex justify-center mb-6">
             <AlphaDataLogo />

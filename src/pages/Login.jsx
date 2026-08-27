@@ -212,33 +212,34 @@ export default function Login({ apenasCadastro = false }) {
       className="min-h-screen relative bg-cover bg-center"
       style={{ backgroundImage: `url(${fundoLogin})` }}
     >
-      <div className="absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-10 2xl:px-16 py-10 md:pr-[38%] lg:pr-[34%]">
-      <div className="w-full max-w-6xl flex items-center justify-center gap-16">
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-10 2xl:px-16 py-10 md:pr-[38%] lg:pr-[34%]">
+      <div className="w-full max-w-6xl flex items-center justify-center gap-6 xl:gap-10 2xl:gap-16">
 
-        {/* Painel de marketing — replica o template topNEGOCIOS.png. Só em
-            telas bem largas: abaixo de 2xl não sobra espaço decente ao
-            lado do cartão (que é largo de propósito) mais a coluna de fotos. */}
-        <div className="hidden 2xl:flex flex-col shrink-0 w-[400px] bg-white/55 backdrop-blur-md rounded-card p-7">
-          <div className="mb-8">
+        {/* Painel de marketing — replica o template topNEGOCIOS.png. Some
+            abaixo de min-[900px] (não sobra espaço nem pro cartão sozinho
+            direito); dali pra cima encolhe em 3 passos (900/xl/2xl) em vez
+            de simplesmente aparecer inteiro só a partir de uma tela enorme. */}
+        <div className="hidden min-[900px]:flex flex-col shrink-0 w-[260px] xl:w-[320px] 2xl:w-[400px] bg-white/55 backdrop-blur-md rounded-card p-5 xl:p-6 2xl:p-7">
+          <div className="mb-5 2xl:mb-8">
             <AlphaDataLogo />
           </div>
-          <p className="text-5xl font-extrabold leading-none text-[#12203a]">Negócios</p>
-          <p className="text-3xl font-extrabold leading-tight text-[#12203a] mt-3">um sistema</p>
-          <p className="text-3xl font-extrabold leading-tight text-primary relative inline-block w-fit">
+          <p className="text-3xl 2xl:text-5xl font-extrabold leading-none text-[#12203a]">Negócios</p>
+          <p className="text-xl 2xl:text-3xl font-extrabold leading-tight text-[#12203a] mt-2 2xl:mt-3">um sistema</p>
+          <p className="text-xl 2xl:text-3xl font-extrabold leading-tight text-primary relative inline-block w-fit">
             vários negócios
-            <svg className="absolute left-0 -bottom-1.5 w-full" height="8" viewBox="0 0 200 8" fill="none" preserveAspectRatio="none">
+            <svg className="absolute left-0 -bottom-1 2xl:-bottom-1.5 w-full" height="8" viewBox="0 0 200 8" fill="none" preserveAspectRatio="none">
               <path d="M2 5.5C40 1 120 1 198 5.5" stroke="#0066CC" strokeWidth="3" strokeLinecap="round" />
             </svg>
           </p>
-          <p className="text-body text-[#555] mt-6 leading-relaxed">
+          <p className="text-label 2xl:text-body text-[#555] mt-4 2xl:mt-6 leading-relaxed">
             Soluções completas para simplificar, organizar e fazer seu negócio crescer.
           </p>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-6 mt-12">
+          <div className="grid grid-cols-2 gap-x-4 2xl:gap-x-6 gap-y-4 2xl:gap-y-6 mt-6 2xl:mt-12">
             {PAINEL_RECURSOS.map(({ Icon, texto }) => (
-              <div key={texto} className="flex flex-col items-start gap-2">
-                <div className="h-11 w-11 rounded-input bg-primary-light flex items-center justify-center text-primary">
-                  <Icon size={22} />
+              <div key={texto} className="flex flex-col items-start gap-1.5 2xl:gap-2">
+                <div className="h-8 w-8 2xl:h-11 2xl:w-11 rounded-input bg-primary-light flex items-center justify-center text-primary">
+                  <Icon size={18} />
                 </div>
                 <span className="text-label text-[#555] leading-snug">{texto}</span>
               </div>
@@ -395,6 +396,8 @@ export default function Login({ apenasCadastro = false }) {
                       <IconMail size={18} className={iconeCampoClasse} />
                       <input
                         type="email"
+                        name="email"
+                        autoComplete="email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -408,6 +411,8 @@ export default function Login({ apenasCadastro = false }) {
                     <div className="relative">
                       <IconLock size={18} className={iconeCampoClasse} />
                       <PasswordInput
+                        name="senha"
+                        autoComplete="current-password"
                         required
                         value={senha}
                         onChange={(e) => setSenha(e.target.value)}
@@ -435,6 +440,8 @@ export default function Login({ apenasCadastro = false }) {
                     <div className="relative">
                       <IconBuildingStore size={18} className={iconeCampoClasse} />
                       <input
+                        name="nomeEmpresa"
+                        autoComplete="organization"
                         required
                         value={nomeEmpresa}
                         onChange={(e) => setNomeEmpresa(e.target.value)}
@@ -449,6 +456,8 @@ export default function Login({ apenasCadastro = false }) {
                       <IconMail size={18} className={iconeCampoClasse} />
                       <input
                         type="email"
+                        name="email"
+                        autoComplete="email"
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -462,6 +471,8 @@ export default function Login({ apenasCadastro = false }) {
                     <div className="relative">
                       <IconLock size={18} className={iconeCampoClasse} />
                       <PasswordInput
+                        name="novaSenha"
+                        autoComplete="new-password"
                         required
                         minLength={8}
                         value={senha}

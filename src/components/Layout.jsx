@@ -9,6 +9,10 @@ export default function Layout({ userType }) {
   const [sidebarAberta, setSidebarAberta] = useState(false)
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
+  // Conta autenticada mas sem vertical escolhido ainda (ex: fechou a aba no
+  // meio do onboarding, ou digitou a URL do dashboard direto) — manda de
+  // volta pra tela de "escolher-negocio" em vez de deixar entrar sem isso.
+  if (!user.tipoNegocio) return <Navigate to="/login" replace state={{ sessaoPendente: user }} />
   if (user.userType !== userType) return <Navigate to={`/${user.userType}/dashboard`} replace />
 
   return (

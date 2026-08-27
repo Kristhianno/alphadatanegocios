@@ -48,6 +48,7 @@ function AdminDashboardRoteado() {
 function RaizApp() {
   const { isAuthenticated, user } = useAuth()
   if (isAuthenticated) {
+    if (!user.tipoNegocio) return <Navigate to="/login" replace state={{ sessaoPendente: user }} />
     return <Navigate to={user.deveTrocarSenha ? '/trocar-senha' : `/${user.userType}/dashboard`} replace />
   }
   return <Navigate to="/login" replace />
