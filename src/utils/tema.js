@@ -24,6 +24,14 @@ export function aplicarCorPrimaria(hex) {
   raiz.setProperty('--color-primary-dark', misturarCor(hex, 'preto', 0.25))
 }
 
+/** Volta pro azul padrão da marca — usado fora da área logada (login, cadastro, demo, etc). */
+export function resetarCorPrimaria() {
+  const raiz = document.documentElement.style
+  raiz.removeProperty('--color-primary')
+  raiz.removeProperty('--color-primary-light')
+  raiz.removeProperty('--color-primary-dark')
+}
+
 export function lerCorPrimariaSalva() {
   try {
     return JSON.parse(localStorage.getItem(CHAVE_CONFIG))?.corPrimaria || null

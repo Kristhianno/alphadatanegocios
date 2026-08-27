@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
-import { aplicarCorPrimaria, lerCorPrimariaSalva } from './utils/tema'
+import { aplicarCorPrimaria, lerCorPrimariaSalva, resetarCorPrimaria } from './utils/tema'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import CallbackSupabase from './pages/CallbackSupabase'
@@ -57,12 +57,19 @@ function RaizApp() {
 }
 
 export default function App() {
-  const { carregando } = useAuth()
+  const { carregando, isAuthenticated } = useAuth()
 
+  // Tema personalizado (Admin > Configurações) só vale dentro da área
+  // logada — login, cadastro, demo, etc. continuam com o azul padrão da
+  // marca, senão a cor escolhida por uma conta vazaria pra tela pública.
   useEffect(() => {
+    if (!isAuthenticated) {
+      resetarCorPrimaria()
+      return
+    }
     const corSalva = lerCorPrimariaSalva()
     if (corSalva) aplicarCorPrimaria(corSalva)
-  }, [])
+  }, [isAuthenticated])
 
   // Evita um "flash" pro /login antes de terminar de restaurar a sessão
   // (o token já existe no localStorage, mas GET /auth/me ainda não voltou).
