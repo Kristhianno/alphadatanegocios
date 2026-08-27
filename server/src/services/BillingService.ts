@@ -149,7 +149,12 @@ export class BillingService {
 
     // constructEventAsync (em vez de constructEvent) porque Cloudflare Workers não tem o módulo `crypto` do Node —
     // a variante async usa WebCrypto por baixo, compatível com os dois runtimes.
-    const evento = await getStripe().webhooks.constructEventAsync(payload, assinaturaHeader, webhookSecret)
+    let evento: Stripe.Event
+    try {
+      evento = await getStripe().webhooks.constructEventAsync(payload, assinaturaHeader, webhookSecret)
+    } catch (erro) {
+      throw new ErroValidacao(`Assinatura do webhook inválida: ${erro instanceof Error ? erro.message : 'erro desconhecido'}.`)
+    }
 
     switch (evento.type) {
       case 'checkout.session.completed': {
