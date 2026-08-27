@@ -79,6 +79,7 @@ export default function Login({ apenasCadastro = false }) {
 
   const [sessaoPendente, setSessaoPendente] = useState(sessaoPendenteInicial)
   const [tiposNegocio, setTiposNegocio] = useState([])
+  const [tipoSelecionadoDropdown, setTipoSelecionadoDropdown] = useState('')
   const [tipoEscolhido, setTipoEscolhido] = useState(null)
   const [mostrarCampoOutro, setMostrarCampoOutro] = useState(false)
   const [descricaoOutro, setDescricaoOutro] = useState('')
@@ -259,19 +260,34 @@ export default function Login({ apenasCadastro = false }) {
               <p className="text-body text-[#666] mb-5">Isso define o menu e os módulos que você vai usar. Só pode ser escolhido uma vez.</p>
 
               {!mostrarCampoOutro ? (
-                <div className="grid grid-cols-1 gap-2">
-                  {tiposNegocio.map((t) => (
-                    <button
-                      key={t.tipo}
-                      type="button"
-                      disabled={!!tipoEscolhido}
-                      onClick={() => handleClickTipo(t)}
-                      className="flex items-center gap-3 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60"
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className="text-label text-[#666] block mb-1">Segmento</label>
+                    <select
+                      value={tipoSelecionadoDropdown}
+                      onChange={(e) => setTipoSelecionadoDropdown(e.target.value)}
+                      disabled={!!tipoEscolhido || tiposNegocio.length === 0}
+                      className="w-full rounded-input border border-muted-dark px-3 py-2.5 text-body bg-surface focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60"
                     >
-                      <span className="text-body font-medium text-[#1a1a1a]">{tipoEscolhido === t.tipo ? 'Configurando...' : t.nome}</span>
-                    </button>
-                  ))}
-                  {tiposNegocio.length === 0 && !erro && <p className="text-body text-[#999] text-center py-4">Carregando opções...</p>}
+                      <option value="" disabled>
+                        {tiposNegocio.length === 0 ? 'Carregando opções...' : 'Selecione o tipo do seu negócio'}
+                      </option>
+                      {tiposNegocio.map((t) => (
+                        <option key={t.tipo} value={t.tipo}>{t.nome}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!tipoSelecionadoDropdown || !!tipoEscolhido}
+                    onClick={() => {
+                      const t = tiposNegocio.find((x) => x.tipo === tipoSelecionadoDropdown)
+                      if (t) handleClickTipo(t)
+                    }}
+                    className="rounded-btn bg-primary hover:bg-primary-dark text-white py-2.5 text-body font-semibold disabled:opacity-60"
+                  >
+                    {tipoEscolhido ? 'Configurando...' : 'Continuar'}
+                  </button>
                 </div>
               ) : (
                 <form onSubmit={confirmarOutro} className="flex flex-col gap-3">
