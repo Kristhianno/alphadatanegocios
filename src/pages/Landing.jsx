@@ -269,11 +269,30 @@ export default function Landing() {
             <IconRocket size={16} /> 7 dias grátis, sem compromisso
           </span>
           <h1 className="text-3xl sm:text-5xl font-bold max-w-3xl leading-tight mb-4">
-            Organize os pedidos, agendamentos e a equipe do seu negócio em um só lugar
+            Uma plataforma, qualquer segmento de serviço
           </h1>
-          <p className="text-body sm:text-lg text-blue-100 max-w-2xl mb-8">
-            A plataforma que substitui a planilha e o grupo de WhatsApp bagunçado — do primeiro contato do cliente até o serviço entregue.
+          <p className="text-body sm:text-lg text-blue-100 max-w-2xl mb-7">
+            Pedidos, agendamentos, equipe e financeiro em um só lugar — com os recursos certos pro seu tipo de negócio,
+            não um sistema genérico. Chega de planilha e grupo de WhatsApp bagunçado.
           </p>
+
+          <div className="flex flex-col items-center gap-2.5 mb-8">
+            <span className="text-label font-semibold uppercase tracking-wide text-blue-200">Feito para o seu segmento</span>
+            <div className="flex flex-wrap justify-center gap-2">
+              {Object.values(SEGMENTOS_FEATURE).map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 bg-white/10 border border-white/25 rounded-full pl-2.5 pr-3.5 py-1.5 text-label font-medium"
+                >
+                  <Icon size={16} className="text-white" /> {label}
+                </span>
+              ))}
+              <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/25 rounded-full px-3.5 py-1.5 text-label font-medium text-blue-100">
+                e outros negócios de serviço
+              </span>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"
