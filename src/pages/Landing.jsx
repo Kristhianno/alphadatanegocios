@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  IconCalendarEvent, IconCategory, IconCheck, IconClipboardList, IconFileTypePdf,
-  IconMessageCircle, IconRocket, IconUserBolt, IconUsers,
+  IconCake, IconCalendarEvent, IconCalculator, IconCamera, IconCategory, IconCheck,
+  IconClipboardList, IconConfetti, IconCrown, IconFileTypePdf, IconHeadset, IconMessageCircle,
+  IconRefresh, IconRocket, IconTools, IconUserBolt, IconUsers, IconWallet,
 } from '@tabler/icons-react'
 import { useToast } from '../hooks/useToast'
 import { api } from '../services/api'
@@ -17,36 +18,178 @@ const BENEFICIOS = [
   { icon: IconFileTypePdf, titulo: 'Relatórios', texto: 'Exporte em PDF ou planilha pra prestar contas sem perder tempo montando na mão.' },
 ]
 
+/** Um item de "por segmento" ganha o ícone do segmento em vez do check padrão. */
+const SEGMENTOS_FEATURE = {
+  confeitaria: { icon: IconCake, label: 'Confeitaria e Salgados' },
+  salaoFestas: { icon: IconConfetti, label: 'Salão de Festas / Eventos' },
+  fotografia: { icon: IconCamera, label: 'Fotografia e Vídeo' },
+  manutencao: { icon: IconTools, label: 'Manutenção e Assistência' },
+}
+
+/**
+ * Conteúdo rico da vitrine de planos — pensado pra landing, não é o mesmo
+ * array de `config.recursos` (esse é o texto curto usado no checkout/e-mail).
+ * Mapeado por `Plano` técnico (startup/profissional), sempre os dois únicos
+ * planos com checkout self-service (ver PLANOS_COM_CHECKOUT no backend).
+ */
+const VITRINE_PLANOS = {
+  startup: {
+    subtitulo: 'Ideal para quem está começando a organizar o negócio',
+    grupos: [
+      {
+        titulo: 'Atendimento e agenda',
+        icon: IconCalendarEvent,
+        itens: [
+          { texto: 'Agenda em tempo real, sem choque de horário' },
+          { texto: 'Ordens de serviço com checklist, fotos e assinatura do cliente' },
+          { texto: 'Cadastro de clientes com histórico completo' },
+        ],
+      },
+      {
+        titulo: 'Recursos do seu segmento',
+        icon: IconCategory,
+        itens: [
+          { segmento: 'confeitaria', texto: 'Catálogo, receitas e pedidos' },
+          { segmento: 'salaoFestas', texto: 'Pacotes e agenda de eventos' },
+          { segmento: 'fotografia', texto: 'Sessões e portfólio' },
+          { segmento: 'manutencao', texto: 'Chamados e ordens de serviço' },
+        ],
+      },
+      {
+        titulo: 'Equipe e suporte',
+        icon: IconUsers,
+        itens: [
+          { texto: 'Até 3 pessoas na equipe' },
+          { texto: 'Até 100 agendamentos por mês' },
+          { texto: 'Suporte por email' },
+        ],
+      },
+    ],
+  },
+  profissional: {
+    subtitulo: 'Para quem quer crescer sem esbarrar em limite',
+    tudoDoAnterior: 'Tudo do Starter, para equipes maiores, e mais:',
+    grupos: [
+      {
+        titulo: 'Gestão financeira completa',
+        icon: IconWallet,
+        itens: [
+          { texto: 'Financeiro com contas a pagar e a receber', novo: true },
+          { texto: 'Orçamentos com aprovação do cliente' },
+          { texto: 'Contratos com assinatura digital', novo: true },
+        ],
+      },
+      {
+        titulo: 'Recursos avançados por segmento',
+        icon: IconCalculator,
+        itens: [
+          { segmento: 'confeitaria', texto: 'Controle de produção e estoque de ingredientes' },
+          { segmento: 'salaoFestas', texto: 'Equipe, equipamentos e financeiro do evento' },
+          { segmento: 'fotografia', texto: 'Edição, galeria e portfólio do cliente' },
+          { segmento: 'manutencao', texto: 'Técnicos, preventivas e contratos de manutenção' },
+        ],
+      },
+      {
+        titulo: 'Relatórios, portal e suporte',
+        icon: IconFileTypePdf,
+        itens: [
+          { texto: 'Relatórios com exportação em PDF e planilha' },
+          { texto: 'Portal do cliente para acompanhar tudo online' },
+          { texto: 'Suporte prioritário' },
+          { texto: 'Até 15 pessoas na equipe e 1.000 agendamentos/mês' },
+        ],
+      },
+    ],
+  },
+}
+
 function formatarPreco(centavos) {
   return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 function PricingCard({ config, ciclo, destaque, onEscolher }) {
   const preco = ciclo === 'anual' ? config.precoAnualMensalCentavos : config.precoMensalCentavos
-  return (
-    <div className={`flex flex-col rounded-card p-6 sm:p-7 ${destaque ? 'bg-primary text-white shadow-cardHover' : 'bg-surface shadow-card border border-muted-dark'}`}>
-      {destaque && <span className="self-start text-label font-semibold bg-white/20 rounded-btn px-2 py-0.5 mb-3">Mais popular</span>}
-      <p className="text-h2 mb-1">{config.nomeMarketing}</p>
-      <p className={`text-body mb-5 ${destaque ? 'text-blue-100' : 'text-[#666]'}`}>
-        Agendamentos e ordens de serviço ilimitados
-      </p>
+  const economiaPercentual = config.precoAnualMensalCentavos
+    ? Math.round((1 - config.precoAnualMensalCentavos / config.precoMensalCentavos) * 100)
+    : 0
+  const vitrine = VITRINE_PLANOS[config.plano]
 
-      <p className="mb-1">
+  return (
+    <div
+      className={`relative flex flex-col rounded-card p-6 sm:p-8 ${
+        destaque
+          ? 'bg-primary text-white shadow-cardHover ring-4 ring-primary-light md:scale-105 z-10'
+          : 'bg-surface shadow-card border border-muted-dark'
+      }`}
+    >
+      {ciclo === 'anual' && economiaPercentual > 0 && (
+        <span
+          className={`absolute -top-3 right-5 text-label font-bold rounded-btn px-2.5 py-1 shadow-cardHover ${
+            destaque ? 'bg-white text-primary' : 'bg-success text-white'
+          }`}
+        >
+          -{economiaPercentual}% no anual
+        </span>
+      )}
+
+      {destaque && (
+        <span className="self-start inline-flex items-center gap-1 text-label font-semibold bg-white/20 rounded-btn px-2.5 py-1 mb-3">
+          <IconCrown size={14} /> Mais popular
+        </span>
+      )}
+
+      <p className="text-h2 mb-1">{config.nomeMarketing}</p>
+      <p className={`text-body mb-5 ${destaque ? 'text-blue-100' : 'text-[#666]'}`}>{vitrine.subtitulo}</p>
+
+      <p className="mb-1 flex items-baseline gap-2 flex-wrap">
+        {ciclo === 'anual' && (
+          <span className={`text-body line-through ${destaque ? 'text-blue-200' : 'text-muted-text'}`}>
+            {formatarPreco(config.precoMensalCentavos)}
+          </span>
+        )}
         <span className="text-h1">{formatarPreco(preco)}</span>
         <span className={destaque ? 'text-blue-100' : 'text-[#999]'}>/mês</span>
       </p>
       <p className={`text-label mb-6 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>
-        {ciclo === 'anual' ? 'cobrado uma vez por ano' : 'cobrança mensal, cancele quando quiser'}
+        {ciclo === 'anual' ? `cobrado uma vez por ano — ${formatarPreco(config.precoAnualTotalCentavos)}/ano` : 'cobrança mensal, cancele quando quiser'}
       </p>
 
-      <ul className="flex flex-col gap-2 mb-7 flex-1">
-        {config.recursos.map((r) => (
-          <li key={r} className={`flex items-start gap-2 text-body ${destaque ? 'text-white' : 'text-[#333]'}`}>
-            <IconCheck size={18} className={`shrink-0 mt-0.5 ${destaque ? 'text-white' : 'text-primary'}`} />
-            {r}
-          </li>
+      {vitrine.tudoDoAnterior && (
+        <p className={`text-label font-semibold uppercase tracking-wide mb-4 ${destaque ? 'text-blue-100' : 'text-primary'}`}>
+          {vitrine.tudoDoAnterior}
+        </p>
+      )}
+
+      <div className="flex flex-col gap-5 mb-7 flex-1">
+        {vitrine.grupos.map((grupo) => (
+          <div key={grupo.titulo}>
+            <p className={`flex items-center gap-1.5 text-label font-bold uppercase tracking-wide mb-2 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>
+              <grupo.icon size={15} />
+              {grupo.titulo}
+            </p>
+            <ul className="flex flex-col gap-2">
+              {grupo.itens.map((item) => {
+                const seg = item.segmento ? SEGMENTOS_FEATURE[item.segmento] : null
+                const ItemIcon = seg ? seg.icon : IconCheck
+                return (
+                  <li key={item.texto} className={`flex items-start gap-2 text-body ${destaque ? 'text-white' : 'text-[#333]'}`}>
+                    <ItemIcon size={18} className={`shrink-0 mt-0.5 ${destaque ? 'text-white' : 'text-primary'}`} />
+                    <span>
+                      {seg && <span className="font-semibold">{seg.label}: </span>}
+                      {item.texto}
+                      {item.novo && (
+                        <span className={`ml-1.5 align-middle text-[10px] font-bold uppercase rounded-btn px-1.5 py-0.5 ${destaque ? 'bg-white/25 text-white' : 'bg-primary-light text-primary'}`}>
+                          Novo
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
 
       <button
         type="button"
@@ -57,6 +200,7 @@ function PricingCard({ config, ciclo, destaque, onEscolher }) {
       >
         Testar grátis por 7 dias
       </button>
+      <p className={`text-label text-center mt-2 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>7 dias grátis, sem cartão de crédito</p>
     </div>
   )
 }
@@ -165,9 +309,21 @@ export default function Landing() {
 
       {/* Preços */}
       <section id="precos" className="bg-muted py-16 sm:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <h2 className="text-h1 text-center text-[#1a1a1a] mb-2">Planos simples, sem letra miúda</h2>
-          <p className="text-body text-[#666] text-center mb-8">Comece com 7 dias grátis. Cancele quando quiser, direto pelas configurações.</p>
+          <p className="text-body text-[#666] text-center mb-5">Comece com 7 dias grátis. Cancele quando quiser, direto pelas configurações.</p>
+
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">
+            {[
+              [IconRocket, '7 dias grátis para testar'],
+              [IconRefresh, 'Cancele quando quiser'],
+              [IconHeadset, 'Suporte incluso em todos os planos'],
+            ].map(([Icon, texto]) => (
+              <span key={texto} className="inline-flex items-center gap-1.5 text-label text-[#666]">
+                <Icon size={16} className="text-primary" /> {texto}
+              </span>
+            ))}
+          </div>
 
           <div className="flex justify-center mb-10">
             <div className="flex rounded-btn bg-surface shadow-card p-1">
@@ -192,7 +348,7 @@ export default function Landing() {
           {planos === null ? (
             <p className="text-body text-[#999] text-center">Carregando planos...</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 items-start pt-4">
               {planos.map((config) => (
                 <PricingCard
                   key={config.plano}
