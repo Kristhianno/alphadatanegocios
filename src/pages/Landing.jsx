@@ -8,6 +8,9 @@ import {
 import { useToast } from '../hooks/useToast'
 import { api } from '../services/api'
 import AlphaDataLogo from '../components/AlphaDataLogo'
+import foto1 from '../assets/login-foto-1.jpeg'
+import foto2 from '../assets/login-foto-2.jpeg'
+import foto3 from '../assets/login-foto-3.jpeg'
 
 const BENEFICIOS = [
   { icon: IconClipboardList, titulo: 'Ordens de serviço', texto: 'Abra, acompanhe e feche chamados com checklist, fotos e assinatura do cliente direto pelo celular.' },
@@ -308,6 +311,31 @@ export default function Landing() {
               Falar com a gente
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* Negócios reais, tipos diferentes — reforça o "qualquer segmento" do hero com gente de verdade */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <h2 className="text-h1 text-[#1a1a1a] mb-2">Negócios diferentes, o mesmo jeito fácil de trabalhar</h2>
+          <p className="text-body text-[#666]">De quem vende produto a quem presta serviço — é a mesma plataforma se adaptando à rotina de cada negócio.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
+          <img
+            src={foto1}
+            alt="Empreendedora conferindo pedidos pelo tablet na própria loja"
+            className="w-full h-72 sm:h-80 object-cover rounded-card shadow-card"
+          />
+          <img
+            src={foto2}
+            alt="Dono de negócio local no seu espaço de trabalho"
+            className="w-full h-72 sm:h-80 object-cover rounded-card shadow-card sm:mt-8"
+          />
+          <img
+            src={foto3}
+            alt="Dona de boutique organizando a agenda pelo tablet"
+            className="w-full h-72 sm:h-80 object-cover rounded-card shadow-card"
+          />
         </div>
       </section>
 
