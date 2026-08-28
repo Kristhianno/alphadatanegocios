@@ -20,6 +20,7 @@ const MENUS = {
     { to: '/admin/financeiro', label: 'Financeiro', icon: IconReportMoney },
     { to: '/admin/clientes', label: 'Clientes', icon: IconUsers },
     { to: '/admin/prestadores', label: 'Prestadores', icon: IconUserBolt },
+    { to: '/admin/equipe', label: 'Equipe', icon: IconUsersGroup },
     { to: '/admin/relatorios', label: 'Relatórios', icon: IconFileTypePdf },
     { to: '/admin/configuracoes', label: 'Configurações', icon: IconSettings },
   ],

@@ -23,6 +23,18 @@ export class UsuarioRepository extends Repository<Usuario> {
     return data ? this.paraDominio(data) : null
   }
 
+  /** Equipe interna com login (gestor/tecnico) de uma conta — usado pela tela de gestão de equipe. Filtro por `.in()` porque `Repository.listar` só faz igualdade simples. */
+  async listarEquipePorConta(contaId: string): Promise<Usuario[]> {
+    const { data, error } = await this.clienteTipado
+      .from('usuarios')
+      .select('*')
+      .eq('conta_id', contaId)
+      .in('papel', ['gestor', 'tecnico'])
+      .order('nome')
+    if (error) throw new ErroPersistencia('usuarios', 'listarEquipePorConta', error)
+    return (data ?? []).map((linha) => this.paraDominio(linha))
+  }
+
   protected paraDominio(linha: LinhaBanco): Usuario {
     return {
       id: linha['id'] as string,

@@ -13,17 +13,24 @@
  */
 import { z } from 'zod'
 import type { Cliente } from '../config/database.config.js'
-import type { Conta, TipoNegocio } from '../models/User.js'
+import type { Conta, Papel, TipoNegocio } from '../models/User.js'
 import { ContaRepository } from '../repositories/ContaRepository.js'
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js'
 import { ClienteService } from './ClienteService.js'
-import { assinarConviteCliente, verificarConviteCliente } from '../utils/jwt.js'
+import {
+  assinarConviteCliente,
+  assinarConviteEquipe,
+  verificarConviteCliente,
+  verificarConviteEquipe,
+} from '../utils/jwt.js'
 import { gerarSenhaTemporaria, hashSenha } from '../utils/senha.js'
 import { validarDocumento, validarTelefoneBr } from '../utils/validadores.js'
-import { ErroConflito, ErroNaoEncontrado, ErroProibido } from '../errors/AppError.js'
+import { ErroConflito, ErroNaoEncontrado, ErroProibido, ErroValidacao } from '../errors/AppError.js'
 import { logger } from '../utils/logger.js'
 
 const EQUIPE_INTERNA = ['admin', 'gestor', 'tecnico'] as const
+type PapelEquipe = Extract<Papel, 'gestor' | 'tecnico'>
+const PAPEIS_EQUIPE = ['gestor', 'tecnico'] as const satisfies readonly PapelEquipe[]
 
 const schemaCadastroPorConvite = z.object({
   nome: z.string().trim().min(2, 'Informe seu nome completo.'),
@@ -44,6 +51,23 @@ export interface ResultadoCadastroPorConvite {
   email: string
   senhaTemporaria: string
   nome: string
+}
+
+const schemaCadastroEquipePorConvite = z.object({
+  nome: z.string().trim().min(2, 'Informe seu nome completo.'),
+  email: z.string().email('Email inválido.'),
+})
+
+export interface InfoConviteEquipe {
+  nomeEmpresa: string
+  papel: PapelEquipe
+}
+
+export interface ResultadoCadastroEquipePorConvite {
+  email: string
+  senhaTemporaria: string
+  nome: string
+  papel: PapelEquipe
 }
 
 export class ConvitesService {
@@ -108,6 +132,54 @@ export class ConvitesService {
 
     logger.info({ contaId: payload.contaId, clienteId: cliente.id }, 'Cliente cadastrado por convite — login criado com senha temporária.')
     return { email: validado.email, senhaTemporaria, nome: validado.nome }
+  }
+
+  /** Só o admin da conta convida equipe — diferente do convite de cliente, que qualquer um da equipe interna pode gerar. Criar um login com papel gestor/tecnico é uma ação mais sensível (acesso à conta, não só ao próprio atendimento). */
+  async criarConviteEquipe(userId: string, papel: unknown): Promise<{ token: string; expiraEm: Date; papel: PapelEquipe }> {
+    const usuario = await this.usuarios.buscarPorId(userId)
+    if (!usuario) throw new ErroNaoEncontrado('Usuário', userId)
+    if (usuario.papel !== 'admin') {
+      throw new ErroProibido('Apenas o administrador da conta pode convidar um membro da equipe.')
+    }
+    if (!(PAPEIS_EQUIPE as readonly string[]).includes(papel as string)) {
+      throw new ErroValidacao('Papel inválido — escolha "gestor" ou "tecnico".')
+    }
+    const papelValidado = papel as PapelEquipe
+
+    const token = await assinarConviteEquipe({ contaId: usuario.contaId, criadoPor: userId, papel: papelValidado })
+    const expiraEm = new Date(Date.now() + 7 * 86_400_000)
+    logger.info({ contaId: usuario.contaId, criadoPor: userId, papel: papelValidado }, 'Convite de equipe gerado.')
+    return { token, expiraEm, papel: papelValidado }
+  }
+
+  async obterInfoConviteEquipe(token: string): Promise<InfoConviteEquipe> {
+    const payload = await verificarConviteEquipe(token)
+    const conta = await this.buscarContaOuFalhar(payload.contaId)
+    return { nomeEmpresa: conta.nomeEmpresa, papel: payload.papel }
+  }
+
+  /** Mesmo padrão de criarClientePorConvite: sem tabela de convite, token autocontido, e o login sai de lá com senha temporária pra trocar no primeiro acesso. */
+  async criarUsuarioPorConvite(token: string, dados: unknown): Promise<ResultadoCadastroEquipePorConvite> {
+    const payload = await verificarConviteEquipe(token)
+    const validado = schemaCadastroEquipePorConvite.parse(dados)
+
+    const existente = await this.usuarios.buscarComCredenciaisPorEmail(validado.email)
+    if (existente) throw new ErroConflito(`Já existe um cadastro com o email "${validado.email}".`)
+
+    const senhaTemporaria = gerarSenhaTemporaria()
+    const senhaHash = await hashSenha(senhaTemporaria)
+    await this.usuarios.criar({
+      contaId: payload.contaId,
+      email: validado.email,
+      senhaHash,
+      nome: validado.nome,
+      papel: payload.papel,
+      status: 'ativo',
+      deveTrocarSenha: true,
+    })
+
+    logger.info({ contaId: payload.contaId, papel: payload.papel }, 'Membro de equipe cadastrado por convite — login criado com senha temporária.')
+    return { email: validado.email, senhaTemporaria, nome: validado.nome, papel: payload.papel }
   }
 
   private async buscarContaOuFalhar(contaId: string): Promise<Conta> {

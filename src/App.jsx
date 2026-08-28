@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import CallbackSupabase from './pages/CallbackSupabase'
 import DemoAutoLogin from './pages/DemoAutoLogin'
 import CadastroCliente from './pages/CadastroCliente'
+import CadastroEquipe from './pages/CadastroEquipe'
 import TrocarSenha from './pages/TrocarSenha'
 import Checkout from './pages/Checkout'
 import CheckoutSucesso from './pages/CheckoutSucesso'
@@ -17,6 +18,7 @@ import AdminDashboardVertical from './pages/Admin/DashboardVertical'
 import AdminOrdensServico from './pages/Admin/OrdensServico'
 import AdminClientes from './pages/Admin/Clientes'
 import AdminPrestadores from './pages/Admin/Prestadores'
+import AdminEquipe from './pages/Admin/Equipe'
 import AdminRelatorios from './pages/Admin/Relatorios'
 import AdminConfiguracoes from './pages/Admin/Configuracoes'
 import AdminPerfil from './pages/Admin/Perfil'
@@ -84,6 +86,7 @@ export default function App() {
       <Route path="/auth/callback" element={<CallbackSupabase />} />
       <Route path="/demo/:vertical" element={<DemoAutoLogin />} />
       <Route path="/cadastro-cliente/:token" element={<CadastroCliente />} />
+      <Route path="/cadastro-equipe/:token" element={<CadastroEquipe />} />
       <Route path="/trocar-senha" element={<TrocarSenha />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
@@ -94,6 +97,7 @@ export default function App() {
         <Route path="ordens" element={<AdminOrdensServico />} />
         <Route path="clientes" element={<AdminClientes />} />
         <Route path="prestadores" element={<AdminPrestadores />} />
+        <Route path="equipe" element={<AdminEquipe />} />
         <Route path="relatorios" element={<AdminRelatorios />} />
         <Route path="configuracoes" element={<AdminConfiguracoes />} />
         <Route path="perfil" element={<AdminPerfil />} />

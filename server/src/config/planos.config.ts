@@ -25,6 +25,8 @@ export interface ConfigPlano {
   limiteUsuarios: number
   /** null = ilimitado. */
   limiteAgendamentosMes: number | null
+  /** null = ilimitado. */
+  limiteContratosMes: number | null
   recursos: string[]
 }
 
@@ -37,7 +39,8 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     precoAnualMensalCentavos: 4_990,
     precoAnualTotalCentavos: 59_880,
     limiteUsuarios: 3,
-    limiteAgendamentosMes: 100,
+    limiteAgendamentosMes: 200,
+    limiteContratosMes: 200,
     recursos: [
       'Ordens de serviço com checklist, fotos e assinatura do cliente',
       'Agenda em tempo real e catálogo de serviços',
@@ -52,11 +55,12 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     precoAnualMensalCentavos: 11_990,
     precoAnualTotalCentavos: 143_880,
     limiteUsuarios: 15,
-    limiteAgendamentosMes: 1_000,
+    limiteAgendamentosMes: null,
+    limiteContratosMes: null,
     recursos: [
       'Tudo do Starter, para equipes maiores',
       'Relatórios com exportação em PDF e planilha',
-      'Suporte prioritário',
+      'Suporte via email e WhatsApp',
     ],
   },
   enterprise: {
@@ -68,6 +72,7 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     precoAnualTotalCentavos: null,
     limiteUsuarios: 100,
     limiteAgendamentosMes: null,
+    limiteContratosMes: null,
     recursos: [
       'Tudo do Pro, para operações maiores',
       'Relatórios avançados',

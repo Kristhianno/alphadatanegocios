@@ -94,3 +94,37 @@ export async function verificarConviteCliente(token: string): Promise<PayloadCon
     throw new ErroValidacao('Este link de convite é inválido ou já expirou.')
   }
 }
+
+// Emissor próprio (diferente do convite de cliente) pelo mesmo motivo de
+// EMISSOR_CONVITE vs EMISSOR: um convite de equipe vazado não deve valer
+// como convite de cliente, e vice-versa — o `papel` embutido no token de
+// equipe também vira uma credencial (define se a pessoa entra como
+// gestor ou técnico), então não pode reaproveitar o formato do outro.
+const EMISSOR_CONVITE_EQUIPE = 'servicehub-convite-equipe'
+const VALIDADE_CONVITE_EQUIPE = '7d'
+
+export interface PayloadConviteEquipe extends PayloadConvite {
+  papel: Extract<Papel, 'gestor' | 'tecnico'>
+}
+
+export async function assinarConviteEquipe(payload: PayloadConviteEquipe): Promise<string> {
+  return new SignJWT({ contaId: payload.contaId, criadoPor: payload.criadoPor, papel: payload.papel })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuer(EMISSOR_CONVITE_EQUIPE)
+    .setIssuedAt()
+    .setExpirationTime(VALIDADE_CONVITE_EQUIPE)
+    .sign(obterChave())
+}
+
+export async function verificarConviteEquipe(token: string): Promise<PayloadConviteEquipe> {
+  try {
+    const { payload } = await jwtVerify(token, obterChave(), { issuer: EMISSOR_CONVITE_EQUIPE })
+    return {
+      contaId: payload['contaId'] as string,
+      criadoPor: payload['criadoPor'] as string,
+      papel: payload['papel'] as PayloadConviteEquipe['papel'],
+    }
+  } catch {
+    throw new ErroValidacao('Este link de convite é inválido ou já expirou.')
+  }
+}

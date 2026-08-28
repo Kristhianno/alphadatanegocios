@@ -60,7 +60,8 @@ const VITRINE_PLANOS = {
         icon: IconUsers,
         itens: [
           { texto: 'Até 3 pessoas na equipe' },
-          { texto: 'Até 100 agendamentos por mês' },
+          { texto: 'Até 200 agendamentos por mês' },
+          { texto: 'Até 200 contratos por mês' },
           { texto: 'Suporte por email' },
         ],
       },
@@ -95,8 +96,9 @@ const VITRINE_PLANOS = {
         itens: [
           { texto: 'Relatórios com exportação em PDF e planilha' },
           { texto: 'Portal do cliente para acompanhar tudo online' },
-          { texto: 'Suporte prioritário' },
-          { texto: 'Até 15 pessoas na equipe e 1.000 agendamentos/mês' },
+          { texto: 'Suporte via email e WhatsApp', novo: true },
+          { texto: 'Até 15 pessoas na equipe' },
+          { texto: 'Agendamentos e contratos ilimitados', novo: true },
         ],
       },
     ],

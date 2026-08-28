@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.routes.js'
 import clientesRoutes from './routes/clientes.routes.js'
 import configRoutes from './routes/config.routes.js'
 import convitesRoutes from './routes/convites.routes.js'
+import equipeRoutes from './routes/equipe.routes.js'
 import dashboardRoutes from './routes/dashboard.routes.js'
 import agendamentosRoutes from './routes/agendamentos.routes.js'
 import servicosRoutes from './routes/servicos.routes.js'
@@ -54,6 +55,7 @@ app.route('/auth', authRoutes)
 app.route('/clientes', clientesRoutes)
 app.route('/config', configRoutes)
 app.route('/convites', convitesRoutes)
+app.route('/equipe', equipeRoutes)
 app.route('/dashboard', dashboardRoutes)
 app.route('/agendamentos', agendamentosRoutes)
 app.route('/servicos', servicosRoutes)
