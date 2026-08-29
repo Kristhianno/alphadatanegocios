@@ -37,6 +37,13 @@ export class LeadService {
     if (!webhookUrl) return
 
     try {
+      // redirect: 'manual' de propósito — um Web App do Apps Script SEMPRE
+      // responde com 302 em /exec (redireciona pra uma URL de conteúdo já
+      // computada), mesmo quando doPost() rodou com sucesso; a gravação na
+      // planilha já aconteceu antes desse redirect. Seguir o redirect só
+      // serviria pra ler o corpo da resposta (que não usamos) e, pior,
+      // clientes HTTP convertem POST em GET ao seguir 301/302 — o que faria
+      // a request de acompanhamento falhar e gerar um alerta falso aqui.
       const resposta = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,8 +53,9 @@ export class LeadService {
           origem: lead.origem,
           criadoEm: lead.criadoEm.toISOString(),
         }),
+        redirect: 'manual',
       })
-      if (!resposta.ok) {
+      if (resposta.status >= 400) {
         logger.warn({ status: resposta.status, leadId: lead.id }, 'Planilha do Google Sheets recusou o lead.')
       }
     } catch (erro) {
