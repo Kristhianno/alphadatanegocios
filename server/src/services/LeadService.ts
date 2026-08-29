@@ -22,6 +22,36 @@ export class LeadService {
     const dados = schemaCriarLead.parse({ nome, email, origem })
     const lead = await this.leads.criar(dados)
     logger.info({ leadId: lead.id, email: lead.email }, 'Novo lead captado.')
+
+    // Best-effort: espelha o lead numa planilha do Google Sheets via um
+    // Apps Script Web App (ver server/.dev.vars.example) — igual ao
+    // espelhamento no Supabase Auth em UserService.criarUsuario, uma
+    // falha aqui não pode derrubar a captação do lead em si.
+    await this.enviarParaPlanilha(lead)
+
     return lead
+  }
+
+  private async enviarParaPlanilha(lead: Lead): Promise<void> {
+    const webhookUrl = process.env['GOOGLE_SHEETS_WEBHOOK_URL']
+    if (!webhookUrl) return
+
+    try {
+      const resposta = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: lead.nome,
+          email: lead.email,
+          origem: lead.origem,
+          criadoEm: lead.criadoEm.toISOString(),
+        }),
+      })
+      if (!resposta.ok) {
+        logger.warn({ status: resposta.status, leadId: lead.id }, 'Planilha do Google Sheets recusou o lead.')
+      }
+    } catch (erro) {
+      logger.warn({ erro, leadId: lead.id }, 'Falha ao enviar lead para a planilha do Google Sheets.')
+    }
   }
 }

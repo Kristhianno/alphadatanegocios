@@ -13,3 +13,9 @@ STRIPE_PRICE_STARTUP_ANUAL=price_replace
 STRIPE_PRICE_PROFISSIONAL_MENSAL=price_replace
 STRIPE_PRICE_PROFISSIONAL_ANUAL=price_replace
 APP_URL=http://localhost:5173
+
+# Opcional — URL do Apps Script Web App (ver LeadService.enviarParaPlanilha)
+# que espelha cada lead de "fale com a gente" numa planilha do Google Sheets.
+# Sem essa variável, o lead continua sendo salvo normalmente, só não é
+# espelhado. Ver instruções de deploy do Apps Script no PR que introduziu isso.
+GOOGLE_SHEETS_WEBHOOK_URL=
