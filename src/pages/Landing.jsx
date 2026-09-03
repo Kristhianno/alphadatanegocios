@@ -1,211 +1,98 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  IconCake, IconCalendarEvent, IconCalculator, IconCamera, IconCategory, IconCheck,
-  IconClipboardList, IconConfetti, IconCrown, IconFileTypePdf, IconHeadset, IconMessageCircle,
-  IconRefresh, IconRocket, IconTools, IconUserBolt, IconUsers, IconWallet,
+  IconArrowRight, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandWhatsapp,
+  IconCheck, IconChevronDown, IconCrown, IconFileSpreadsheet, IconMicrophone, IconNotes, IconX,
 } from '@tabler/icons-react'
 import { useToast } from '../hooks/useToast'
 import { api } from '../services/api'
 import AlphaDataLogo from '../components/AlphaDataLogo'
-import foto1 from '../assets/login-foto-1.jpeg'
-import foto2 from '../assets/login-foto-2.jpeg'
-import foto3 from '../assets/login-foto-3.jpeg'
+import heroMockup from '../assets/landing/hero-mockup.jpeg'
 
-const BENEFICIOS = [
-  { icon: IconClipboardList, titulo: 'Ordens de serviço', texto: 'Abra, acompanhe e feche chamados com checklist, fotos e assinatura do cliente direto pelo celular.' },
-  { icon: IconCalendarEvent, titulo: 'Agendamentos', texto: 'Sua equipe vê a agenda em tempo real e evita choque de horário sem trocar mensagem no grupo.' },
-  { icon: IconCategory, titulo: 'Catálogo e pacotes', texto: 'Cadastre seus serviços ou pacotes uma vez e reutilize em cada novo atendimento.' },
-  { icon: IconUsers, titulo: 'Clientes', texto: 'Histórico completo de cada cliente — o que já foi feito, quando e por quem.' },
-  { icon: IconUserBolt, titulo: 'Equipe', texto: 'Cada técnico ou prestador vê só o que é dele, sem bagunça nem retrabalho.' },
-  { icon: IconFileTypePdf, titulo: 'Relatórios', texto: 'Exporte em PDF ou planilha pra prestar contas sem perder tempo montando na mão.' },
+const AZUL = '#0052CC'
+const AZUL_HOVER = '#004AAD'
+const AZUL_CLARO = '#E8F0FF'
+const CINZA_CLARO = '#F5F5F5'
+const CINZA_TEXTO = '#333333'
+const VERDE = '#10B981'
+const VERDE_HOVER = '#0EA372'
+const VERMELHO = '#EF4444'
+
+const DORES = [
+  { icon: IconBrandWhatsapp, texto: 'WhatsApp pra confirmar agendamento (e fica perdido em 50 conversas)' },
+  { icon: IconFileSpreadsheet, texto: 'Planilha pra saber quanto ganhou (e fica confuso se fechou ou não)' },
+  { icon: IconNotes, texto: 'Papel pra lembrar que o cliente pediu aquilo mês passado' },
+  { icon: IconMicrophone, texto: 'Mensagem de voz pra avisar o time o que fazer' },
 ]
 
-/** Um item de "por segmento" ganha o ícone do segmento em vez do check padrão. */
-const SEGMENTOS_FEATURE = {
-  confeitaria: { icon: IconCake, label: 'Confeitaria e Salgados' },
-  salaoFestas: { icon: IconConfetti, label: 'Salão de Festas / Eventos' },
-  fotografia: { icon: IconCamera, label: 'Fotografia e Vídeo' },
-  manutencao: { icon: IconTools, label: 'Manutenção e Assistência' },
-}
+const ANTES_DEPOIS = [
+  { antes: 'Agendamento (WhatsApp + ligação)', depois: 'Cliente agenda online + aviso automático' },
+  { antes: 'Histórico do cliente (anotação + memória)', depois: 'Histórico completo, sempre à mão' },
+  { antes: 'Faturamento (planilha)', depois: 'Dashboard automático no final do dia' },
+  { antes: 'Equipe (grupos de WhatsApp)', depois: 'Tarefas automáticas, todos sabem o que fazer' },
+]
 
-/**
- * Conteúdo rico da vitrine de planos — pensado pra landing, não é o mesmo
- * array de `config.recursos` (esse é o texto curto usado no checkout/e-mail).
- * Mapeado por `Plano` técnico (startup/profissional), sempre os dois únicos
- * planos com checkout self-service (ver PLANOS_COM_CHECKOUT no backend).
- */
-const VITRINE_PLANOS = {
-  startup: {
-    subtitulo: 'Ideal para quem está começando a organizar o negócio',
-    grupos: [
-      {
-        titulo: 'Atendimento e agenda',
-        icon: IconCalendarEvent,
-        itens: [
-          { texto: 'Agenda em tempo real, sem choque de horário' },
-          { texto: 'Ordens de serviço com checklist, fotos e assinatura do cliente' },
-          { texto: 'Cadastro de clientes com histórico completo' },
-        ],
-      },
-      {
-        titulo: 'Recursos do seu segmento',
-        icon: IconCategory,
-        itens: [
-          { segmento: 'confeitaria', texto: 'Catálogo, receitas e pedidos' },
-          { segmento: 'salaoFestas', texto: 'Pacotes e agenda de eventos' },
-          { segmento: 'fotografia', texto: 'Sessões e portfólio' },
-          { segmento: 'manutencao', texto: 'Chamados e ordens de serviço' },
-        ],
-      },
-      {
-        titulo: 'Equipe e suporte',
-        icon: IconUsers,
-        itens: [
-          { texto: 'Até 3 pessoas na equipe' },
-          { texto: 'Até 200 agendamentos por mês' },
-          { texto: 'Até 200 contratos por mês' },
-          { texto: 'Suporte por email' },
-        ],
-      },
-    ],
+const PASSOS = [
+  { numero: '01', titulo: 'Seus clientes agora marcam sozinhos', texto: 'Eles veem horários livres, escolhem um, e você recebe aviso automático + número do cliente.' },
+  { numero: '02', titulo: 'Quando voltam, você sabe tudo', texto: 'Histórico de todos os serviços dele, quanto pagou, do que reclamou. Atendimento perfeito.' },
+  { numero: '03', titulo: 'No final do mês, sabe exatamente quanto lucrou', texto: 'Relatório automático mostra receita por serviço, por dia, por funcionário. Sem planilha.' },
+]
+
+const PLANOS_LANDING = [
+  {
+    nome: 'Starter',
+    preco: 'R$ 49,90',
+    plano: 'startup',
+    paraQuem: 'Você sozinho ou com 1-2 pessoas',
+    itens: ['Agendamento online 24/7', 'Histórico de cliente', 'Aviso via WhatsApp', 'Relatório básico'],
+    cta: 'COMEÇAR GRÁTIS',
   },
-  profissional: {
-    subtitulo: 'Para quem quer crescer sem esbarrar em limite',
-    tudoDoAnterior: 'Tudo do Starter, para equipes maiores, e mais:',
-    grupos: [
-      {
-        titulo: 'Gestão financeira completa',
-        icon: IconWallet,
-        itens: [
-          { texto: 'Financeiro com contas a pagar e a receber', novo: true },
-          { texto: 'Orçamentos com aprovação do cliente' },
-          { texto: 'Contratos com assinatura digital', novo: true },
-        ],
-      },
-      {
-        titulo: 'Recursos avançados por segmento',
-        icon: IconCalculator,
-        itens: [
-          { segmento: 'confeitaria', texto: 'Controle de produção e estoque de ingredientes' },
-          { segmento: 'salaoFestas', texto: 'Equipe, equipamentos e financeiro do evento' },
-          { segmento: 'fotografia', texto: 'Edição, galeria e portfólio do cliente' },
-          { segmento: 'manutencao', texto: 'Técnicos, preventivas e contratos de manutenção' },
-        ],
-      },
-      {
-        titulo: 'Relatórios, portal e suporte',
-        icon: IconFileTypePdf,
-        itens: [
-          { texto: 'Relatórios com exportação em PDF e planilha' },
-          { texto: 'Portal do cliente para acompanhar tudo online' },
-          { texto: 'Suporte via email e WhatsApp', novo: true },
-          { texto: 'Até 15 pessoas na equipe' },
-          { texto: 'Agendamentos e contratos ilimitados', novo: true },
-        ],
-      },
-    ],
+  {
+    nome: 'Profissional',
+    preco: 'R$ 119,90',
+    plano: 'profissional',
+    recomendado: true,
+    paraQuem: 'Negócio com 3-10 pessoas',
+    itens: ['Tudo do Starter +', 'Gestão de equipe', 'Comissão automática', 'Relatório avançado', 'Suporte via WhatsApp'],
+    cta: 'COMEÇAR GRÁTIS',
   },
-}
+  {
+    nome: 'Enterprise',
+    preco: 'Sob Consulta',
+    paraQuem: '10+ pessoas ou múltiplas unidades',
+    itens: ['Tudo do Profissional +', 'Integrações custom', 'API', 'Gestor de conta dedicado'],
+    cta: 'FALAR COM VENDAS',
+  },
+]
 
-function formatarPreco(centavos) {
-  return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
+const FAQ = [
+  { pergunta: 'Quanto tempo demora pra migrar meus dados?', resposta: 'Sem migração complicada. Você adiciona clientes aos poucos enquanto usa. Começa hoje, migra no seu ritmo.' },
+  { pergunta: 'Meu time vai conseguir usar sem treinamento?', resposta: 'Sim. A interface é tão simples que gerente de salão sem email usa. Enviamos 1 vídeo de 5 min se quiser.' },
+  { pergunta: 'Integra com meu app de nota fiscal?', resposta: 'Integra com principais apps do mercado. E você exporta dados em Excel quando quiser.' },
+  { pergunta: 'E se depois de 3 meses não quiser mais?', resposta: 'Seus dados saem com você em 1 clique. Sem punição, sem aviso prévio. Isso é teu.' },
+  { pergunta: 'Meus dados ficam seguros?', resposta: 'Sim. Criptografia de ponta a ponta, backup automático diário, certificação de segurança.' },
+]
 
-function PricingCard({ config, ciclo, destaque, onEscolher }) {
-  const preco = ciclo === 'anual' ? config.precoAnualMensalCentavos : config.precoMensalCentavos
-  const economiaPercentual = config.precoAnualMensalCentavos
-    ? Math.round((1 - config.precoAnualMensalCentavos / config.precoMensalCentavos) * 100)
-    : 0
-  const vitrine = VITRINE_PLANOS[config.plano]
+const CLIENTES_PLACEHOLDER = ['Cliente 1', 'Cliente 2', 'Cliente 3', 'Cliente 4', 'Cliente 5', 'Cliente 6']
 
+function FaqItem({ item, aberta, onToggle }) {
   return (
-    <div
-      className={`relative flex flex-col rounded-card p-6 sm:p-8 ${
-        destaque
-          ? 'bg-primary text-white shadow-cardHover ring-4 ring-primary-light md:scale-105 z-10'
-          : 'bg-surface shadow-card border border-muted-dark'
-      }`}
-    >
-      {ciclo === 'anual' && economiaPercentual > 0 && (
-        <span
-          className={`absolute -top-3 right-5 text-label font-bold rounded-btn px-2.5 py-1 shadow-cardHover ${
-            destaque ? 'bg-white text-primary' : 'bg-success text-white'
-          }`}
-        >
-          -{economiaPercentual}% no anual
-        </span>
-      )}
-
-      {destaque && (
-        <span className="self-start inline-flex items-center gap-1 text-label font-semibold bg-white/20 rounded-btn px-2.5 py-1 mb-3">
-          <IconCrown size={14} /> Mais popular
-        </span>
-      )}
-
-      <p className="text-h2 mb-1">{config.nomeMarketing}</p>
-      <p className={`text-body mb-5 ${destaque ? 'text-blue-100' : 'text-[#666]'}`}>{vitrine.subtitulo}</p>
-
-      <p className="mb-1 flex items-baseline gap-2 flex-wrap">
-        {ciclo === 'anual' && (
-          <span className={`text-body line-through ${destaque ? 'text-blue-200' : 'text-muted-text'}`}>
-            {formatarPreco(config.precoMensalCentavos)}
-          </span>
-        )}
-        <span className="text-h1">{formatarPreco(preco)}</span>
-        <span className={destaque ? 'text-blue-100' : 'text-[#999]'}>/mês</span>
-      </p>
-      <p className={`text-label mb-6 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>
-        {ciclo === 'anual' ? `cobrado uma vez por ano — ${formatarPreco(config.precoAnualTotalCentavos)}/ano` : 'cobrança mensal, cancele quando quiser'}
-      </p>
-
-      {vitrine.tudoDoAnterior && (
-        <p className={`text-label font-semibold uppercase tracking-wide mb-4 ${destaque ? 'text-blue-100' : 'text-primary'}`}>
-          {vitrine.tudoDoAnterior}
-        </p>
-      )}
-
-      <div className="flex flex-col gap-5 mb-7 flex-1">
-        {vitrine.grupos.map((grupo) => (
-          <div key={grupo.titulo}>
-            <p className={`flex items-center gap-1.5 text-label font-bold uppercase tracking-wide mb-2 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>
-              <grupo.icon size={15} />
-              {grupo.titulo}
-            </p>
-            <ul className="flex flex-col gap-2">
-              {grupo.itens.map((item) => {
-                const seg = item.segmento ? SEGMENTOS_FEATURE[item.segmento] : null
-                const ItemIcon = seg ? seg.icon : IconCheck
-                return (
-                  <li key={item.texto} className={`flex items-start gap-2 text-body ${destaque ? 'text-white' : 'text-[#333]'}`}>
-                    <ItemIcon size={18} className={`shrink-0 mt-0.5 ${destaque ? 'text-white' : 'text-primary'}`} />
-                    <span>
-                      {seg && <span className="font-semibold">{seg.label}: </span>}
-                      {item.texto}
-                      {item.novo && (
-                        <span className={`ml-1.5 align-middle text-[10px] font-bold uppercase rounded-btn px-1.5 py-0.5 ${destaque ? 'bg-white/25 text-white' : 'bg-primary-light text-primary'}`}>
-                          Novo
-                        </span>
-                      )}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        ))}
-      </div>
-
+    <div className="border-b border-[#E5E5E5]">
       <button
         type="button"
-        onClick={onEscolher}
-        className={`rounded-btn py-2.5 text-body font-semibold transition-colors ${
-          destaque ? 'bg-white text-primary hover:bg-blue-50' : 'bg-primary text-white hover:bg-primary-dark'
-        }`}
+        onClick={onToggle}
+        className="w-full flex items-center justify-between gap-4 py-5 text-left"
       >
-        Testar grátis por 7 dias
+        <span className="text-base sm:text-lg font-semibold" style={{ color: CINZA_TEXTO }}>{item.pergunta}</span>
+        <IconChevronDown
+          size={20}
+          className={`shrink-0 transition-transform duration-300 ${aberta ? 'rotate-180' : ''}`}
+          style={{ color: AZUL }}
+        />
       </button>
-      <p className={`text-label text-center mt-2 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>7 dias grátis, sem cartão de crédito</p>
+      {aberta && (
+        <p className="pb-5 text-base leading-relaxed" style={{ color: '#555555' }}>{item.resposta}</p>
+      )}
     </div>
   )
 }
@@ -214,19 +101,13 @@ export default function Landing() {
   const navigate = useNavigate()
   const { showToast } = useToast()
 
-  const [planos, setPlanos] = useState(null)
-  const [ciclo, setCiclo] = useState('mensal')
-
+  const [faqAberta, setFaqAberta] = useState(0)
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [enviandoLead, setEnviandoLead] = useState(false)
 
-  useEffect(() => {
-    api.get('/config/planos-disponiveis', { comAuth: false }).then(setPlanos).catch(() => setPlanos([]))
-  }, [])
-
   function irParaCadastro(plano) {
-    navigate('/cadastro', { state: { plano, ciclo } })
+    navigate('/cadastro', { state: { plano, ciclo: 'mensal' } })
   }
 
   async function enviarLead(e) {
@@ -245,179 +126,261 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-surface">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur-sm border-b border-muted-dark">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-white" style={{ color: CINZA_TEXTO }}>
+      {/* 1. HEADER */}
+      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-[#E5E5E5]">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <AlphaDataLogo tagline={null} className="scale-75 origin-left" />
           <nav className="flex items-center gap-4 sm:gap-6">
-            <a href="#precos" className="text-body text-[#333] hover:text-primary hidden sm:block">Planos</a>
-            <a href="#contato" className="text-body text-[#333] hover:text-primary hidden sm:block">Fale com a gente</a>
-            <a href="/login" className="text-body text-[#333] hover:text-primary">Entrar</a>
+            <a href="#precos" className="hidden sm:block text-base font-medium hover:opacity-70 transition-opacity">Preços</a>
+            <a href="#contato" className="hidden sm:block text-base font-medium hover:opacity-70 transition-opacity">Fale com a gente</a>
             <button
               type="button"
               onClick={() => irParaCadastro('startup')}
-              className="rounded-btn bg-primary hover:bg-primary-dark text-white px-4 py-2 text-body font-semibold transition-colors"
+              className="rounded-[8px] text-white px-4 sm:px-5 py-2.5 text-base font-semibold transition-colors duration-300"
+              style={{ backgroundColor: AZUL }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = AZUL_HOVER)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = AZUL)}
             >
-              Testar grátis
+              Entrar grátis
             </button>
           </nav>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-primary via-blue-600 to-primary-dark text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center flex flex-col items-center">
-          <span className="inline-flex items-center gap-1.5 bg-white/15 rounded-btn px-3 py-1 text-label font-medium mb-5">
-            <IconRocket size={16} /> 7 dias grátis, sem compromisso
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-bold max-w-3xl leading-tight mb-4">
-            Uma plataforma, qualquer segmento de serviço
+      {/* 2. HERO */}
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div className="text-center lg:text-left">
+          <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-5" style={{ color: CINZA_TEXTO }}>
+            Agendamento, histórico de cliente e faturamento — tudo que seu negócio de serviço precisa, num só lugar, sem planilha
           </h1>
-          <p className="text-body sm:text-lg text-blue-100 max-w-2xl mb-7">
-            Pedidos, agendamentos, equipe e financeiro em um só lugar — com os recursos certos pro seu tipo de negócio,
-            não um sistema genérico. Chega de planilha e grupo de WhatsApp bagunçado.
+          <p className="text-base sm:text-lg leading-relaxed mb-8" style={{ color: '#555555' }}>
+            Parou de ficar 2h digitando cliente em planilha, achando contato velho, e descobrindo no mês que lucrou menos que esperava.
           </p>
 
-          <div className="flex flex-col items-center gap-2.5 mb-8">
-            <span className="text-label font-semibold uppercase tracking-wide text-blue-200">Feito para o seu segmento</span>
-            <div className="flex flex-wrap justify-center gap-2">
-              {Object.values(SEGMENTOS_FEATURE).map(({ icon: Icon, label }) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-1.5 bg-white/10 border border-white/25 rounded-full pl-2.5 pr-3.5 py-1.5 text-label font-medium"
-                >
-                  <Icon size={16} className="text-white" /> {label}
-                </span>
-              ))}
-              <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/25 rounded-full px-3.5 py-1.5 text-label font-medium text-blue-100">
-                e outros negócios de serviço
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col items-center lg:items-start gap-3">
             <button
               type="button"
               onClick={() => irParaCadastro('startup')}
-              className="rounded-btn bg-white text-primary hover:bg-blue-50 px-6 py-3 text-body font-semibold transition-colors"
+              className="rounded-[8px] text-white px-8 py-4 text-lg font-semibold transition-colors duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+              style={{ backgroundColor: VERDE }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = VERDE_HOVER)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = VERDE)}
             >
-              Testar grátis por 7 dias
+              COMECE GRÁTIS — SEM CARTÃO
             </button>
-            <a
-              href="#contato"
-              className="rounded-btn border border-white/40 hover:bg-white/10 px-6 py-3 text-body font-semibold transition-colors"
-            >
-              Falar com a gente
+            <p className="text-sm" style={{ color: '#999999' }}>Setup em 10 minutos. Cancele quando quiser.</p>
+            <a href="#contato" className="text-base font-semibold hover:underline" style={{ color: AZUL }}>
+              Ou agendar uma demo com seus dados
             </a>
+          </div>
+        </div>
+
+        <img
+          src={heroMockup}
+          alt="Donos de negócios de serviço usando a AlphaData para organizar agendamento, clientes e faturamento"
+          className="w-full rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+        />
+      </section>
+
+      {/* 3. PROVA SOCIAL */}
+      <section className="py-14 sm:py-16" style={{ backgroundColor: CINZA_CLARO }}>
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 text-center">
+          <p className="text-base font-semibold uppercase tracking-wide mb-8" style={{ color: '#999999' }}>
+            Empresas que já usam e cresceram
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 mb-8">
+            {CLIENTES_PLACEHOLDER.map((cliente) => (
+              <div
+                key={cliente}
+                className="bg-white rounded-[8px] h-16 flex items-center justify-center text-sm font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                style={{ color: '#999999' }}
+              >
+                {cliente}
+              </div>
+            ))}
+          </div>
+          <p className="text-2xl sm:text-3xl font-bold" style={{ color: AZUL }}>500+ negócios de serviço já confiam</p>
+        </div>
+      </section>
+
+      {/* 4. O PROBLEMA */}
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <h2 className="text-2xl sm:text-4xl font-bold text-center mb-12" style={{ color: CINZA_TEXTO }}>Você tá vivendo isso?</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto mb-12">
+          {DORES.map(({ icon: Icon, texto }) => (
+            <div key={texto} className="flex items-start gap-3 rounded-[8px] p-5" style={{ backgroundColor: CINZA_CLARO }}>
+              <div className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center" style={{ backgroundColor: '#FEE2E2' }}>
+                <Icon size={18} style={{ color: VERMELHO }} />
+              </div>
+              <p className="text-base leading-relaxed" style={{ color: CINZA_TEXTO }}>{texto}</p>
+            </div>
+          ))}
+        </div>
+
+        <blockquote className="max-w-2xl mx-auto text-center border-l-4 pl-6 py-2 mb-10" style={{ borderColor: AZUL }}>
+          <p className="text-xl sm:text-2xl italic font-medium mb-2" style={{ color: CINZA_TEXTO }}>
+            "A gente só descobre que o mês não vai fechar na semana 3"
+          </p>
+          <cite className="text-sm not-italic" style={{ color: '#999999' }}>— Gerente de salão</cite>
+        </blockquote>
+
+        <p className="text-center text-lg font-semibold max-w-2xl mx-auto" style={{ color: CINZA_TEXTO }}>
+          Resultado: <span style={{ color: VERMELHO }}>2-3 horas por dia</span> viram perda, confusão com cliente, receita que escapa
+        </p>
+      </section>
+
+      {/* 5. SOLUÇÃO (ANTES vs DEPOIS) */}
+      <section className="py-16 sm:py-24" style={{ backgroundColor: AZUL_CLARO }}>
+        <div className="max-w-[1000px] mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-12" style={{ color: CINZA_TEXTO }}>
+            Tudo que você fazia em 5 lugares, agora funciona em um
+          </h2>
+
+          <div className="flex flex-col gap-4">
+            {ANTES_DEPOIS.map((linha) => (
+              <div
+                key={linha.antes}
+                className="bg-white rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.08)] p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-4 items-center"
+              >
+                <div className="flex items-start gap-2.5">
+                  <IconX size={20} className="shrink-0 mt-0.5" style={{ color: VERMELHO }} />
+                  <p className="text-base" style={{ color: '#666666' }}>{linha.antes}</p>
+                </div>
+                <IconArrowRight size={22} className="hidden sm:block mx-auto rotate-90 sm:rotate-0" style={{ color: AZUL }} />
+                <div className="flex items-start gap-2.5">
+                  <IconCheck size={20} className="shrink-0 mt-0.5" style={{ color: VERDE }} />
+                  <p className="text-base font-semibold" style={{ color: CINZA_TEXTO }}>{linha.depois}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Negócios reais, tipos diferentes — reforça o "qualquer segmento" do hero com gente de verdade */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <h2 className="text-h1 text-[#1a1a1a] mb-2">Negócios diferentes, o mesmo jeito fácil de trabalhar</h2>
-          <p className="text-body text-[#666]">De quem vende produto a quem presta serviço — é a mesma plataforma se adaptando à rotina de cada negócio.</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
-          <img
-            src={foto1}
-            alt="Empreendedora conferindo pedidos pelo tablet na própria loja"
-            className="w-full h-72 sm:h-80 object-cover rounded-card shadow-card"
-          />
-          <img
-            src={foto2}
-            alt="Dono de negócio local no seu espaço de trabalho"
-            className="w-full h-72 sm:h-80 object-cover rounded-card shadow-card sm:mt-8"
-          />
-          <img
-            src={foto3}
-            alt="Dona de boutique organizando a agenda pelo tablet"
-            className="w-full h-72 sm:h-80 object-cover rounded-card shadow-card"
-          />
-        </div>
-      </section>
-
-      {/* Benefícios */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-        <h2 className="text-h1 text-center text-[#1a1a1a] mb-2">Tudo que o seu negócio precisa, sem inventar mil planilhas</h2>
-        <p className="text-body text-[#666] text-center max-w-xl mx-auto mb-12">Módulos prontos pra confeitaria, salão de festas, fotografia/vídeo, manutenção e outros tipos de negócio.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {BENEFICIOS.map(({ icon: Icon, titulo, texto }) => (
-            <div key={titulo} className="rounded-card bg-muted p-5 flex flex-col gap-3">
-              <div className="w-10 h-10 rounded-btn bg-primary-light flex items-center justify-center">
-                <Icon size={22} className="text-primary" />
-              </div>
-              <p className="text-body font-semibold text-[#1a1a1a]">{titulo}</p>
-              <p className="text-body text-[#666]">{texto}</p>
+      {/* 6. COMO FUNCIONA */}
+      <section id="como-funciona" className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <h2 className="text-2xl sm:text-4xl font-bold text-center mb-14" style={{ color: CINZA_TEXTO }}>Como funciona</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
+          {PASSOS.map((passo) => (
+            <div key={passo.numero} className="text-center sm:text-left">
+              <p className="text-5xl font-bold mb-4" style={{ color: AZUL, opacity: 0.35 }}>{passo.numero}</p>
+              <p className="text-xl font-bold mb-2" style={{ color: CINZA_TEXTO }}>{passo.titulo}</p>
+              <p className="text-base leading-relaxed" style={{ color: '#666666' }}>{passo.texto}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Preços */}
-      <section id="precos" className="bg-muted py-16 sm:py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-h1 text-center text-[#1a1a1a] mb-2">Planos simples, sem letra miúda</h2>
-          <p className="text-body text-[#666] text-center mb-5">Comece com 7 dias grátis. Cancele quando quiser, direto pelas configurações.</p>
+      {/* 7. CASE / RESULTADO */}
+      <section className="py-16 sm:py-24 text-white" style={{ backgroundColor: AZUL }}>
+        <div className="max-w-[900px] mx-auto px-4 sm:px-6 text-center">
+          <p className="text-5xl sm:text-6xl font-bold mb-3">25% mais faturamento</p>
+          <p className="text-base sm:text-lg mb-12" style={{ color: '#CFE0FF' }}>
+            Em média, clientes aumentam faturamento em 25% no primeiro trimestre
+          </p>
 
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">
-            {[
-              [IconRocket, '7 dias grátis para testar'],
-              [IconRefresh, 'Cancele quando quiser'],
-              [IconHeadset, 'Suporte incluso em todos os planos'],
-            ].map(([Icon, texto]) => (
-              <span key={texto} className="inline-flex items-center gap-1.5 text-label text-[#666]">
-                <Icon size={16} className="text-primary" /> {texto}
-              </span>
-            ))}
+          <div className="bg-white rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.08)] p-6 sm:p-10 max-w-xl mx-auto">
+            <p className="text-lg sm:text-xl italic font-medium mb-4" style={{ color: CINZA_TEXTO }}>
+              "Florista em SP reduziu tempo de atendimento de 1h/dia pra 15 minutos. Faturamento subiu 25%."
+            </p>
+            <cite className="text-sm not-italic font-semibold" style={{ color: '#999999' }}>— Mariana, Dona da Flor Linda</cite>
           </div>
-
-          <div className="flex justify-center mb-10">
-            <div className="flex rounded-btn bg-surface shadow-card p-1">
-              {[
-                ['mensal', 'Mensal'],
-                ['anual', 'Anual — economize'],
-              ].map(([valor, rotulo]) => (
-                <button
-                  key={valor}
-                  type="button"
-                  onClick={() => setCiclo(valor)}
-                  className={`rounded-btn px-4 py-2 text-body font-medium transition-colors ${
-                    ciclo === valor ? 'bg-primary text-white' : 'text-[#666]'
-                  }`}
-                >
-                  {rotulo}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {planos === null ? (
-            <p className="text-body text-[#999] text-center">Carregando planos...</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 items-start pt-4">
-              {planos.map((config) => (
-                <PricingCard
-                  key={config.plano}
-                  config={config}
-                  ciclo={ciclo}
-                  destaque={config.plano === 'profissional'}
-                  onEscolher={() => irParaCadastro(config.plano)}
-                />
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Fale com a gente */}
+      {/* 8. PLANOS & PRICING */}
+      <section id="precos" className="py-16 sm:py-24" style={{ backgroundColor: CINZA_CLARO }}>
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-2" style={{ color: CINZA_TEXTO }}>Planos simples, sem letra miúda</h2>
+          <p className="text-base text-center mb-12" style={{ color: '#666666' }}>Comece grátis, sem cartão de crédito.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            {PLANOS_LANDING.map((p) => (
+              <div
+                key={p.nome}
+                className={`relative flex flex-col rounded-[8px] p-6 sm:p-8 bg-white ${p.recomendado ? 'md:scale-105 z-10' : ''}`}
+                style={{
+                  boxShadow: p.recomendado ? '0 4px 12px rgba(0,0,0,0.16)' : '0 4px 12px rgba(0,0,0,0.08)',
+                  border: p.recomendado ? `2px solid ${AZUL}` : '1px solid #E5E5E5',
+                }}
+              >
+                {p.recomendado && (
+                  <span
+                    className="self-start inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide rounded-[6px] px-2.5 py-1 mb-4 text-white"
+                    style={{ backgroundColor: AZUL }}
+                  >
+                    <IconCrown size={14} /> Recomendado
+                  </span>
+                )}
+
+                <p className="text-xl font-bold mb-1" style={{ color: CINZA_TEXTO }}>{p.nome}</p>
+                <p className="text-sm mb-5" style={{ color: '#999999' }}>{p.paraQuem}</p>
+
+                <p className="mb-6 flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold" style={{ color: CINZA_TEXTO }}>{p.preco}</span>
+                  {p.plano && <span className="text-sm" style={{ color: '#999999' }}>/mês</span>}
+                </p>
+
+                <ul className="flex flex-col gap-3 mb-8 flex-1">
+                  {p.itens.map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm sm:text-base">
+                      <IconCheck size={18} className="shrink-0 mt-0.5" style={{ color: VERDE }} />
+                      <span style={{ color: CINZA_TEXTO }}>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  onClick={() => (p.plano ? irParaCadastro(p.plano) : document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' }))}
+                  className="rounded-[8px] py-3 text-base font-semibold transition-colors duration-300 text-white"
+                  style={{ backgroundColor: p.recomendado ? VERDE : AZUL }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = p.recomendado ? VERDE_HOVER : AZUL_HOVER)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = p.recomendado ? VERDE : AZUL)}
+                >
+                  {p.cta}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 9. FAQ */}
+      <section className="max-w-[800px] mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <h2 className="text-2xl sm:text-4xl font-bold text-center mb-10" style={{ color: CINZA_TEXTO }}>Perguntas frequentes</h2>
+        <div>
+          {FAQ.map((item, i) => (
+            <FaqItem key={item.pergunta} item={item} aberta={faqAberta === i} onToggle={() => setFaqAberta(faqAberta === i ? null : i)} />
+          ))}
+        </div>
+      </section>
+
+      {/* 10. CTA FINAL */}
+      <section className="py-16 sm:py-24 text-white text-center" style={{ backgroundColor: AZUL }}>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-4xl font-bold mb-8">Pronto pra sair dessa rotina de planilha e WhatsApp?</h2>
+          <button
+            type="button"
+            onClick={() => irParaCadastro('startup')}
+            className="rounded-[8px] text-white px-8 py-4 text-lg font-semibold transition-colors duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.08)] mb-4"
+            style={{ backgroundColor: VERDE }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = VERDE_HOVER)}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = VERDE)}
+          >
+            COMECE AGORA — SEM CARTÃO, SEM RISCO
+          </button>
+          <p className="text-sm" style={{ color: '#CFE0FF' }}>Teste 7 dias. Se não gostar, seus dados saem com você. Sem pergunta.</p>
+        </div>
+      </section>
+
+      {/* Fale com a gente (destino de "Fale com a gente" no header e "Falar com vendas" do Enterprise) */}
       <section id="contato" className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-        <div className="rounded-card bg-primary-light p-6 sm:p-10 text-center">
-          <IconMessageCircle size={32} className="text-primary mx-auto mb-3" />
-          <h2 className="text-h1 text-[#1a1a1a] mb-2">Prefere conversar antes?</h2>
-          <p className="text-body text-[#666] mb-6">Deixa seu contato que nossa equipe te chama pra tirar dúvidas sobre o plano ideal pro seu negócio.</p>
+        <div className="rounded-[8px] p-6 sm:p-10 text-center" style={{ backgroundColor: AZUL_CLARO }}>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: CINZA_TEXTO }}>Prefere conversar antes?</h2>
+          <p className="text-base mb-6" style={{ color: '#666666' }}>Deixa seu contato que nossa equipe te chama pra tirar dúvidas ou agendar uma demo com seus dados.</p>
 
           <form onSubmit={enviarLead} className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
             <input
@@ -425,7 +388,8 @@ export default function Landing() {
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Seu nome"
-              className="flex-1 rounded-input border border-muted-dark px-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 rounded-[4px] border border-[#E5E5E5] px-3 py-2.5 text-base focus:outline-none focus:ring-2"
+              style={{ '--tw-ring-color': AZUL }}
             />
             <input
               required
@@ -433,12 +397,14 @@ export default function Landing() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
-              className="flex-1 rounded-input border border-muted-dark px-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+              className="flex-1 rounded-[4px] border border-[#E5E5E5] px-3 py-2.5 text-base focus:outline-none focus:ring-2"
+              style={{ '--tw-ring-color': AZUL }}
             />
             <button
               type="submit"
               disabled={enviandoLead}
-              className="rounded-btn bg-primary hover:bg-primary-dark text-white px-5 py-2.5 text-body font-semibold transition-colors disabled:opacity-60 whitespace-nowrap"
+              className="rounded-[8px] text-white px-5 py-2.5 text-base font-semibold transition-colors duration-300 disabled:opacity-60 whitespace-nowrap"
+              style={{ backgroundColor: AZUL }}
             >
               {enviandoLead ? 'Enviando...' : 'Fale comigo'}
             </button>
@@ -446,12 +412,28 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-muted-dark py-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-3">
-          <AlphaDataLogo />
-          <a href="/privacidade" className="text-label text-[#999] hover:text-primary">Política de Privacidade e Cookies</a>
-          <p className="text-label text-[#999]">© 2026 ALPHADATA - Negócios</p>
+      {/* 11. RODAPÉ */}
+      <footer className="text-white" style={{ backgroundColor: CINZA_TEXTO }}>
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-12 flex flex-col items-center gap-6">
+          <AlphaDataLogo variant="branco" tagline={null} />
+
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
+            <a href="#como-funciona" className="hover:opacity-70 transition-opacity">Produto</a>
+            <a href="#precos" className="hover:opacity-70 transition-opacity">Preços</a>
+            <a href="/privacidade" className="hover:opacity-70 transition-opacity">Segurança</a>
+            <a href="#" className="hover:opacity-70 transition-opacity">Blog</a>
+            <a href="#contato" className="hover:opacity-70 transition-opacity">Contato</a>
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <a href="#" aria-label="Instagram" className="hover:opacity-70 transition-opacity"><IconBrandInstagram size={20} /></a>
+            <a href="#" aria-label="LinkedIn" className="hover:opacity-70 transition-opacity"><IconBrandLinkedin size={20} /></a>
+            <a href="#" aria-label="Facebook" className="hover:opacity-70 transition-opacity"><IconBrandFacebook size={20} /></a>
+          </div>
+
+          <p className="text-xs text-center" style={{ color: '#999999' }}>
+            AlphaData® | CNPJ [CNPJ] | Todos os direitos reservados
+          </p>
         </div>
       </footer>
     </div>
