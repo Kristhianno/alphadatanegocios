@@ -9,7 +9,9 @@ import {
 import { useToast } from '../hooks/useToast'
 import { api } from '../services/api'
 import AlphaDataLogo from '../components/AlphaDataLogo'
-import heroMockup from '../assets/landing/hero-mockup.jpeg'
+import heroLaptop from '../assets/landing/hero-mockup-laptop.png'
+import heroMobileMenu from '../assets/landing/hero-mockup-mobile-menu.png'
+import heroMobileDashboard from '../assets/landing/hero-mockup-mobile-dashboard.png'
 
 const AZUL = '#0052CC'
 const AZUL_HOVER = '#004AAD'
@@ -364,11 +366,29 @@ export default function Landing() {
           </div>
         </div>
 
-        <img
-          src={heroMockup}
-          alt="Donos de negócios de serviço usando a AlphaData para organizar agendamento, clientes e faturamento"
-          className="w-full rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
-        />
+        {/* Mobile: laptop em destaque + celulares lado a lado abaixo (evita sobreposição apertada em telas pequenas) */}
+        <div className="sm:hidden flex flex-col items-center gap-5">
+          <img src={heroLaptop} alt="Dashboard de Ordens de Serviço da AlphaData aberto num notebook" className="w-full drop-shadow-[0_20px_35px_rgba(0,0,0,0.15)]" />
+          <div className="flex justify-center gap-6">
+            <img src={heroMobileMenu} alt="Menu do app AlphaData num celular" className="w-[38%] drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]" />
+            <img src={heroMobileDashboard} alt="Dashboard do app AlphaData num celular" className="w-[38%] drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]" />
+          </div>
+        </div>
+
+        {/* sm+: composição em camadas — notebook em destaque com os dois celulares "apoiados" nos cantos de baixo */}
+        <div className="hidden sm:block relative w-full max-w-[560px] mx-auto lg:mx-0 pb-10 lg:pb-12">
+          <img src={heroLaptop} alt="Dashboard de Ordens de Serviço da AlphaData aberto num notebook" className="w-full drop-shadow-[0_25px_45px_rgba(0,0,0,0.18)]" />
+          <img
+            src={heroMobileMenu}
+            alt="Menu do app AlphaData num celular"
+            className="absolute z-10 w-[28%] -left-[5%] bottom-[-6%] rotate-[-7deg] drop-shadow-[0_16px_28px_rgba(0,0,0,0.2)]"
+          />
+          <img
+            src={heroMobileDashboard}
+            alt="Dashboard do app AlphaData num celular"
+            className="absolute z-10 w-[28%] -right-[5%] bottom-[-2%] rotate-[7deg] drop-shadow-[0_16px_28px_rgba(0,0,0,0.2)]"
+          />
+        </div>
       </section>
 
       {/* 4. O PROBLEMA */}
