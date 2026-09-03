@@ -39,6 +39,15 @@ export default {
         sm: '640px',
         md: '1024px',
       },
+      keyframes: {
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
+        },
+      },
+      animation: {
+        marquee: 'marquee 22s linear infinite',
+      },
     },
   },
   plugins: [],

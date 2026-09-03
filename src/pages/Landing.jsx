@@ -50,6 +50,9 @@ const SEGMENTOS_FEATURE = {
   manutencao: { icon: IconTools, label: 'Manutenção e Assistência' },
 }
 
+/** Carrossel do hero: os segmentos + um item final convidando os demais tipos de negócio. */
+const SEGMENTOS_CARROSSEL = [...Object.values(SEGMENTOS_FEATURE), { icon: null, label: 'e outros negócios de serviço' }]
+
 /**
  * Conteúdo rico da vitrine de planos — mapeado por `Plano` técnico
  * (startup/profissional), os dois únicos planos com checkout self-service.
@@ -322,30 +325,28 @@ export default function Landing() {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
             <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-5 text-white">
-              Agendamento, histórico de cliente e faturamento — tudo que seu negócio de serviço precisa, num só lugar,{' '}
+              A plataforma que se adapta ao seu negócio de serviço: agendamento, histórico de cliente e faturamento, tudo num só lugar,{' '}
               <span style={{ color: VERDE }}>sem planilha</span>
             </h1>
             <p className="text-base sm:text-lg leading-relaxed mb-6" style={{ color: '#CFE0FF' }}>
               Parou de ficar 2h digitando cliente em planilha, achando contato velho, e descobrindo no mês que lucrou menos que esperava.
             </p>
 
-            <div className="flex flex-col items-center lg:items-start gap-2.5 mb-8">
-              <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#9FC1FA' }}>Uma plataforma que se adapta ao seu tipo de negócio</span>
-              <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-                {Object.values(SEGMENTOS_FEATURE).map(({ icon: Icon, label }) => (
-                  <span
-                    key={label}
-                    className="inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3.5 py-1.5 text-sm font-medium text-white bg-white/10 border border-white/25"
-                  >
-                    <Icon size={16} /> {label}
-                  </span>
-                ))}
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium bg-white/10 border border-white/25"
-                  style={{ color: '#CFE0FF' }}
-                >
-                  e outros negócios de serviço
-                </span>
+            <div className="flex flex-col gap-2.5 mb-8">
+              <span className="text-sm font-semibold uppercase tracking-wide text-center lg:text-left" style={{ color: '#9FC1FA' }}>
+                Feito sob medida pro seu segmento
+              </span>
+              <div className="w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+                <div className="flex w-max gap-3 motion-safe:animate-marquee hover:[animation-play-state:paused]">
+                  {[...SEGMENTOS_CARROSSEL, ...SEGMENTOS_CARROSSEL].map(({ icon: Icon, label }, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3.5 py-1.5 text-sm font-medium text-white bg-white/10 border border-white/25 whitespace-nowrap"
+                    >
+                      {Icon && <Icon size={16} />} {label}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
