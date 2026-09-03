@@ -28,6 +28,8 @@ const EQUIPE_INTERNA = ['admin', 'gestor', 'tecnico'] as const
 const schemaChamado = z.object({
   tipoManutencao: z.enum(['preventiva', 'corretiva', 'emergencia']),
   descricao: z.string().trim().min(5, 'Descreva o problema com ao menos 5 caracteres.'),
+  /** Só usado (e exigido) quando quem chama é equipe interna abrindo em nome de um cliente — ver ManutencaoService.criarChamado. */
+  clienteId: z.string().uuid().optional(),
 })
 const schemaAgendar = z.object({ tecnicoId: z.string().uuid(), data: z.coerce.date() })
 const schemaOrdem = z.object({ tecnicoId: z.string().uuid() })
@@ -48,9 +50,10 @@ const base = [autenticar, carregarContexto, exigirTipoNegocio('manutencao')] as 
 const soEquipeInterna = [...base, requererPapel(...EQUIPE_INTERNA)] as const
 const soCliente = [...base, requererPapel('cliente')] as const
 
-router.post('/chamados', ...soCliente, validar(schemaChamado), async (c) => {
-  const { tipoManutencao, descricao } = c.get('dadosValidados') as z.infer<typeof schemaChamado>
-  const chamado = await manutencaoService().criarChamado(c.get('usuarioAutenticado').id, tipoManutencao, descricao)
+/** Sem restrição de papel: cliente abre em nome de si mesmo, equipe interna abre em nome de um cliente informado — a distinção é resolvida dentro do service (ver ManutencaoService.criarChamado). */
+router.post('/chamados', ...base, validar(schemaChamado), async (c) => {
+  const { tipoManutencao, descricao, clienteId } = c.get('dadosValidados') as z.infer<typeof schemaChamado>
+  const chamado = await manutencaoService().criarChamado(c.get('usuarioAutenticado').id, tipoManutencao, descricao, clienteId)
   return c.json(chamado, 201)
 })
 

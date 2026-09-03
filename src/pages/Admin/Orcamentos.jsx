@@ -113,24 +113,95 @@ function FormularioNovoOrcamentoSalao({ onCriado, onCancelar }) {
   )
 }
 
-// Manutenção não tem "criar orçamento do zero": todo orçamento nasce de
-// um chamado aberto pelo cliente (POST /manutencao/chamados/:id/orcamento
-// — ver ManutencaoService.gerarOrcamento). O botão "Novo Orçamento" aqui
-// só dá acesso rápido a essa mesma ação, escolhendo o chamado num select
-// em vez de precisar rolar até a lista "aguardando orçamento" abaixo.
+const CATEGORIAS_MANUTENCAO = [
+  { valor: 'preventiva', label: 'Preventiva' },
+  { valor: 'corretiva', label: 'Corretiva' },
+  { valor: 'emergencia', label: 'Emergência' },
+]
+
+// Todo orçamento de manutenção nasce de um chamado (POST
+// /manutencao/chamados/:id/orcamento — ver ManutencaoService.gerarOrcamento).
+// Isso não exige mais que o CLIENTE tenha aberto esse chamado: equipe
+// interna também pode abrir em nome de um cliente (ManutencaoService.criarChamado
+// aceita clienteId quando quem chama não é papel 'cliente') — é o que
+// permite ao admin gerar um orçamento do zero, sem depender do cliente
+// ter aberto nada primeiro.
 function FormularioNovoOrcamentoManutencao({ chamados, onGerar, gerando, onCancelar }) {
+  const { showToast } = useToast()
+  const [modoNovoChamado, setModoNovoChamado] = useState(chamados.length === 0)
   const [chamadoId, setChamadoId] = useState(chamados[0]?.id ?? '')
 
-  if (chamados.length === 0) {
+  const [clientes, setClientes] = useState([])
+  const [clienteId, setClienteId] = useState('')
+  const [categoria, setCategoria] = useState('corretiva')
+  const [descricao, setDescricao] = useState('')
+  const [abrindo, setAbrindo] = useState(false)
+
+  useEffect(() => {
+    if (!modoNovoChamado) return
+    api
+      .get('/clientes?ativo=true')
+      .then((lista) => {
+        setClientes(lista)
+        setClienteId((atual) => atual || lista[0]?.id || '')
+      })
+      .catch(() => setClientes([]))
+  }, [modoNovoChamado])
+
+  async function handleAbrirEGerar(e) {
+    e.preventDefault()
+    if (!clienteId || descricao.trim().length < 5) return
+    setAbrindo(true)
+    try {
+      const chamado = await api.post('/manutencao/chamados', { clienteId, tipoManutencao: categoria, descricao: descricao.trim() })
+      await onGerar(chamado.id)
+    } catch (erro) {
+      showToast(erro instanceof ApiError ? erro.message : 'Falha ao abrir o chamado.', 'erro')
+    } finally {
+      setAbrindo(false)
+    }
+  }
+
+  if (modoNovoChamado) {
     return (
-      <div className="flex flex-col gap-4">
-        <p className="text-body text-[#666]">
-          Nenhum chamado aguardando orçamento no momento. Um orçamento de manutenção só pode ser gerado a partir de um chamado aberto pelo cliente.
-        </p>
-        <div className="flex justify-end pt-2 border-t border-muted-dark">
-          <button onClick={onCancelar} className="rounded-btn px-4 py-2 text-body font-medium bg-muted-dark text-[#333] hover:bg-gray-300">Fechar</button>
+      <form onSubmit={handleAbrirEGerar} className="flex flex-col gap-4">
+        <div>
+          <label className={labelClasse}>Cliente *</label>
+          <select required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+            <option value="">Selecione...</option>
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
         </div>
-      </div>
+        <div>
+          <label className={labelClasse}>Categoria *</label>
+          <select required className={inputClasse} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+            {CATEGORIAS_MANUTENCAO.map((c) => <option key={c.valor} value={c.valor}>{c.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelClasse}>Descreva o problema *</label>
+          <textarea
+            required
+            minLength={5}
+            rows={3}
+            className={inputClasse}
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            placeholder="Detalhes do que precisa ser feito..."
+          />
+        </div>
+        {chamados.length > 0 && (
+          <button type="button" onClick={() => setModoNovoChamado(false)} className="text-label text-primary hover:underline self-start">
+            Ou escolher um chamado já aberto
+          </button>
+        )}
+        <div className="flex justify-end gap-3 pt-2 border-t border-muted-dark">
+          <button type="button" onClick={onCancelar} className="rounded-btn px-4 py-2 text-body font-medium bg-muted-dark text-[#333] hover:bg-gray-300">Cancelar</button>
+          <button type="submit" disabled={abrindo || !!gerando} className="rounded-btn px-4 py-2 text-body font-medium bg-primary text-white hover:bg-primary-dark disabled:opacity-60">
+            {abrindo || gerando ? 'Criando...' : 'Abrir Chamado e Gerar Orçamento'}
+          </button>
+        </div>
+      </form>
     )
   }
 
@@ -142,6 +213,9 @@ function FormularioNovoOrcamentoManutencao({ chamados, onGerar, gerando, onCance
           {chamados.map((c) => <option key={c.id} value={c.id}>{c.categoria_manutencao} — {c.descricao}</option>)}
         </select>
       </div>
+      <button type="button" onClick={() => setModoNovoChamado(true)} className="text-label text-primary hover:underline self-start">
+        Ou abrir um novo chamado
+      </button>
       <div className="flex justify-end gap-3 pt-2 border-t border-muted-dark">
         <button onClick={onCancelar} className="rounded-btn px-4 py-2 text-body font-medium bg-muted-dark text-[#333] hover:bg-gray-300">Cancelar</button>
         <button

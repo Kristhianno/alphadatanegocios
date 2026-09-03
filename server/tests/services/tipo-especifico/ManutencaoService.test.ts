@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import { ManutencaoService } from '../../../src/services/tipo-especifico/ManutencaoService.js'
-import { ErroProibido, ErroValidacao } from '../../../src/errors/AppError.js'
+import { ErroNaoEncontrado, ErroProibido, ErroValidacao } from '../../../src/errors/AppError.js'
 import { criarClienteFake, paraTipado } from '../../helpers/fakeSupabase.js'
 
 function prepararUsuario(cliente: ReturnType<typeof criarClienteFake>, papel: 'admin' | 'gestor' | 'tecnico' | 'cliente', clienteId: string | null = null) {
@@ -13,12 +13,54 @@ function prepararUsuario(cliente: ReturnType<typeof criarClienteFake>, papel: 'a
 }
 
 describe('ManutencaoService.criarChamado', () => {
-  it('só um login papel "cliente" pode abrir chamado', async () => {
+  it('equipe interna sem informar clienteId é rejeitada (precisa dizer em nome de quem está abrindo)', async () => {
     const cliente = criarClienteFake()
     const { userId } = prepararUsuario(cliente, 'admin')
     const service = new ManutencaoService(paraTipado(cliente))
 
+    await expect(service.criarChamado(userId, 'corretiva', 'Torneira vazando')).rejects.toBeInstanceOf(ErroValidacao)
+  })
+
+  it('um usuário papel "cliente" sem clienteId vinculado é rejeitado', async () => {
+    const cliente = criarClienteFake()
+    const { userId } = prepararUsuario(cliente, 'cliente', null)
+    const service = new ManutencaoService(paraTipado(cliente))
+
     await expect(service.criarChamado(userId, 'corretiva', 'Torneira vazando')).rejects.toBeInstanceOf(ErroProibido)
+  })
+
+  it('equipe interna pode abrir chamado em nome de um cliente da mesma conta', async () => {
+    const cliente = criarClienteFake()
+    const { userId, contaId } = prepararUsuario(cliente, 'admin')
+    const clienteFinal = cliente.semear('clientes', [{ conta_id: contaId, nome: 'Maria', ativo: true, metadados: {} }])[0]!
+    const service = new ManutencaoService(paraTipado(cliente))
+
+    const chamado = await service.criarChamado(userId, 'corretiva', 'Vazamento na cozinha', clienteFinal['id'] as string)
+    expect(chamado.cliente_id).toBe(clienteFinal['id'])
+    expect(chamado.conta_id).toBe(contaId)
+  })
+
+  it('equipe interna não consegue abrir chamado em nome de um cliente de outra conta', async () => {
+    const cliente = criarClienteFake()
+    const { userId } = prepararUsuario(cliente, 'admin')
+    const outraConta = cliente.semear('contas', [{ nome_empresa: 'Outra Conta', tipo_negocio: 'manutencao', plano: 'startup', status: 'ativo', configuracoes_gerais: {} }])[0]!
+    const clienteDeOutraConta = cliente.semear('clientes', [{ conta_id: outraConta['id'], nome: 'Cliente Alheio', ativo: true, metadados: {} }])[0]!
+    const service = new ManutencaoService(paraTipado(cliente))
+
+    await expect(
+      service.criarChamado(userId, 'corretiva', 'Vazamento na cozinha', clienteDeOutraConta['id'] as string)
+    ).rejects.toBeInstanceOf(ErroNaoEncontrado)
+  })
+
+  it('um login "cliente" não consegue abrir chamado em nome de outro cliente forçando o parâmetro', async () => {
+    const cliente = criarClienteFake()
+    const meuClienteId = randomUUID()
+    const { userId, contaId } = prepararUsuario(cliente, 'cliente', meuClienteId)
+    const outroCliente = cliente.semear('clientes', [{ conta_id: contaId, nome: 'Outro Cliente', ativo: true, metadados: {} }])[0]!
+    const service = new ManutencaoService(paraTipado(cliente))
+
+    const chamado = await service.criarChamado(userId, 'corretiva', 'Torneira vazando', outroCliente['id'] as string)
+    expect(chamado.cliente_id).toBe(meuClienteId)
   })
 
   it('exige ao menos 5 caracteres na descrição', async () => {

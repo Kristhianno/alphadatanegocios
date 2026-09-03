@@ -44,8 +44,23 @@ export class ManutencaoService {
     this.usuarios = new UsuarioRepository(client)
   }
 
-  /** Quem abre o chamado é o próprio usuário logado como cliente — usuario.clienteId identifica de quem é o chamado. */
-  async criarChamado(userId: string, tipoManutencao: CategoriaManutencao, descricao: string): Promise<LinhaChamado> {
+  /**
+   * Quem abre o chamado normalmente é o próprio cliente (usuario.clienteId
+   * identifica de quem é o chamado) — mas a equipe interna (admin/gestor/
+   * tecnico) também pode abrir em nome de um cliente, ex: atendimento por
+   * telefone, ou pra já gerar o orçamento sem esperar o cliente abrir pelo
+   * portal (ver Admin/Orcamentos.jsx). `clienteIdParaEquipeInterna` só é
+   * usado nesse segundo caso — um usuário papel 'cliente' nunca tem esse
+   * parâmetro respeitado (sempre usa o próprio usuario.clienteId), pro
+   * mesmo motivo de todo outro lugar do sistema que nunca confia num
+   * clienteId vindo do cliente pra agir em nome de outro.
+   */
+  async criarChamado(
+    userId: string,
+    tipoManutencao: CategoriaManutencao,
+    descricao: string,
+    clienteIdParaEquipeInterna?: string
+  ): Promise<LinhaChamado> {
     if (!CATEGORIAS_MANUTENCAO.includes(tipoManutencao)) {
       throw new ErroValidacao(`Tipo de manutenção inválido: "${tipoManutencao}".`)
     }
@@ -54,8 +69,20 @@ export class ManutencaoService {
     }
 
     const usuario = await this.buscarUsuarioOuFalhar(userId)
-    if (usuario.papel !== 'cliente' || !usuario.clienteId) {
-      throw new ErroProibido('Apenas um usuário com papel "cliente" pode abrir um chamado.')
+
+    let clienteId: string
+    if (usuario.papel === 'cliente') {
+      if (!usuario.clienteId) throw new ErroProibido('Este login não está vinculado a um cliente.')
+      clienteId = usuario.clienteId
+    } else {
+      if (!clienteIdParaEquipeInterna) {
+        throw new ErroValidacao('Informe o cliente para quem o chamado está sendo aberto.')
+      }
+      const cliente = await this.client.from('clientes').select('id, conta_id').eq('id', clienteIdParaEquipeInterna).maybeSingle()
+      if (cliente.error || !cliente.data || cliente.data.conta_id !== usuario.contaId) {
+        throw new ErroNaoEncontrado('Cliente', clienteIdParaEquipeInterna)
+      }
+      clienteId = clienteIdParaEquipeInterna
     }
 
     const prioridade = tipoManutencao === 'emergencia' ? 'urgente' : 'normal'
@@ -66,7 +93,7 @@ export class ManutencaoService {
         .from('chamados_manutencao')
         .insert({
           conta_id: usuario.contaId,
-          cliente_id: usuario.clienteId,
+          cliente_id: clienteId,
           categoria_manutencao: tipoManutencao,
           prioridade,
           descricao: descricao.trim(),
