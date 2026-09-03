@@ -95,6 +95,16 @@ export class ClienteService {
     return this.clientes.atualizar(clienteId, { ativo: false })
   }
 
+  /**
+   * Autoatendimento: o próprio cliente logado lendo seu cadastro (ex:
+   * pra pré-preencher endereço na tela de agendamento). `clienteId` vem
+   * direto do JWT (ver auth.middleware.ts), não de um parâmetro de
+   * rota — por isso não há checagem extra de posse aqui.
+   */
+  async buscarProprioCadastro(clienteId: string): Promise<ClienteFinal | null> {
+    return this.clientes.buscarPorId(clienteId)
+  }
+
   private async buscarUsuarioOuFalhar(userId: string) {
     const usuario = await this.usuarios.buscarPorId(userId)
     if (!usuario) throw new ErroNaoEncontrado('Usuário', userId)

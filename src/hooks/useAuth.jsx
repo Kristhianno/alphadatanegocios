@@ -38,6 +38,8 @@ function montarSessao(usuario, conta) {
     tipoNegocio: conta?.tipoNegocio ?? null,
     nomeEmpresa: conta?.nomeEmpresa ?? null,
     logoUrl: conta?.configuracoesGerais?.logoUrl ?? null,
+    // Endereço fixo do espaço/salão, quando configurado — usado pra pré-preencher o local do agendamento em salão de festas (ver Cliente/Agendar.jsx).
+    enderecoNegocio: conta?.configuracoesGerais?.enderecoNegocio ?? null,
     tecnicoId: ponte.tecnicoId ?? null,
     clienteId: ponte.clienteId ?? usuario.clienteId ?? null,
     // Assinatura (Stripe) — ver BillingService no backend.

@@ -1,10 +1,37 @@
 import type { Cliente } from '../config/database.config.js'
 import type { Agendamento } from '../models/Agendamento.js'
+import { fimEfetivoParaComparacao } from '../models/Agendamento.js'
+import { ErroPersistencia } from '../errors/AppError.js'
 import { Repository, type LinhaBanco } from './Repository.js'
 
 export class AgendamentoRepository extends Repository<Agendamento> {
   constructor(client: Cliente) {
     super(client, 'agendamentos')
+  }
+
+  /**
+   * Agendamentos não cancelados da conta cujo intervalo [dataHoraInicio,
+   * fim-efetivo) cruza com [inicio, fim) — base tanto da checagem de
+   * conflito na criação quanto do endpoint de disponibilidade do
+   * calendário. Filtra em memória (não via `.lt`/`.gt`/`.neq` do
+   * Postgrest) de propósito: o fake de Supabase usado nos testes
+   * (tests/helpers/fakeSupabase.ts) só implementa eq/in/order/limit, e
+   * uma faixa de data não justifica fazer esse fake crescer.
+   */
+  async buscarConflitantes(
+    contaId: string,
+    inicio: Date,
+    fim: Date,
+    opcoes: { responsavelId?: string; excluirId?: string } = {}
+  ): Promise<Agendamento[]> {
+    const { data, error } = await this.client.from(this.tabela).select('*').eq('conta_id', contaId)
+    if (error) throw new ErroPersistencia(this.tabela, 'buscarConflitantes', error)
+    return (data ?? [])
+      .map((linha) => this.paraDominio(linha))
+      .filter((ag) => ag.status !== 'cancelado')
+      .filter((ag) => !opcoes.excluirId || ag.id !== opcoes.excluirId)
+      .filter((ag) => !opcoes.responsavelId || ag.responsavelId === opcoes.responsavelId)
+      .filter((ag) => ag.dataHoraInicio < fim && fimEfetivoParaComparacao(ag) > inicio)
   }
 
   protected paraDominio(linha: LinhaBanco): Agendamento {

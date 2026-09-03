@@ -7,9 +7,10 @@
 import { z } from 'zod'
 import type { Cliente } from '../config/database.config.js'
 import type { Agendamento, NovoAgendamentoInput, StatusAgendamento } from '../models/Agendamento.js'
-import { transicionarStatus, validarAgendamento } from '../models/Agendamento.js'
+import { AgendamentoConflitanteError, exigeExclusividadeDeHorario, fimEfetivoParaComparacao, transicionarStatus, validarAgendamento } from '../models/Agendamento.js'
 import type { TipoNegocio } from '../models/User.js'
 import { AgendamentoRepository } from '../repositories/AgendamentoRepository.js'
+import { ServicoRepository } from '../repositories/ServicoRepository.js'
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js'
 import { ErroNaoEncontrado, ErroValidacao } from '../errors/AppError.js'
 import { logger } from '../utils/logger.js'
@@ -35,15 +36,29 @@ export interface FiltrosAgendamento {
 export class AgendamentoService {
   private readonly agendamentos: AgendamentoRepository
   private readonly usuarios: UsuarioRepository
+  private readonly servicos: ServicoRepository
 
   constructor(client: Cliente) {
     this.agendamentos = new AgendamentoRepository(client)
     this.usuarios = new UsuarioRepository(client)
+    this.servicos = new ServicoRepository(client)
   }
 
   async criarAgendamento(userId: string, tipoNegocio: TipoNegocio, dados: unknown): Promise<Agendamento> {
     const usuario = await this.buscarUsuarioOuFalhar(userId)
     const validado = schemaCriarAgendamento.parse(dados)
+
+    // Sem dataHoraFim explícita, estima a partir da duração do serviço
+    // vinculado (quando houver) — é o que dá uma janela real pra
+    // checagem de conflito abaixo, em vez de tratar o agendamento como
+    // um instante isolado.
+    let dataHoraFim = validado.dataHoraFim
+    if (!dataHoraFim && validado.servicoId) {
+      const servico = await this.buscarServicoDaContaOuFalhar(validado.servicoId, usuario.contaId)
+      if (servico.duracaoEstimadaMinutos) {
+        dataHoraFim = new Date(validado.dataHoraInicio.getTime() + servico.duracaoEstimadaMinutos * 60_000)
+      }
+    }
 
     const input: NovoAgendamentoInput = {
       contaId: usuario.contaId,
@@ -52,7 +67,7 @@ export class AgendamentoService {
       dataHoraInicio: validado.dataHoraInicio,
       ...(validado.servicoId !== undefined && { servicoId: validado.servicoId }),
       ...(validado.responsavelId !== undefined && { responsavelId: validado.responsavelId }),
-      ...(validado.dataHoraFim !== undefined && { dataHoraFim: validado.dataHoraFim }),
+      ...(dataHoraFim !== undefined && { dataHoraFim }),
       ...(validado.endereco !== undefined && { endereco: validado.endereco }),
       ...(validado.valorEstimado !== undefined && { valorEstimado: validado.valorEstimado }),
       ...(validado.observacoes !== undefined && { observacoes: validado.observacoes }),
@@ -64,9 +79,31 @@ export class AgendamentoService {
       throw new ErroValidacao('Agendamento inválido para o tipo de negócio informado.', erros)
     }
 
+    if (exigeExclusividadeDeHorario(tipoNegocio)) {
+      const fimParaChecagem = fimEfetivoParaComparacao({ dataHoraInicio: input.dataHoraInicio, dataHoraFim: dataHoraFim ?? null })
+      const conflitantes = await this.agendamentos.buscarConflitantes(usuario.contaId, input.dataHoraInicio, fimParaChecagem, {
+        ...(input.responsavelId && { responsavelId: input.responsavelId }),
+      })
+      if (conflitantes.length > 0) {
+        throw new AgendamentoConflitanteError()
+      }
+    }
+
     const agendamento = await this.agendamentos.criar({ ...input, status: 'agendado' })
     logger.info({ agendamentoId: agendamento.id, tipoNegocio }, 'Agendamento criado.')
     return agendamento
+  }
+
+  /**
+   * Horários já ocupados da conta num período — usado pelo calendário
+   * do cliente pra mostrar o que já está reservado, sem expor dados de
+   * outros clientes (nome, endereço, etc. ficam de fora de propósito).
+   * Disponível pra qualquer papel autenticado, inclusive 'cliente'.
+   */
+  async listarDisponibilidade(userId: string, periodo: { de: Date; ate: Date }): Promise<{ inicio: string; fim: string }[]> {
+    const usuario = await this.buscarUsuarioOuFalhar(userId)
+    const ocupados = await this.agendamentos.buscarConflitantes(usuario.contaId, periodo.de, periodo.ate)
+    return ocupados.map((a) => ({ inicio: a.dataHoraInicio.toISOString(), fim: fimEfetivoParaComparacao(a).toISOString() }))
   }
 
   /**
@@ -125,5 +162,12 @@ export class AgendamentoService {
     const agendamento = await this.agendamentos.buscarPorId(agendamentoId)
     if (!agendamento) throw new ErroNaoEncontrado('Agendamento', agendamentoId)
     return agendamento
+  }
+
+  /** Também garante que o serviço pertence à mesma conta do usuário — um clienteId de outra conta nunca deve ser aceito aqui. */
+  private async buscarServicoDaContaOuFalhar(servicoId: string, contaId: string) {
+    const servico = await this.servicos.buscarPorId(servicoId)
+    if (!servico || servico.contaId !== contaId) throw new ErroNaoEncontrado('Serviço', servicoId)
+    return servico
   }
 }

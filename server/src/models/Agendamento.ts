@@ -83,6 +83,31 @@ export class TransicaoInvalidaError extends ErroConflito {
   }
 }
 
+/** Mesmo motivo de {@link TransicaoInvalidaError}: precisa ser ErroConflito (409), não Error puro, pro middleware de erro reconhecer. */
+export class AgendamentoConflitanteError extends ErroConflito {
+  constructor() {
+    super('Já existe um agendamento nesse horário. Escolha outro dia ou horário.')
+  }
+}
+
+/**
+ * Piso de duração assumido ao comparar dois agendamentos sem
+ * dataHoraFim definida — sem isso, dois agendamentos "instantâneos" no
+ * exato mesmo minuto teriam ambos um intervalo de largura zero e
+ * escapariam da checagem de sobreposição (dois pontos idênticos nunca
+ * "cruzam" sob comparação estrita `<`/`>`). Nunca é persistido como
+ * dataHoraFim real — só usado nesta comparação, tanto em
+ * AgendamentoRepository.buscarConflitantes (lado dos agendamentos já
+ * existentes) quanto em AgendamentoService.criarAgendamento (lado do
+ * agendamento novo).
+ */
+export const DURACAO_MINIMA_PARA_COMPARACAO_MS = 30 * 60_000
+
+/** Fim "efetivo" de um agendamento pra fins de comparação de sobreposição — ver {@link DURACAO_MINIMA_PARA_COMPARACAO_MS}. */
+export function fimEfetivoParaComparacao(agendamento: Pick<Agendamento, 'dataHoraInicio' | 'dataHoraFim'>): Date {
+  return agendamento.dataHoraFim ?? new Date(agendamento.dataHoraInicio.getTime() + DURACAO_MINIMA_PARA_COMPARACAO_MS)
+}
+
 export function podeTransicionar(de: StatusAgendamento, para: StatusAgendamento): boolean {
   return TRANSICOES_VALIDAS[de].includes(para)
 }
@@ -106,9 +131,17 @@ export interface ErroValidacaoAgendamento {
 
 interface ValidadorAgendamento {
   validar(agendamento: NovoAgendamentoInput): ErroValidacaoAgendamento[]
+  /**
+   * true quando o vertical não tolera dois agendamentos com horários
+   * sobrepostos — um único local/profissional atende uma coisa por vez
+   * (ex: salão de festas). false quando agendamentos concorrentes são
+   * normais (ex: confeitaria aceita várias encomendas pro mesmo horário
+   * de entrega).
+   */
+  exigeExclusividadeDeHorario(): boolean
 }
 
-/** Confeitaria: pedidos precisam de prazo mínimo de produção. */
+/** Confeitaria: pedidos precisam de prazo mínimo de produção. Vários pedidos podem mirar o mesmo horário de entrega. */
 class ValidadorConfeitaria implements ValidadorAgendamento {
   validar(agendamento: NovoAgendamentoInput): ErroValidacaoAgendamento[] {
     const erros: ErroValidacaoAgendamento[] = []
@@ -118,9 +151,13 @@ class ValidadorConfeitaria implements ValidadorAgendamento {
     }
     return erros
   }
+
+  exigeExclusividadeDeHorario(): boolean {
+    return false
+  }
 }
 
-/** Salão de festas: evento precisa ter data futura e serviço (pacote) vinculado. */
+/** Salão de festas: evento precisa ter data futura e serviço (pacote) vinculado. Um único espaço não recebe dois eventos ao mesmo tempo. */
 class ValidadorSalaoFestas implements ValidadorAgendamento {
   validar(agendamento: NovoAgendamentoInput): ErroValidacaoAgendamento[] {
     const erros: ErroValidacaoAgendamento[] = []
@@ -132,9 +169,13 @@ class ValidadorSalaoFestas implements ValidadorAgendamento {
     }
     return erros
   }
+
+  exigeExclusividadeDeHorario(): boolean {
+    return true
+  }
 }
 
-/** Fotografia/vídeo: sessão precisa de horário dentro do expediente (8h–20h). */
+/** Fotografia/vídeo: sessão precisa de horário dentro do expediente (8h–20h). Um fotógrafo não cobre duas sessões ao mesmo tempo. */
 class ValidadorFotografia implements ValidadorAgendamento {
   validar(agendamento: NovoAgendamentoInput): ErroValidacaoAgendamento[] {
     const erros: ErroValidacaoAgendamento[] = []
@@ -144,9 +185,13 @@ class ValidadorFotografia implements ValidadorAgendamento {
     }
     return erros
   }
+
+  exigeExclusividadeDeHorario(): boolean {
+    return true
+  }
 }
 
-/** Manutenção: chamados de emergência não podem ser agendados para o futuro — são atendimento imediato. */
+/** Manutenção: chamados de emergência não podem ser agendados para o futuro — são atendimento imediato. Um técnico não cobre dois chamados ao mesmo tempo. */
 class ValidadorManutencao implements ValidadorAgendamento {
   validar(agendamento: NovoAgendamentoInput): ErroValidacaoAgendamento[] {
     const erros: ErroValidacaoAgendamento[] = []
@@ -157,11 +202,19 @@ class ValidadorManutencao implements ValidadorAgendamento {
     }
     return erros
   }
+
+  exigeExclusividadeDeHorario(): boolean {
+    return true
+  }
 }
 
 class ValidadorPadrao implements ValidadorAgendamento {
   validar(): ErroValidacaoAgendamento[] {
     return []
+  }
+
+  exigeExclusividadeDeHorario(): boolean {
+    return false
   }
 }
 
@@ -180,4 +233,9 @@ export function validarAgendamento(agendamento: NovoAgendamentoInput): ErroValid
     erros.push({ campo: 'dataHoraFim', mensagem: 'O horário de término não pode ser anterior ao início.' })
   }
   return [...erros, ...VALIDADORES[agendamento.tipoNegocio].validar(agendamento)]
+}
+
+/** true quando dois agendamentos sobrepostos nesse vertical devem ser tratados como conflito (409) — ver {@link ValidadorAgendamento.exigeExclusividadeDeHorario}. */
+export function exigeExclusividadeDeHorario(tipoNegocio: TipoNegocio): boolean {
+  return VALIDADORES[tipoNegocio].exigeExclusividadeDeHorario()
 }

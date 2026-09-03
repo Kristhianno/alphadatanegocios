@@ -25,6 +25,14 @@ const schemaFiltros = z.object({
 
 const protegido = [autenticar, carregarContexto, requererPapel('admin', 'gestor', 'tecnico')] as const
 
+/** Autoatendimento do próprio cliente logado — antes do bloco `protegido` acima, que é exclusivo da equipe interna. */
+router.get('/me', autenticar, async (c) => {
+  const usuario = c.get('usuarioAutenticado')
+  if (usuario.papel !== 'cliente' || !usuario.clienteId) return c.json(null, 200)
+  const cliente = await clienteService().buscarProprioCadastro(usuario.clienteId)
+  return c.json(cliente, 200)
+})
+
 router.post('/', ...protegido, async (c) => {
   const cliente = await clienteService().criarCliente(c.get('usuarioAutenticado').id, await c.req.json())
   return c.json(cliente, 201)

@@ -20,8 +20,16 @@ const schemaFiltros = z.object({
 
 const schemaCancelar = z.object({ motivo: z.string().trim().min(1, 'Informe o motivo do cancelamento.') })
 const schemaStatus = z.object({ status: z.enum(['agendado', 'confirmado', 'em_andamento', 'concluido', 'cancelado']) })
+const schemaDisponibilidade = z.object({ de: z.coerce.date(), ate: z.coerce.date() })
 
 const protegido = [autenticar, carregarContexto] as const
+
+/** Só horários ocupados (sem dados de quem ocupa) — alimenta o calendário de agendamento do cliente. Antes de '/' de propósito, embora não haja colisão de rota hoje. */
+router.get('/disponibilidade', ...protegido, validar(schemaDisponibilidade, 'query'), async (c) => {
+  const periodo = c.get('dadosValidados') as z.infer<typeof schemaDisponibilidade>
+  const ocupados = await agendamentoService().listarDisponibilidade(c.get('usuarioAutenticado').id, periodo)
+  return c.json(ocupados, 200)
+})
 
 router.post('/', ...protegido, async (c) => {
   const conta = c.get('conta')

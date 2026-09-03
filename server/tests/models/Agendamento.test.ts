@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   calcularDuracaoMinutos,
+  exigeExclusividadeDeHorario,
   podeTransicionar,
   transicionarStatus,
   TransicaoInvalidaError,
@@ -128,5 +129,18 @@ describe('validarAgendamento — Strategy por vertical', () => {
     const fim = new Date(inicio.getTime() - 1000)
     const erros = validarAgendamento(input({ tipoNegocio: 'confeitaria', dataHoraInicio: inicio, dataHoraFim: fim }))
     expect(erros.some((e) => e.campo === 'dataHoraFim')).toBe(true)
+  })
+})
+
+describe('exigeExclusividadeDeHorario — quais verticais bloqueiam horários sobrepostos', () => {
+  it('salão de festas, fotografia e manutenção exigem exclusividade (um local/profissional por vez)', () => {
+    expect(exigeExclusividadeDeHorario('salao_festas')).toBe(true)
+    expect(exigeExclusividadeDeHorario('fotografia_video')).toBe(true)
+    expect(exigeExclusividadeDeHorario('manutencao')).toBe(true)
+  })
+
+  it('confeitaria e "outro" toleram agendamentos concorrentes no mesmo horário', () => {
+    expect(exigeExclusividadeDeHorario('confeitaria')).toBe(false)
+    expect(exigeExclusividadeDeHorario('outro')).toBe(false)
   })
 })
