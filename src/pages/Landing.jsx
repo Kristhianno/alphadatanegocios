@@ -318,76 +318,78 @@ export default function Landing() {
       </header>
 
       {/* 2. HERO */}
-      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        <div className="text-center lg:text-left">
-          <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-5" style={{ color: CINZA_TEXTO }}>
-            Agendamento, histórico de cliente e faturamento — tudo que seu negócio de serviço precisa, num só lugar, sem planilha
-          </h1>
-          <p className="text-base sm:text-lg leading-relaxed mb-6" style={{ color: '#555555' }}>
-            Parou de ficar 2h digitando cliente em planilha, achando contato velho, e descobrindo no mês que lucrou menos que esperava.
-          </p>
+      <section className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${AZUL} 0%, #003A94 60%, #002A6B 100%)` }}>
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="text-center lg:text-left">
+            <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-5 text-white">
+              Agendamento, histórico de cliente e faturamento — tudo que seu negócio de serviço precisa, num só lugar,{' '}
+              <span style={{ color: VERDE }}>sem planilha</span>
+            </h1>
+            <p className="text-base sm:text-lg leading-relaxed mb-6" style={{ color: '#CFE0FF' }}>
+              Parou de ficar 2h digitando cliente em planilha, achando contato velho, e descobrindo no mês que lucrou menos que esperava.
+            </p>
 
-          <div className="flex flex-col items-center lg:items-start gap-2.5 mb-8">
-            <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#999999' }}>Uma plataforma que se adapta ao seu tipo de negócio</span>
-            <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-              {Object.values(SEGMENTOS_FEATURE).map(({ icon: Icon, label }) => (
+            <div className="flex flex-col items-center lg:items-start gap-2.5 mb-8">
+              <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: '#9FC1FA' }}>Uma plataforma que se adapta ao seu tipo de negócio</span>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+                {Object.values(SEGMENTOS_FEATURE).map(({ icon: Icon, label }) => (
+                  <span
+                    key={label}
+                    className="inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3.5 py-1.5 text-sm font-medium text-white bg-white/10 border border-white/25"
+                  >
+                    <Icon size={16} /> {label}
+                  </span>
+                ))}
                 <span
-                  key={label}
-                  className="inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3.5 py-1.5 text-sm font-medium"
-                  style={{ backgroundColor: AZUL_CLARO, color: AZUL }}
+                  className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium bg-white/10 border border-white/25"
+                  style={{ color: '#CFE0FF' }}
                 >
-                  <Icon size={16} /> {label}
+                  e outros negócios de serviço
                 </span>
-              ))}
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium"
-                style={{ backgroundColor: CINZA_CLARO, color: '#666666' }}
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center lg:items-start gap-3">
+              <button
+                type="button"
+                onClick={() => irParaCadastro('startup')}
+                className="rounded-[8px] text-white px-8 py-4 text-lg font-semibold transition-colors duration-300 shadow-[0_8px_20px_rgba(0,0,0,0.25)]"
+                style={{ backgroundColor: VERDE }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = VERDE_HOVER)}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = VERDE)}
               >
-                e outros negócios de serviço
-              </span>
+                COMECE GRÁTIS — SEM CARTÃO
+              </button>
+              <p className="text-sm" style={{ color: '#9FC1FA' }}>Setup em 10 minutos. Cancele quando quiser.</p>
+              <a href="#contato" className="text-base font-semibold text-white underline underline-offset-2 hover:opacity-80">
+                Ou agendar uma demo com seus dados
+              </a>
             </div>
           </div>
 
-          <div className="flex flex-col items-center lg:items-start gap-3">
-            <button
-              type="button"
-              onClick={() => irParaCadastro('startup')}
-              className="rounded-[8px] text-white px-8 py-4 text-lg font-semibold transition-colors duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
-              style={{ backgroundColor: VERDE }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = VERDE_HOVER)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = VERDE)}
-            >
-              COMECE GRÁTIS — SEM CARTÃO
-            </button>
-            <p className="text-sm" style={{ color: '#999999' }}>Setup em 10 minutos. Cancele quando quiser.</p>
-            <a href="#contato" className="text-base font-semibold hover:underline" style={{ color: AZUL }}>
-              Ou agendar uma demo com seus dados
-            </a>
+          {/* Mobile: laptop em destaque + celulares lado a lado abaixo (evita sobreposição apertada em telas pequenas) */}
+          <div className="sm:hidden flex flex-col items-center gap-5">
+            <img src={heroLaptop} alt="Dashboard de Ordens de Serviço da AlphaData aberto num notebook" className="w-full drop-shadow-[0_20px_35px_rgba(0,0,0,0.3)]" />
+            <div className="flex justify-center gap-6">
+              <img src={heroMobileMenu} alt="Menu do app AlphaData num celular" className="w-[38%] drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]" />
+              <img src={heroMobileDashboard} alt="Dashboard do app AlphaData num celular" className="w-[38%] drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]" />
+            </div>
           </div>
-        </div>
 
-        {/* Mobile: laptop em destaque + celulares lado a lado abaixo (evita sobreposição apertada em telas pequenas) */}
-        <div className="sm:hidden flex flex-col items-center gap-5">
-          <img src={heroLaptop} alt="Dashboard de Ordens de Serviço da AlphaData aberto num notebook" className="w-full drop-shadow-[0_20px_35px_rgba(0,0,0,0.15)]" />
-          <div className="flex justify-center gap-6">
-            <img src={heroMobileMenu} alt="Menu do app AlphaData num celular" className="w-[38%] drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]" />
-            <img src={heroMobileDashboard} alt="Dashboard do app AlphaData num celular" className="w-[38%] drop-shadow-[0_10px_20px_rgba(0,0,0,0.15)]" />
+          {/* sm+: composição em camadas — notebook em destaque com os dois celulares "apoiados" nos cantos de baixo */}
+          <div className="hidden sm:block relative w-full max-w-[560px] mx-auto lg:mx-0 pb-10 lg:pb-12">
+            <img src={heroLaptop} alt="Dashboard de Ordens de Serviço da AlphaData aberto num notebook" className="w-full drop-shadow-[0_25px_45px_rgba(0,0,0,0.35)]" />
+            <img
+              src={heroMobileMenu}
+              alt="Menu do app AlphaData num celular"
+              className="absolute z-10 w-[28%] -left-[5%] bottom-[-6%] rotate-[-7deg] drop-shadow-[0_16px_28px_rgba(0,0,0,0.35)]"
+            />
+            <img
+              src={heroMobileDashboard}
+              alt="Dashboard do app AlphaData num celular"
+              className="absolute z-10 w-[28%] -right-[5%] bottom-[-2%] rotate-[7deg] drop-shadow-[0_16px_28px_rgba(0,0,0,0.35)]"
+            />
           </div>
-        </div>
-
-        {/* sm+: composição em camadas — notebook em destaque com os dois celulares "apoiados" nos cantos de baixo */}
-        <div className="hidden sm:block relative w-full max-w-[560px] mx-auto lg:mx-0 pb-10 lg:pb-12">
-          <img src={heroLaptop} alt="Dashboard de Ordens de Serviço da AlphaData aberto num notebook" className="w-full drop-shadow-[0_25px_45px_rgba(0,0,0,0.18)]" />
-          <img
-            src={heroMobileMenu}
-            alt="Menu do app AlphaData num celular"
-            className="absolute z-10 w-[28%] -left-[5%] bottom-[-6%] rotate-[-7deg] drop-shadow-[0_16px_28px_rgba(0,0,0,0.2)]"
-          />
-          <img
-            src={heroMobileDashboard}
-            alt="Dashboard do app AlphaData num celular"
-            className="absolute z-10 w-[28%] -right-[5%] bottom-[-2%] rotate-[7deg] drop-shadow-[0_16px_28px_rgba(0,0,0,0.2)]"
-          />
         </div>
       </section>
 
