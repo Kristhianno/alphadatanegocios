@@ -28,11 +28,11 @@ const CONFIG_POR_VERTICAL = {
   },
   salao_festas: {
     storageKey: 'alphadata_contratos_salao', mock: CONTRATOS_SALAO, prefixoId: 'CTR-SL',
-    clientes: CLIENTES_SALAO, pacotes: PACOTES_SALAO, campoPreco: 'precoBase', tituloItem: 'Pacote',
+    clientes: CLIENTES_SALAO, pacotes: PACOTES_SALAO, campoPreco: 'precoBase', tituloItem: 'Pacote / Kit',
   },
   fotografia_video: {
     storageKey: 'alphadata_contratos_fotografia', mock: CONTRATOS_FOTOGRAFIA, prefixoId: 'CTR-FT',
-    clientes: CLIENTES_FOTOGRAFIA, pacotes: PACOTES_FOTOGRAFIA, campoPreco: 'precoBase', tituloItem: 'Pacote',
+    clientes: CLIENTES_FOTOGRAFIA, pacotes: PACOTES_FOTOGRAFIA, campoPreco: 'precoBase', tituloItem: 'Pacote / Kit',
   },
   manutencao: {
     storageKey: 'alphadata_contratos_manutencao', mock: CONTRATOS_MANUTENCAO, prefixoId: 'CTR-MN',

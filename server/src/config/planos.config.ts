@@ -48,7 +48,7 @@ export const FIDELIDADE_MESES = 12
 
 const RECURSOS_ESSENCIAL = [
   'IA no WhatsApp: atendimento 24h com texto e áudio',
-  'Orçamento e pacotes em PDF na conversa',
+  'Orçamento e pacotes / kits em PDF na conversa',
   'Agenda: consulta e reserva de datas',
   'Coleta dos dados do contrato',
   'Sistema ALPHADATA integrado: agenda, orçamentos, contratos e financeiro',

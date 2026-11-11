@@ -157,7 +157,7 @@ export default function EventosSalao() {
             <input className={inputClasse} value={nomeEvento} onChange={(e) => setNomeEvento(e.target.value)} placeholder="Deixe em branco para gerar automaticamente" />
           </div>
           <div>
-            <label className={labelClasse}>Pacote *</label>
+            <label className={labelClasse}>Pacote / Kit *</label>
             <select required className={inputClasse} value={pacoteId} onChange={(e) => setPacoteId(e.target.value)}>
               {PACOTES_SALAO.map((p) => <option key={p.id} value={p.id}>{p.nome} — R$ {p.precoBase.toLocaleString('pt-BR')}</option>)}
             </select>
@@ -186,7 +186,7 @@ export default function EventosSalao() {
               <StatusBadge status={eventoDetalhe.status} />
             </div>
             <p className="text-body"><span className="text-[#666]">Data:</span> {eventoDetalhe.dataEvento} · <span className="text-[#666]">Convidados:</span> {eventoDetalhe.numeroConvidados}</p>
-            <p className="text-body"><span className="text-[#666]">Pacote:</span> {eventoDetalhe.pacoteNome} — R$ {eventoDetalhe.valorTotal.toLocaleString('pt-BR')}</p>
+            <p className="text-body"><span className="text-[#666]">Pacote / Kit:</span> {eventoDetalhe.pacoteNome} — R$ {eventoDetalhe.valorTotal.toLocaleString('pt-BR')}</p>
 
             <div>
               <p className="text-label text-[#666] mb-2">Checklist operacional</p>

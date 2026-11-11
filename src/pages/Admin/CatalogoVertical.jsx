@@ -26,7 +26,7 @@ const CONFIG_POR_VERTICAL = {
     camposExtra: [{ chave: 'categoria', label: 'Categoria', tipo: 'texto' }],
   },
   salao_festas: {
-    titulo: 'Pacotes', storageKey: 'alphadata_catalogo_salao', mock: PACOTES_SALAO, prefixoId: 'PCT',
+    titulo: 'Pacotes / Kits', storageKey: 'alphadata_catalogo_salao', mock: PACOTES_SALAO, prefixoId: 'PCT',
     campoPreco: 'precoBase',
     camposExtra: [
       { chave: 'capacidade', label: 'Capacidade', tipo: 'numero' },
@@ -34,7 +34,7 @@ const CONFIG_POR_VERTICAL = {
     ],
   },
   fotografia_video: {
-    titulo: 'Pacotes', storageKey: 'alphadata_catalogo_fotografia', mock: PACOTES_FOTOGRAFIA, prefixoId: 'PCF',
+    titulo: 'Pacotes / Kits', storageKey: 'alphadata_catalogo_fotografia', mock: PACOTES_FOTOGRAFIA, prefixoId: 'PCF',
     campoPreco: 'precoBase',
     camposExtra: [
       { chave: 'horasInclusas', label: 'Horas inclusas', tipo: 'numero' },
@@ -54,7 +54,7 @@ function proximoId(lista, prefixo) {
 export default function CatalogoVertical() {
   const { user } = useAuth()
   const config = CONFIG_POR_VERTICAL[user?.tipoNegocio] ?? CONFIG_POR_VERTICAL.confeitaria
-  const tituloSingular = config.titulo === 'Catálogo' ? 'Produto' : 'Pacote'
+  const tituloSingular = config.titulo === 'Catálogo' ? 'Produto' : 'Pacote / Kit'
 
   const [itens, setItens] = usePersisted(config.storageKey, config.mock)
   const { showToast } = useToast()

@@ -42,7 +42,7 @@ const ANTES_DEPOIS = [
 ]
 
 const PASSOS = [
-  { numero: '01', titulo: 'O cliente pede, você responde na hora', texto: 'Monte o orçamento a partir dos seus pacotes e envie. O cliente aprova online, sem vai e volta.' },
+  { numero: '01', titulo: 'O cliente pede, você responde na hora', texto: 'Monte o orçamento a partir dos seus pacotes / kits e envie. O cliente aprova online, sem vai e volta.' },
   { numero: '02', titulo: 'Fechou? A data fica travada', texto: 'Contrato digital, sinal registrado e o evento já entra no calendário da equipe.' },
   { numero: '03', titulo: 'Depois da festa, você sabe quanto lucrou', texto: 'Receitas e custos de cada evento num só lugar. No fim do mês, o resultado aparece sozinho.' },
 ]
@@ -59,7 +59,7 @@ const GRUPOS_NICHO = [
   {
     ...SEGMENTOS_FEATURE.eventos,
     nichos: 'Salão de Festas, Decoração, Personagens Vivos, Recreação, Aluguel de Brinquedos, Barracas e Food Truck, Lembrancinhas e Convites',
-    recursos: ['Pacotes e agenda de eventos', 'Equipe e equipamentos de cada festa', 'Orçamentos, contratos e financeiro por evento'],
+    recursos: ['Pacotes / kits e agenda de eventos', 'Equipe e equipamentos de cada festa', 'Orçamentos, contratos e financeiro por evento'],
   },
   {
     ...SEGMENTOS_FEATURE.doces,
@@ -69,7 +69,7 @@ const GRUPOS_NICHO = [
   {
     ...SEGMENTOS_FEATURE.fotografia,
     nichos: 'Fotografia e Filmagem de festas e eventos',
-    recursos: ['Pacotes e agenda de sessões', 'Produções de vídeo e edição', 'Portfólio e galeria do cliente'],
+    recursos: ['Pacotes / kits e agenda de sessões', 'Produções de vídeo e edição', 'Portfólio e galeria do cliente'],
   },
 ]
 
@@ -92,7 +92,7 @@ const VITRINE_PLANOS = {
         icon: IconBrandWhatsapp,
         itens: [
           'Atendimento 24h com texto e áudio',
-          'Orçamento e pacotes em PDF na conversa',
+          'Orçamento e pacotes / kits em PDF na conversa',
           'Agenda: consulta e reserva de datas',
           'Coleta dos dados do contrato',
         ],
@@ -255,11 +255,11 @@ const FAQ = [
   },
   {
     pergunta: 'Como funciona a IA no WhatsApp?',
-    resposta: 'Ela atende seus clientes 24h com texto e áudio, envia orçamento e pacotes em PDF na conversa, consulta e reserva datas na agenda e coleta os dados do contrato, tudo integrado ao sistema ALPHADATA.',
+    resposta: 'Ela atende seus clientes 24h com texto e áudio, envia orçamento e pacotes / kits em PDF na conversa, consulta e reserva datas na agenda e coleta os dados do contrato, tudo integrado ao sistema ALPHADATA.',
   },
   {
     pergunta: 'O que está incluso na implementação?',
-    resposta: 'A gente configura a IA no WhatsApp com os seus pacotes e preços e integra tudo ao sistema. É um investimento único de R$ 1.997, cobrado junto da primeira mensalidade.',
+    resposta: 'A gente configura a IA no WhatsApp com os seus pacotes / kits e preços e integra tudo ao sistema. É um investimento único de R$ 1.997, cobrado junto da primeira mensalidade.',
   },
   {
     pergunta: 'Qual a diferença entre o plano de 12 meses e o sem fidelidade?',
@@ -267,7 +267,7 @@ const FAQ = [
   },
   { pergunta: 'Meu cliente consegue ver o orçamento e o contrato?', resposta: 'Sim. Ele recebe acesso ao portal do cliente, onde aprova orçamentos, vê os contratos e acompanha a festa dele.' },
   { pergunta: 'Consigo organizar a equipe e os equipamentos de cada festa?', resposta: 'Sim. Em cada evento você define quem trabalha e quais equipamentos vão, e vê tudo no calendário.' },
-  { pergunta: 'Quanto tempo demora pra começar?', resposta: 'Uns 10 minutos. Você cadastra seus pacotes e clientes aos poucos, enquanto usa. Sem migração complicada.' },
+  { pergunta: 'Quanto tempo demora pra começar?', resposta: 'Uns 10 minutos. Você cadastra seus pacotes / kits e clientes aos poucos, enquanto usa. Sem migração complicada.' },
   { pergunta: 'E se eu não quiser mais?', resposta: 'No plano sem fidelidade você cancela direto pelas configurações, sem multa. No plano de 12 meses vale o período contratado. Em ambos, você exporta seus relatórios em PDF e planilha quando quiser.' },
   { pergunta: 'Meus dados ficam seguros?', resposta: 'Sim. A conexão é sempre criptografada (HTTPS) e cada empresa só enxerga os próprios dados.' },
 ]
@@ -616,7 +616,7 @@ export default function Landing() {
                 <p className="text-h1 text-[#1a1a1a]">{formatarPreco(planos[0].taxaImplementacaoCentavos)}</p>
               </div>
               <p className="text-body text-[#666] md:flex-1">
-                A gente configura a IA no WhatsApp com os seus pacotes e preços e integra tudo ao sistema ALPHADATA. Vale para o Essencial e o
+                A gente configura a IA no WhatsApp com os seus pacotes / kits e preços e integra tudo ao sistema ALPHADATA. Vale para o Essencial e o
                 Completo, e é cobrada uma única vez, junto da primeira mensalidade.
               </p>
             </div>

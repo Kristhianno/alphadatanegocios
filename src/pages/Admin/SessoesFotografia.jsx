@@ -140,7 +140,7 @@ export default function SessoesFotografia() {
             </select>
           </div>
           <div>
-            <label className={labelClasse}>Pacote *</label>
+            <label className={labelClasse}>Pacote / Kit *</label>
             <select required className={inputClasse} value={pacoteId} onChange={(e) => setPacoteId(e.target.value)}>
               {PACOTES_FOTOGRAFIA.map((p) => <option key={p.id} value={p.id}>{p.nome} — R$ {p.precoBase.toLocaleString('pt-BR')}</option>)}
             </select>
@@ -172,7 +172,7 @@ export default function SessoesFotografia() {
             </div>
             <p className="text-body"><span className="text-[#666]">Tipo:</span> {sessaoDetalhe.tipoSessao} · <span className="text-[#666]">Local:</span> {sessaoDetalhe.local}</p>
             <p className="text-body"><span className="text-[#666]">Data:</span> {sessaoDetalhe.dataSessao}</p>
-            <p className="text-body"><span className="text-[#666]">Pacote:</span> {sessaoDetalhe.pacoteNome} — R$ {sessaoDetalhe.valorTotal.toLocaleString('pt-BR')}</p>
+            <p className="text-body"><span className="text-[#666]">Pacote / Kit:</span> {sessaoDetalhe.pacoteNome} — R$ {sessaoDetalhe.valorTotal.toLocaleString('pt-BR')}</p>
             {sessaoDetalhe.quantidadeFotos > 0 && <p className="text-body"><span className="text-[#666]">Fotos inclusas:</span> {sessaoDetalhe.quantidadeFotos}</p>}
 
             <div>
