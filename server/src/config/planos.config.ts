@@ -37,6 +37,8 @@ export interface ConfigPlano {
   limiteAgendamentosMes: number | null
   /** null = ilimitado. */
   limiteContratosMes: number | null
+  /** Cota de arquivos (fotos, vídeos, PDFs) da conta, em MB — ver ArquivoService. */
+  limiteArmazenamentoMb: number
   recursos: string[]
 }
 
@@ -68,6 +70,7 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     limiteUsuarios: 3,
     limiteAgendamentosMes: 200,
     limiteContratosMes: 200,
+    limiteArmazenamentoMb: 1024,
     recursos: RECURSOS_ESSENCIAL,
   },
   profissional: {
@@ -82,6 +85,7 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     limiteUsuarios: 15,
     limiteAgendamentosMes: null,
     limiteContratosMes: null,
+    limiteArmazenamentoMb: 5120,
     recursos: [
       'Tudo do Essencial',
       'CRM em kanban com todos os contatos',
@@ -102,6 +106,7 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     limiteUsuarios: 100,
     limiteAgendamentosMes: null,
     limiteContratosMes: null,
+    limiteArmazenamentoMb: 20480,
     recursos: [
       'Combine os recursos do Essencial e do Completo do seu jeito',
       'Pensado pra operações com necessidades específicas',

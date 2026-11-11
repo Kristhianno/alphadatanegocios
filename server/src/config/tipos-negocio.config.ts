@@ -26,6 +26,11 @@ function itemCrm(): MenuItem {
   return { id: 'crm', label: 'CRM de Leads', icone: '🗂️', rota: '/crm/leads', papeis: [...EQUIPE_INTERNA] }
 }
 
+/** Arquivos da conta (fotos, vídeos, PDFs) — todos os planos, só equipe interna. */
+function itemArquivos(): MenuItem {
+  return { id: 'arquivos', label: 'Arquivos', icone: '📁', rota: '/arquivos', papeis: [...EQUIPE_INTERNA] }
+}
+
 function itemAgendamentos(): MenuItem {
   return { id: 'agendamentos', label: 'Agendamentos', icone: '📅', rota: '/agendamentos' }
 }
@@ -65,6 +70,7 @@ const CONFEITARIA: TipoNegocioConfig = {
     { id: 'estoque', label: 'Estoque', icone: '📦', rota: '/confeitaria/ingredientes', papeis: [...EQUIPE_INTERNA] },
     itemContratos(),
     itemClientes(),
+    itemArquivos(),
   ],
   relatorios: ['custo-por-receita', 'margem-por-produto'],
   metadadosServico: {
@@ -95,6 +101,7 @@ const SALAO_FESTAS: TipoNegocioConfig = {
     itemContratos(),
     itemFinanceiro(),
     itemClientes(),
+    itemArquivos(),
   ],
   relatorios: ['lucro-por-evento'],
   metadadosServico: {
@@ -126,6 +133,7 @@ const FOTOGRAFIA_VIDEO: TipoNegocioConfig = {
     { id: 'portfolio', label: 'Portfólio', icone: '✨', rota: '/fotografia/sessoes', papeis: [...EQUIPE_INTERNA] },
     itemContratos(),
     itemClientes(),
+    itemArquivos(),
   ],
   relatorios: ['sessoes-por-status'],
   metadadosServico: {
@@ -153,6 +161,7 @@ const MANUTENCAO: TipoNegocioConfig = {
     itemContratos(),
     itemFinanceiro(),
     itemClientes(),
+    itemArquivos(),
   ],
   relatorios: ['chamados-por-prioridade', 'valor-orcamentos'],
   metadadosServico: {
@@ -170,7 +179,7 @@ const OUTRO: TipoNegocioConfig = {
   nome: 'Outro tipo de negócio',
   icone: '🧩',
   modulos: ['catalogo'],
-  menuItems: [itemDashboard(), itemCrm(), itemAgendamentos(), itemServicos('Serviços'), itemClientes()],
+  menuItems: [itemDashboard(), itemCrm(), itemAgendamentos(), itemServicos('Serviços'), itemClientes(), itemArquivos()],
   relatorios: [],
   metadadosServico: {} satisfies Record<string, CampoMetadado>,
   metadadosOrdem: {} satisfies Record<string, CampoMetadado>,

@@ -5,7 +5,7 @@ import {
   IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX, IconApps,
   IconCalendarEvent, IconCategory, IconClipboardList, IconBook2, IconPackage,
   IconConfetti, IconUsersGroup, IconCamera, IconVideo, IconPhoto, IconContract,
-  IconReportMoney, IconCalculator, IconLayoutKanban, IconLock,
+  IconReportMoney, IconCalculator, IconLayoutKanban, IconLock, IconFolder,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
@@ -23,6 +23,7 @@ const MENUS = {
     { to: '/admin/prestadores', label: 'Prestadores', icon: IconUserBolt },
     { to: '/admin/equipe', label: 'Equipe', icon: IconUsersGroup },
     { to: '/admin/relatorios', label: 'Relatórios', icon: IconFileTypePdf },
+    { to: '/admin/arquivos', label: 'Arquivos', icon: IconFolder },
     { to: '/admin/configuracoes', label: 'Configurações', icon: IconSettings },
   ],
   tecnico: [
@@ -51,6 +52,7 @@ const MENUS = {
 const ROTAS_REAIS_POR_ID_ADMIN = {
   dashboard: '/admin/dashboard',
   crm: '/admin/crm',
+  arquivos: '/admin/arquivos',
   clientes: '/admin/clientes',
   agendamentos: '/admin/agendamentos',
   servicos: '/admin/catalogo',
@@ -88,6 +90,7 @@ const ROTAS_REAIS_POR_ID_CLIENTE = {
 const ICONES_POR_ID = {
   dashboard: IconChartBar,
   crm: IconLayoutKanban,
+  arquivos: IconFolder,
   clientes: IconUsers,
   agendamentos: IconCalendarEvent,
   servicos: IconCategory,

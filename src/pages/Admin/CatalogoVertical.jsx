@@ -7,7 +7,7 @@ import { PRODUTOS_CONFEITARIA, PACOTES_SALAO, PACOTES_FOTOGRAFIA } from '../../d
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
-import CameraCapture from '../../components/CameraCapture'
+import GaleriaFotosUpload from '../../components/GaleriaFotosUpload'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -220,7 +220,7 @@ export default function CatalogoVertical() {
               </div>
             </div>
 
-            <CameraCapture titulo="Fotos" fotos={form.fotos} onChange={(fotos) => setForm((f) => ({ ...f, fotos }))} max={6} />
+            <GaleriaFotosUpload titulo="Fotos" fotos={form.fotos} onChange={(fotos) => setForm((f) => ({ ...f, fotos }))} max={6} categoria="catalogo" />
 
             <div className="flex justify-end gap-3 pt-2 border-t border-muted-dark">
               <button type="button" onClick={() => setForm(null)} className="rounded-btn px-4 py-2 text-body font-medium bg-muted-dark text-[#333] hover:bg-gray-300">Cancelar</button>

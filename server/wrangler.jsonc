@@ -6,5 +6,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true
+  },
+  // Faxina diária do Storage (ver worker.ts / ArquivoService.limparOrfaos) — 03:30 em Brasília.
+  "triggers": {
+    "crons": ["30 6 * * *"]
   }
 }
