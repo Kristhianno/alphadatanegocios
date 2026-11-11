@@ -4,12 +4,11 @@ import { useBranding } from '../../hooks/useBranding'
 import { useAuth } from '../../hooks/useAuth'
 import { api } from '../../services/api'
 import { diasRestantesTrial } from '../../utils/trial'
+import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO, ROTULO_CICLO, formatarPreco, precoMensalDoCiclo } from '../../data/planos'
 
 const CHAVE_CONFIG = 'alphadata_config'
 const PADRAO = { notifEmail: true, notifSMS: false, notifWhatsapp: true }
 
-// Espelha `nomeMarketing` de server/src/config/planos.config.ts, só pra exibição aqui.
-const NOME_MARKETING_PLANO = { startup: 'Starter', profissional: 'Pro', enterprise: 'Enterprise' }
 
 /** Escolha de plano/ciclo sem cartão — só aparece durante o trial (ver CardAssinatura). */
 function SeletorPlanoTrial({ planoInicial, cicloInicial, enviando, onCancelar, onConfirmar }) {
@@ -38,7 +37,7 @@ function SeletorPlanoTrial({ planoInicial, cicloInicial, enviando, onCancelar, o
             >
               <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
               <span className="block text-label text-[#999]">
-                {((ciclo === 'anual' ? p.precoAnualMensalCentavos : p.precoMensalCentavos) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/mês
+                {formatarPreco(precoMensalDoCiclo(p, ciclo))}/mês
               </span>
             </button>
           ))}
@@ -46,7 +45,7 @@ function SeletorPlanoTrial({ planoInicial, cicloInicial, enviando, onCancelar, o
       )}
 
       <div className="flex rounded-btn bg-muted p-1">
-        {[['mensal', 'Mensal'], ['anual', 'Anual']].map(([valor, rotulo]) => (
+        {OPCOES_CICLO.map(([valor, rotulo]) => (
           <button
             key={valor}
             type="button"
@@ -116,7 +115,7 @@ function CardAssinatura() {
         <div>
           <p className="text-label text-[#666] mb-1">Assinatura</p>
           <p className="text-body font-semibold text-[#1a1a1a]">
-            Plano {NOME_MARKETING_PLANO[user?.plano] ?? user?.plano} · {user?.cicloCobranca === 'anual' ? 'cobrança anual' : 'cobrança mensal'}
+            Plano {NOME_MARKETING_PLANO[user?.plano] ?? user?.plano} · {ROTULO_CICLO[user?.cicloCobranca] ?? ROTULO_CICLO.mensal}
           </p>
           <p className="text-body text-[#666] mt-0.5">
             {emTrial ? `${dias} ${dias === 1 ? 'dia' : 'dias'} de teste grátis restantes — sem necessidade de cartão` : 'Assinatura ativa'}
@@ -133,21 +132,25 @@ function CardAssinatura() {
             </button>
           )
         ) : (
-          <button
-            type="button"
-            onClick={gerenciar}
-            disabled={abrindo}
-            className="rounded-btn px-4 py-2.5 text-body font-medium bg-primary text-white hover:bg-primary-dark disabled:opacity-60 whitespace-nowrap"
-          >
-            {abrindo ? 'Abrindo...' : 'Mudar de plano / forma de pagamento'}
-          </button>
+          <div className="flex flex-col items-start sm:items-end gap-1">
+            <button
+              type="button"
+              onClick={gerenciar}
+              disabled={abrindo}
+              className="rounded-btn px-4 py-2.5 text-body font-medium bg-primary text-white hover:bg-primary-dark disabled:opacity-60 whitespace-nowrap"
+            >
+              {abrindo ? 'Abrindo...' : 'Pagamento e faturas'}
+            </button>
+            {/* Troca de plano saiu do portal do Stripe (os dois ciclos são mensais e o de 12 meses tem fidelidade) — ver stripe-setup.ts. */}
+            <span className="text-label text-[#999]">Para mudar de plano, fale com o nosso suporte.</span>
+          </div>
         )}
       </div>
 
       {emTrial && editandoPlano && (
         <SeletorPlanoTrial
           planoInicial={user?.plano ?? 'startup'}
-          cicloInicial={user?.cicloCobranca ?? 'mensal'}
+          cicloInicial={user?.cicloCobranca ?? CICLO_PADRAO}
           enviando={salvandoPlano}
           onCancelar={() => setEditandoPlano(false)}
           onConfirmar={confirmarTrocaPlano}

@@ -4,10 +4,7 @@ import { IconArrowRight, IconLoader2 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
 import AlphaDataLogo from '../components/AlphaDataLogo'
-
-function formatarPreco(centavos) {
-  return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
+import { CICLO_PADRAO, OPCOES_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
 
 // Só aparece quando o teste grátis local de 7 dias (sem cartão, ver
 // utils/trial.js e Configuracoes.jsx) já acabou e a conta ainda não tem
@@ -20,7 +17,7 @@ export default function Checkout() {
 
   const [planos, setPlanos] = useState(null)
   const [plano, setPlano] = useState(user?.plano ?? 'startup')
-  const [ciclo, setCiclo] = useState(user?.cicloCobranca ?? 'mensal')
+  const [ciclo, setCiclo] = useState(user?.cicloCobranca ?? CICLO_PADRAO)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -46,7 +43,9 @@ export default function Checkout() {
   }
 
   const configEscolhido = planos?.find((p) => p.plano === plano)
-  const preco = configEscolhido ? (ciclo === 'anual' ? configEscolhido.precoAnualMensalCentavos : configEscolhido.precoMensalCentavos) : null
+  const preco = configEscolhido ? precoMensalDoCiclo(configEscolhido, ciclo) : null
+  // A implementação só é cobrada na primeira assinatura (ver montarItensCheckout no backend).
+  const cobraImplementacao = configEscolhido && !user?.stripeSubscriptionId
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary via-blue-600 to-primary-dark">
@@ -78,17 +77,14 @@ export default function Checkout() {
                   >
                     <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
                     <span className="block text-label text-[#999]">
-                      {formatarPreco(ciclo === 'anual' ? p.precoAnualMensalCentavos : p.precoMensalCentavos)}/mês
+                      {formatarPreco(precoMensalDoCiclo(p, ciclo))}/mês
                     </span>
                   </button>
                 ))}
               </div>
 
               <div className="flex rounded-btn bg-muted p-1 mb-5">
-                {[
-                  ['mensal', 'Mensal'],
-                  ['anual', 'Anual'],
-                ].map(([valor, rotulo]) => (
+                {OPCOES_CICLO.map(([valor, rotulo]) => (
                   <button
                     key={valor}
                     type="button"
@@ -106,9 +102,19 @@ export default function Checkout() {
                 <div className="rounded-card bg-primary-light px-4 py-3 mb-5">
                   <p className="text-body text-[#1a1a1a]">
                     <span className="font-semibold">{formatarPreco(preco)}/mês</span>
-                    {ciclo === 'anual' && <span className="text-label text-[#666]"> — cobrado uma vez por ano</span>}
+                    {ciclo === 'anual' && <span className="text-label text-[#666]"> — fidelidade de 12 meses</span>}
                   </p>
-                  <p className="text-label text-[#666] mt-0.5">Cobrança começa agora, no cartão informado. Cancele quando quiser.</p>
+                  {cobraImplementacao && (
+                    <p className="text-body text-[#1a1a1a] mt-1">
+                      + <span className="font-semibold">{formatarPreco(configEscolhido.taxaImplementacaoCentavos)}</span>
+                      <span className="text-label text-[#666]"> de implementação (cobrança única, junto da 1ª mensalidade)</span>
+                    </p>
+                  )}
+                  <p className="text-label text-[#666] mt-0.5">
+                    {ciclo === 'anual'
+                      ? 'Cobrança mensal no cartão informado, começando agora.'
+                      : 'Cobrança mensal no cartão informado, começando agora. Cancele quando quiser.'}
+                  </p>
                 </div>
               )}
             </>

@@ -15,14 +15,12 @@ import { api } from '../services/api'
 import { supabase } from '../services/supabase'
 import PasswordInput from '../components/ui/PasswordInput'
 import AlphaDataLogo from '../components/AlphaDataLogo'
+import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
 import fundoLogin from '../assets/login-fundo.jpeg'
 import foto1 from '../assets/login-foto-1.jpeg'
 import foto2 from '../assets/login-foto-2.jpeg'
 import foto3 from '../assets/login-foto-3.jpeg'
 
-// Nomes de marketing dos planos (landing/checkout) — espelha `nomeMarketing`
-// de server/src/config/planos.config.ts, só pra exibição aqui no cadastro.
-const NOME_MARKETING_PLANO = { startup: 'Starter', profissional: 'Pro' }
 
 const inputComIconeClasse = 'w-full rounded-input border border-muted-dark pl-10 pr-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const iconeCampoClasse = 'absolute left-3 top-1/2 -translate-y-1/2 text-[#999] pointer-events-none'
@@ -82,10 +80,10 @@ export default function Login({ apenasCadastro = false }) {
   const [salvandoLogo, setSalvandoLogo] = useState(false)
 
   // Quem não veio de um CTA de plano na landing (planoEscolhido) ainda
-  // precisa poder escolher — mesmo pro teste grátis. Default Starter/mensal.
+  // precisa poder escolher — mesmo pro teste grátis. Default Essencial/12 meses.
   const [planos, setPlanos] = useState([])
   const [planoForm, setPlanoForm] = useState('startup')
-  const [cicloForm, setCicloForm] = useState('mensal')
+  const [cicloForm, setCicloForm] = useState(CICLO_PADRAO)
 
   useEffect(() => {
     if (modo === 'escolher-negocio' && tiposNegocio.length === 0) {
@@ -454,13 +452,13 @@ export default function Login({ apenasCadastro = false }) {
                           >
                             <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
                             <span className="block text-label text-[#999]">
-                              {((cicloForm === 'anual' ? p.precoAnualMensalCentavos : p.precoMensalCentavos) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/mês
+                              {formatarPreco(precoMensalDoCiclo(p, cicloForm))}/mês
                             </span>
                           </button>
                         ))}
                       </div>
                       <div className="flex rounded-btn bg-muted p-1">
-                        {[['mensal', 'Mensal'], ['anual', 'Anual']].map(([valor, rotulo]) => (
+                        {OPCOES_CICLO.map(([valor, rotulo]) => (
                           <button
                             key={valor}
                             type="button"

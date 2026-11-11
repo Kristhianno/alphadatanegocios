@@ -18,7 +18,7 @@
  */
 import Stripe from 'stripe'
 import type { Cliente } from '../config/database.config.js'
-import { PLANOS_COM_CHECKOUT, obterStripePriceId } from '../config/planos.config.js'
+import { FIDELIDADE_MESES, PLANOS_COM_CHECKOUT, obterStripePriceId, obterStripePriceIdImplementacao } from '../config/planos.config.js'
 import { getAppUrl, getStripe } from '../config/stripe.config.js'
 import type { CicloCobranca, Conta, Plano, StatusConta } from '../models/User.js'
 import { ContaRepository } from '../repositories/ContaRepository.js'
@@ -38,6 +38,37 @@ function mapearStatus(status: Stripe.Subscription.Status): StatusConta {
       // past_due, unpaid, incomplete, paused — trata como suspenso até resolver
       return 'suspenso'
   }
+}
+
+/**
+ * Itens da Checkout Session: a mensalidade do plano+ciclo e, só na
+ * PRIMEIRA assinatura da conta (nunca teve `stripeSubscriptionId`), a
+ * taxa única de implementação — o Stripe permite misturar um Price
+ * avulso numa sessão `mode: 'subscription'`, e ele entra só na primeira
+ * fatura. Quem já assinou antes e volta não paga implementação de novo.
+ */
+export function montarItensCheckout(
+  conta: Pick<Conta, 'plano' | 'stripeSubscriptionId'>,
+  ciclo: CicloCobranca,
+): Stripe.Checkout.SessionCreateParams.LineItem[] {
+  const itens: Stripe.Checkout.SessionCreateParams.LineItem[] = [{ price: obterStripePriceId(conta.plano, ciclo), quantity: 1 }]
+  if (!conta.stripeSubscriptionId) itens.push({ price: obterStripePriceIdImplementacao(), quantity: 1 })
+  return itens
+}
+
+/**
+ * Ciclo de um Price do Stripe. Desde os planos de 2026-11 os dois ciclos
+ * são cobrados por mês (o `anual` é o "plano de 12 meses" com
+ * fidelidade), então o intervalo não distingue mais um do outro — vale
+ * `metadata.ciclo` (gravado por stripe-setup.ts). O intervalo continua
+ * como fallback pros Prices antigos (anual = cobrança por ano).
+ */
+export function cicloDoPrice(price: Pick<Stripe.Price, 'metadata' | 'recurring'> | undefined): CicloCobranca | undefined {
+  const ciclo = price?.metadata?.['ciclo']
+  if (ciclo === 'mensal' || ciclo === 'anual') return ciclo
+  if (price?.recurring?.interval === 'year') return 'anual'
+  if (price?.recurring?.interval === 'month') return 'mensal'
+  return undefined
 }
 
 export class BillingService {
@@ -76,14 +107,20 @@ export class BillingService {
       throw new ErroValidacao(`O plano "${contaAtual.plano}" não tem checkout self-service — fale com o time comercial.`)
     }
     if (!contaAtual.cicloCobranca) {
-      throw new ErroValidacao('Escolha o ciclo de cobrança (mensal ou anual) antes de continuar.')
+      throw new ErroValidacao('Escolha entre o plano de 12 meses e o sem fidelidade antes de continuar.')
     }
 
     const appUrl = getAppUrl()
     const params: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
-      line_items: [{ price: obterStripePriceId(contaAtual.plano, contaAtual.cicloCobranca), quantity: 1 }],
-      subscription_data: { metadata: { contaId: conta.id } },
+      line_items: montarItensCheckout(contaAtual, contaAtual.cicloCobranca),
+      subscription_data: {
+        metadata: {
+          contaId: conta.id,
+          ciclo: contaAtual.cicloCobranca,
+          fidelidadeMeses: contaAtual.cicloCobranca === 'anual' ? String(FIDELIDADE_MESES) : '0',
+        },
+      },
       client_reference_id: conta.id,
       success_url: `${appUrl}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/checkout`,
@@ -109,7 +146,7 @@ export class BillingService {
    */
   async trocarPlanoTrial(conta: Conta, plano: Plano, ciclo: CicloCobranca): Promise<Conta> {
     if (conta.stripeCustomerId) {
-      throw new ErroValidacao('Esta conta já tem uma assinatura no Stripe — use "Mudar de plano" para trocar por lá.')
+      throw new ErroValidacao('Esta conta já tem uma assinatura ativa — para mudar de plano, fale com o nosso suporte.')
     }
     if (!trialAindaAtivo(conta.trialTerminaEm)) {
       throw new ErroValidacao('Seu teste grátis terminou — escolha um plano e informe os dados de pagamento para continuar.')
@@ -160,8 +197,7 @@ export class BillingService {
     const price = subscription.items.data[0]?.price
     const produto = price?.product as Stripe.Product | undefined
     const plano = produto?.metadata?.['plano'] as Plano | undefined
-    const ciclo: CicloCobranca | undefined =
-      price?.recurring?.interval === 'year' ? 'anual' : price?.recurring?.interval === 'month' ? 'mensal' : undefined
+    const ciclo = cicloDoPrice(price)
     const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id
 
     const atualizacao: Partial<Conta> = {

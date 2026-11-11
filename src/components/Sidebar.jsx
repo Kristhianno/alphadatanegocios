@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
 import BrandMark from './BrandMark'
+import { NOME_MARKETING_PLANO } from '../data/planos'
 
 const MENUS = {
   admin: [
@@ -102,8 +103,6 @@ const ICONES_POR_ID = {
 }
 const ICONE_PADRAO = IconApps
 
-// Espelha `nomeMarketing` de server/src/config/planos.config.ts, só pra exibição aqui.
-const NOME_MARKETING_PLANO = { startup: 'Starter', profissional: 'Pro', enterprise: 'Enterprise' }
 
 function diasRestantesTrial(trialTerminaEm) {
   if (!trialTerminaEm) return null

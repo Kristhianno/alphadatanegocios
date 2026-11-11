@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   IconArrowRight, IconBalloon, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandWhatsapp,
-  IconBuildingCommunity, IconCake, IconCalculator, IconCalendarEvent, IconCalendarX, IconCamera, IconCandy,
-  IconCategory, IconCheck, IconChevronDown, IconConfetti, IconCrown, IconFileSpreadsheet, IconFileTypePdf,
-  IconHeadset, IconHorseToy, IconMasksTheater, IconMoodKid, IconNotes, IconRefresh, IconRocket,
-  IconToolsKitchen2, IconTruck, IconUsers, IconWallet, IconX,
+  IconBuildingCommunity, IconCake, IconCalendarEvent, IconCalendarX, IconCamera, IconCandy, IconCheck,
+  IconChevronDown, IconConfetti, IconCrown, IconFileSpreadsheet, IconHeadset, IconHorseToy, IconMasksTheater,
+  IconMoodKid, IconNotes, IconPuzzle, IconRefresh, IconRocket, IconToolsKitchen2, IconTruck, IconUsers, IconX,
 } from '@tabler/icons-react'
 import { useToast } from '../hooks/useToast'
 import { api } from '../services/api'
 import AlphaDataLogo from '../components/AlphaDataLogo'
+import { CICLO_PADRAO, OPCOES_CICLO, ROTULO_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
 import heroLaptop from '../assets/landing/hero-mockup-laptop.png'
 import heroMobileMenu from '../assets/landing/hero-mockup-mobile-menu.png'
 import heroMobileDashboard from '../assets/landing/hero-mockup-mobile-dashboard.png'
@@ -31,6 +31,7 @@ const DORES = [
 ]
 
 const ANTES_DEPOIS = [
+  { antes: 'Atendimento (você respondendo WhatsApp até de madrugada)', depois: 'IA responde 24h no WhatsApp, com texto e áudio' },
   { antes: 'Orçamento (vai e volta no WhatsApp)', depois: 'Orçamento enviado e aprovado pelo cliente online' },
   { antes: 'Agenda de festas (caderno + memória)', depois: 'Calendário de eventos sem choque de data' },
   { antes: 'Contrato e sinal (papel + print de PIX)', depois: 'Contrato digital e controle do que já foi pago' },
@@ -87,129 +88,93 @@ const GRUPOS_NICHO = [
 const SEGMENTOS_CARROSSEL = [...NICHOS, { icon: null, label: 'e outros serviços para festas' }]
 
 /**
- * Conteúdo rico da vitrine de planos — mapeado por `Plano` técnico
- * (startup/profissional), os dois únicos planos com checkout self-service.
+ * Conteúdo da vitrine de planos (proposta comercial de 2026-11) — mapeado
+ * por `Plano` técnico (startup = Essencial, profissional = Completo).
+ * Preços vêm da API (/config/planos-disponiveis); só os textos ficam aqui.
+ * IA no WhatsApp, CRM em kanban e follow-up rodam na ferramenta externa
+ * implantada pela ALPHADATA — este sistema é a parte de gestão do pacote.
  */
 const VITRINE_PLANOS = {
   startup: {
-    subtitulo: 'Ideal para quem está começando a organizar o negócio',
+    subtitulo: 'IA atendendo no WhatsApp, integrada ao sistema',
     grupos: [
       {
-        titulo: 'Agenda e clientes',
+        titulo: 'IA no WhatsApp',
+        icon: IconBrandWhatsapp,
+        itens: [
+          'Atendimento 24h com texto e áudio',
+          'Orçamento e pacotes em PDF na conversa',
+          'Agenda: consulta e reserva de datas',
+          'Coleta dos dados do contrato',
+        ],
+      },
+      {
+        titulo: 'Sistema ALPHADATA',
         icon: IconCalendarEvent,
-        itens: [
-          { texto: 'Calendário de eventos em tempo real, sem choque de data' },
-          { texto: 'Catálogo de pacotes e serviços' },
-          { texto: 'Cadastro de clientes com histórico de festas' },
-        ],
-      },
-      {
-        titulo: 'Recursos do seu segmento',
-        icon: IconCategory,
-        itens: [
-          { segmento: 'eventos', texto: 'Pacotes e agenda de eventos' },
-          { segmento: 'doces', texto: 'Catálogo, receitas e encomendas' },
-          { segmento: 'fotografia', texto: 'Sessões e portfólio' },
-        ],
-      },
-      {
-        titulo: 'Equipe e suporte',
-        icon: IconUsers,
-        itens: [
-          { texto: 'Até 3 pessoas na equipe' },
-          { texto: 'Até 200 agendamentos por mês' },
-          { texto: 'Até 200 contratos por mês' },
-          { texto: 'Suporte por email' },
-        ],
+        itens: ['Integrado com a IA do WhatsApp', 'Agenda de eventos, orçamentos, contratos e financeiro', 'Módulos do seu tipo de negócio de festa'],
       },
     ],
+    suporte: 'Suporte em horário comercial, resposta em até 48h úteis.',
   },
   profissional: {
-    subtitulo: 'Para quem quer crescer sem esbarrar em limite',
-    tudoDoAnterior: 'Tudo do Starter, para equipes maiores, e mais:',
+    subtitulo: 'Pra não deixar nenhum cliente esfriar',
+    tudoDoAnterior: 'Tudo do Essencial, e mais:',
     grupos: [
       {
-        titulo: 'Gestão financeira completa',
-        icon: IconWallet,
+        titulo: 'Vendas e acompanhamento',
+        icon: IconUsers,
         itens: [
-          { texto: 'Financeiro com contas a pagar e a receber', novo: true },
-          { texto: 'Orçamentos com aprovação do cliente' },
-          { texto: 'Contratos com assinatura digital', novo: true },
-        ],
-      },
-      {
-        titulo: 'Recursos avançados por segmento',
-        icon: IconCalculator,
-        itens: [
-          { segmento: 'eventos', texto: 'Equipe, equipamentos e financeiro de cada evento' },
-          { segmento: 'doces', texto: 'Controle de produção e estoque de ingredientes' },
-          { segmento: 'fotografia', texto: 'Produções de vídeo, edição e galeria do cliente' },
-        ],
-      },
-      {
-        titulo: 'Relatórios, portal e suporte',
-        icon: IconFileTypePdf,
-        itens: [
-          { texto: 'Relatórios com exportação em PDF e planilha' },
-          { texto: 'Portal do cliente para acompanhar tudo online' },
-          { texto: 'Suporte via email e WhatsApp', novo: true },
-          { texto: 'Até 15 pessoas na equipe' },
-          { texto: 'Agendamentos e contratos ilimitados', novo: true },
+          'CRM em kanban com todos os contatos',
+          'Follow-up: alerta após 3 dias sem resposta, com o resumo da conversa',
+          'Reunião mensal de resultados',
         ],
       },
     ],
+    suporte: 'Suporte prioritário, resposta em até 24h úteis.',
   },
-}
-
-function formatarPreco(centavos) {
-  return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 function PricingCard({ config, ciclo, destaque, onEscolher }) {
-  const preco = ciclo === 'anual' ? config.precoAnualMensalCentavos : config.precoMensalCentavos
-  const economiaPercentual = config.precoAnualMensalCentavos
-    ? Math.round((1 - config.precoAnualMensalCentavos / config.precoMensalCentavos) * 100)
-    : 0
+  const preco = precoMensalDoCiclo(config, ciclo)
+  const outroCiclo = ciclo === 'anual' ? 'mensal' : 'anual'
+  const economiaMensal = config.precoMensalCentavos - config.precoAnualMensalCentavos
   const vitrine = VITRINE_PLANOS[config.plano]
 
   return (
     <div
       className={`relative flex flex-col rounded-card p-6 sm:p-8 ${
         destaque
-          ? 'bg-primary text-white shadow-cardHover ring-4 ring-primary-light md:scale-105 z-10'
+          ? 'bg-primary text-white shadow-cardHover ring-4 ring-primary-light lg:scale-105 z-10'
           : 'bg-surface shadow-card border border-muted-dark'
       }`}
     >
-      {ciclo === 'anual' && economiaPercentual > 0 && (
+      {ciclo === 'anual' && economiaMensal > 0 && (
         <span
           className={`absolute -top-3 right-5 text-label font-bold rounded-btn px-2.5 py-1 shadow-cardHover ${
             destaque ? 'bg-white text-primary' : 'bg-success text-white'
           }`}
         >
-          -{economiaPercentual}% no anual
+          economize {formatarPreco(economiaMensal)}/mês
         </span>
       )}
 
       {destaque && (
         <span className="self-start inline-flex items-center gap-1 text-label font-semibold bg-white/20 rounded-btn px-2.5 py-1 mb-3">
-          <IconCrown size={14} /> Mais popular
+          <IconCrown size={14} /> Mais completo
         </span>
       )}
 
-      <p className="text-h2 mb-1">{config.nomeMarketing}</p>
+      <p className={`text-label font-bold uppercase tracking-widest mb-1 ${destaque ? 'text-blue-100' : 'text-primary'}`}>
+        {config.nomeMarketing} · {config.descricaoCurta}
+      </p>
       <p className={`text-body mb-5 ${destaque ? 'text-blue-100' : 'text-[#666]'}`}>{vitrine.subtitulo}</p>
 
       <p className="mb-1 flex items-baseline gap-2 flex-wrap">
-        {ciclo === 'anual' && (
-          <span className={`text-body line-through ${destaque ? 'text-blue-200' : 'text-muted-text'}`}>
-            {formatarPreco(config.precoMensalCentavos)}
-          </span>
-        )}
         <span className="text-h1">{formatarPreco(preco)}</span>
         <span className={destaque ? 'text-blue-100' : 'text-[#999]'}>/mês</span>
       </p>
       <p className={`text-label mb-6 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>
-        {ciclo === 'anual' ? `cobrado uma vez por ano — ${formatarPreco(config.precoAnualTotalCentavos)}/ano` : 'cobrança mensal, cancele quando quiser'}
+        {ROTULO_CICLO[ciclo]} · {ROTULO_CICLO[outroCiclo]}: {formatarPreco(precoMensalDoCiclo(config, outroCiclo))}/mês
       </p>
 
       {vitrine.tudoDoAnterior && (
@@ -218,7 +183,7 @@ function PricingCard({ config, ciclo, destaque, onEscolher }) {
         </p>
       )}
 
-      <div className="flex flex-col gap-5 mb-7 flex-1">
+      <div className="flex flex-col gap-5 mb-5 flex-1">
         {vitrine.grupos.map((grupo) => (
           <div key={grupo.titulo}>
             <p className={`flex items-center gap-1.5 text-label font-bold uppercase tracking-wide mb-2 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>
@@ -226,28 +191,20 @@ function PricingCard({ config, ciclo, destaque, onEscolher }) {
               {grupo.titulo}
             </p>
             <ul className="flex flex-col gap-2">
-              {grupo.itens.map((item) => {
-                const seg = item.segmento ? SEGMENTOS_FEATURE[item.segmento] : null
-                const ItemIcon = seg ? seg.icon : IconCheck
-                return (
-                  <li key={item.texto} className={`flex items-start gap-2 text-body ${destaque ? 'text-white' : 'text-[#333]'}`}>
-                    <ItemIcon size={18} className={`shrink-0 mt-0.5 ${destaque ? 'text-white' : 'text-primary'}`} />
-                    <span>
-                      {seg && <span className="font-semibold">{seg.label}: </span>}
-                      {item.texto}
-                      {item.novo && (
-                        <span className={`ml-1.5 align-middle text-[10px] font-bold uppercase rounded-btn px-1.5 py-0.5 ${destaque ? 'bg-white/25 text-white' : 'bg-primary-light text-primary'}`}>
-                          Novo
-                        </span>
-                      )}
-                    </span>
-                  </li>
-                )
-              })}
+              {grupo.itens.map((texto) => (
+                <li key={texto} className={`flex items-start gap-2 text-body ${destaque ? 'text-white' : 'text-[#333]'}`}>
+                  <IconCheck size={18} className={`shrink-0 mt-0.5 ${destaque ? 'text-white' : 'text-primary'}`} />
+                  <span>{texto}</span>
+                </li>
+              ))}
             </ul>
           </div>
         ))}
       </div>
+
+      <p className={`flex items-start gap-2 text-label mb-6 ${destaque ? 'text-blue-100' : 'text-[#666]'}`}>
+        <IconHeadset size={16} className="shrink-0 mt-0.5" /> {vitrine.suporte}
+      </p>
 
       <button
         type="button"
@@ -256,9 +213,48 @@ function PricingCard({ config, ciclo, destaque, onEscolher }) {
           destaque ? 'bg-white text-primary hover:bg-blue-50' : 'bg-primary text-white hover:bg-primary-dark'
         }`}
       >
-        Testar grátis por 7 dias
+        Começar com o {config.nomeMarketing}
       </button>
-      <p className={`text-label text-center mt-2 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>7 dias grátis, sem cartão de crédito</p>
+      <p className={`text-label text-center mt-2 ${destaque ? 'text-blue-100' : 'text-[#999]'}`}>
+        7 dias grátis no sistema, sem cartão. Implementação cobrada só ao assinar.
+      </p>
+    </div>
+  )
+}
+
+/** "Monte seu plano" — sem checkout: leva pro formulário de contato. */
+function CardPlanoEspecial() {
+  return (
+    <div className="flex flex-col rounded-card p-6 sm:p-8 bg-surface shadow-card border-2 border-dashed border-primary/40">
+      <p className="text-label font-bold uppercase tracking-widest mb-1 text-primary">Plano Especial · monte seu plano</p>
+      <p className="text-body mb-5 text-[#666]">Precisa de algo diferente? A gente monta com você.</p>
+
+      <p className="mb-1 flex items-center gap-2">
+        <IconPuzzle size={28} className="text-primary" />
+        <span className="text-h2 text-[#1a1a1a]">Sob consulta</span>
+      </p>
+      <p className="text-label mb-6 text-[#999]">valores de acordo com o que você escolher</p>
+
+      <ul className="flex flex-col gap-2 mb-6 flex-1">
+        {[
+          'Combine os recursos do Essencial e do Completo do seu jeito',
+          'Pensado pra operações com necessidades específicas',
+          'Condições combinadas direto com o nosso time',
+        ].map((texto) => (
+          <li key={texto} className="flex items-start gap-2 text-body text-[#333]">
+            <IconCheck size={18} className="shrink-0 mt-0.5 text-primary" />
+            <span>{texto}</span>
+          </li>
+        ))}
+      </ul>
+
+      <a
+        href="#contato"
+        className="rounded-btn py-2.5 text-body font-semibold text-center border-2 border-primary text-primary hover:bg-primary-light transition-colors"
+      >
+        Falar com a gente
+      </a>
+      <p className="text-label text-center mt-2 text-[#999]">Respondemos e montamos a proposta com você.</p>
     </div>
   )
 }
@@ -268,10 +264,22 @@ const FAQ = [
     pergunta: 'Serve pro meu tipo de negócio?',
     resposta: 'Se você trabalha com festas e eventos, sim: salão de festas, decoração, fotografia e filmagem, personagens vivos, recreação, aluguel de brinquedos, barracas e food truck, doces personalizados, salgados, bolos e doces. Na hora do cadastro você escolhe o seu, e o sistema monta o menu certo pra ele.',
   },
+  {
+    pergunta: 'Como funciona a IA no WhatsApp?',
+    resposta: 'Ela atende seus clientes 24h com texto e áudio, envia orçamento e pacotes em PDF na conversa, consulta e reserva datas na agenda e coleta os dados do contrato, tudo integrado ao sistema ALPHADATA.',
+  },
+  {
+    pergunta: 'O que está incluso na implementação?',
+    resposta: 'A gente configura a IA no WhatsApp com os seus pacotes e preços e integra tudo ao sistema. É um investimento único de R$ 1.997, cobrado junto da primeira mensalidade.',
+  },
+  {
+    pergunta: 'Qual a diferença entre o plano de 12 meses e o sem fidelidade?',
+    resposta: 'No plano de 12 meses a mensalidade é menor e você fica com a gente por 12 meses. No sem fidelidade a mensalidade é um pouco maior e você pode cancelar quando quiser.',
+  },
   { pergunta: 'Meu cliente consegue ver o orçamento e o contrato?', resposta: 'Sim. Ele recebe acesso ao portal do cliente, onde aprova orçamentos, vê os contratos e acompanha a festa dele.' },
   { pergunta: 'Consigo organizar a equipe e os equipamentos de cada festa?', resposta: 'Sim. Em cada evento você define quem trabalha e quais equipamentos vão, e vê tudo no calendário.' },
   { pergunta: 'Quanto tempo demora pra começar?', resposta: 'Uns 10 minutos. Você cadastra seus pacotes e clientes aos poucos, enquanto usa. Sem migração complicada.' },
-  { pergunta: 'E se eu não quiser mais?', resposta: 'Você cancela direto pelas configurações, sem multa e sem aviso prévio. E pode exportar seus relatórios em PDF e planilha quando quiser.' },
+  { pergunta: 'E se eu não quiser mais?', resposta: 'No plano sem fidelidade você cancela direto pelas configurações, sem multa. No plano de 12 meses vale o período contratado. Em ambos, você exporta seus relatórios em PDF e planilha quando quiser.' },
   { pergunta: 'Meus dados ficam seguros?', resposta: 'Sim. A conexão é sempre criptografada (HTTPS) e cada empresa só enxerga os próprios dados.' },
 ]
 
@@ -307,7 +315,7 @@ export default function Landing() {
   const [enviandoLead, setEnviandoLead] = useState(false)
 
   const [planos, setPlanos] = useState(null)
-  const [ciclo, setCiclo] = useState('mensal')
+  const [ciclo, setCiclo] = useState(CICLO_PADRAO)
 
   useEffect(() => {
     api.get('/config/planos-disponiveis', { comAuth: false }).then(setPlanos).catch(() => setPlanos([]))
@@ -360,11 +368,11 @@ export default function Landing() {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
             <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-5 text-white">
-              O sistema de quem vive de festas e eventos: orçamento, agenda, contrato e lucro de cada festa num só lugar,{' '}
+              Seu WhatsApp atendendo 24h com IA, e cada festa organizada do orçamento ao lucro,{' '}
               <span style={{ color: VERDE }}>sem planilha</span>
             </h1>
             <p className="text-base sm:text-lg leading-relaxed mb-6" style={{ color: '#CFE0FF' }}>
-              Chega de perder orçamento no WhatsApp, fechar festa sem contrato e descobrir só no fim do mês que o evento deu prejuízo.
+              A IA responde seus clientes com texto e áudio, manda orçamento em PDF e reserva a data. O sistema ALPHADATA cuida da agenda, dos contratos e do financeiro de cada evento.
             </p>
 
             <div className="flex flex-col gap-2.5 mb-8">
@@ -522,14 +530,14 @@ export default function Landing() {
 
       {/* 8. PLANOS & PRICING */}
       <section id="precos" className="bg-muted py-16 sm:py-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <h2 className="text-h1 text-center text-[#1a1a1a] mb-2">Planos simples, sem letra miúda</h2>
-          <p className="text-body text-[#666] text-center mb-5">Comece com 7 dias grátis. Cancele quando quiser, direto pelas configurações.</p>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <h2 className="text-h1 text-center text-[#1a1a1a] mb-2">Escolha o seu plano</h2>
+          <p className="text-body text-[#666] text-center mb-5">IA atendendo no WhatsApp + o sistema ALPHADATA organizando cada festa.</p>
 
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-8">
             {[
-              [IconRocket, '7 dias grátis para testar'],
-              [IconRefresh, 'Cancele quando quiser'],
+              [IconRocket, '7 dias grátis para testar o sistema'],
+              [IconRefresh, 'Plano sem fidelidade disponível'],
               [IconHeadset, 'Suporte incluso em todos os planos'],
             ].map(([Icon, texto]) => (
               <span key={texto} className="inline-flex items-center gap-1.5 text-label text-[#666]">
@@ -540,10 +548,7 @@ export default function Landing() {
 
           <div className="flex justify-center mb-10">
             <div className="flex rounded-btn bg-surface shadow-card p-1">
-              {[
-                ['mensal', 'Mensal'],
-                ['anual', 'Anual — economize'],
-              ].map(([valor, rotulo]) => (
+              {OPCOES_CICLO.map(([valor, rotulo]) => (
                 <button
                   key={valor}
                   type="button"
@@ -561,7 +566,7 @@ export default function Landing() {
           {planos === null ? (
             <p className="text-body text-[#999] text-center">Carregando planos...</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 items-start pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch pt-4">
               {planos.map((config) => (
                 <PricingCard
                   key={config.plano}
@@ -571,6 +576,20 @@ export default function Landing() {
                   onEscolher={() => irParaCadastro(config.plano)}
                 />
               ))}
+              <CardPlanoEspecial />
+            </div>
+          )}
+
+          {planos?.[0] && (
+            <div className="mt-10 rounded-card bg-surface shadow-card p-6 sm:p-8 flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+              <div className="md:w-1/3">
+                <p className="text-label font-bold uppercase tracking-widest text-primary mb-1">Implementação · investimento único</p>
+                <p className="text-h1 text-[#1a1a1a]">{formatarPreco(planos[0].taxaImplementacaoCentavos)}</p>
+              </div>
+              <p className="text-body text-[#666] md:flex-1">
+                A gente configura a IA no WhatsApp com os seus pacotes e preços e integra tudo ao sistema ALPHADATA. Vale para o Essencial e o
+                Completo, e é cobrada uma única vez, junto da primeira mensalidade.
+              </p>
             </div>
           )}
         </div>

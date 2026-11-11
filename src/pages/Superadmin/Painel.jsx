@@ -10,6 +10,7 @@ import AlphaDataLogo from '../../components/AlphaDataLogo'
 import KpiCard from '../../components/ui/KpiCard'
 import Badge from '../../components/ui/Badge'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import { NOME_MARKETING_PLANO, ROTULO_CICLO } from '../../data/planos'
 
 const SITUACAO = {
   pagante: { label: 'Pagante', bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' },
@@ -24,7 +25,6 @@ const STATUS_CONTA = {
   cancelado: { label: 'Cancelada', bg: 'bg-gray-100', text: 'text-gray-700', dot: 'bg-gray-400' },
 }
 
-const NOME_PLANO = { startup: 'Starter', profissional: 'Pro', enterprise: 'Enterprise' }
 
 function formatarData(valor) {
   if (!valor) return '—'
@@ -203,8 +203,8 @@ export default function PainelSuperadmin() {
                       </td>
                       <td className="px-4 py-3 text-[#333] whitespace-nowrap">{c.nicho ?? <span className="text-[#999]">Não escolhido</span>}</td>
                       <td className="px-4 py-3 text-[#333] whitespace-nowrap">
-                        {NOME_PLANO[c.plano] ?? c.plano}
-                        {c.cicloCobranca && <span className="text-label text-[#999]"> · {c.cicloCobranca}</span>}
+                        {NOME_MARKETING_PLANO[c.plano] ?? c.plano}
+                        {c.cicloCobranca && <span className="text-label text-[#999]"> · {ROTULO_CICLO[c.cicloCobranca] ?? c.cicloCobranca}</span>}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <Badge status={c.situacaoAssinatura} cores={SITUACAO} label={SITUACAO[c.situacaoAssinatura]?.label} />

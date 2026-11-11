@@ -52,6 +52,8 @@ function montarSessao(usuario, conta) {
     cicloCobranca: conta?.cicloCobranca ?? null,
     trialTerminaEm: conta?.trialTerminaEm ?? null,
     assinaturaPendente: conta?.assinaturaPendente ?? false,
+    // Já teve assinatura no Stripe? Decide se o checkout ainda cobra a implementação (ver Checkout.jsx).
+    stripeSubscriptionId: conta?.stripeSubscriptionId ?? null,
   }
 }
 
@@ -177,7 +179,7 @@ export function AuthProvider({ children }) {
       const conta = await api.post('/billing/confirmar-checkout', { sessionId })
       setUser((u) =>
         u
-          ? { ...u, plano: conta.plano, cicloCobranca: conta.cicloCobranca, trialTerminaEm: conta.trialTerminaEm, assinaturaPendente: conta.assinaturaPendente }
+          ? { ...u, plano: conta.plano, cicloCobranca: conta.cicloCobranca, trialTerminaEm: conta.trialTerminaEm, assinaturaPendente: conta.assinaturaPendente, stripeSubscriptionId: conta.stripeSubscriptionId ?? null }
           : u,
       )
       return { ok: true }

@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { BillingService } from '../../src/services/BillingService.js'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { BillingService, cicloDoPrice, montarItensCheckout } from '../../src/services/BillingService.js'
+import { getConfigPlano, listarPlanosComCheckout } from '../../src/config/planos.config.js'
 import type { Conta } from '../../src/models/User.js'
 import { ErroValidacao } from '../../src/errors/AppError.js'
 import { criarClienteFake, paraTipado } from '../helpers/fakeSupabase.js'
@@ -81,5 +82,64 @@ describe('BillingService.trocarPlanoTrial', () => {
     const service = new BillingService(paraTipado(cliente))
 
     await expect(service.trocarPlanoTrial(conta, 'enterprise', 'mensal')).rejects.toBeInstanceOf(ErroValidacao)
+  })
+})
+
+describe('montarItensCheckout', () => {
+  const ENV = {
+    STRIPE_PRICE_STARTUP_MENSAL: 'price_ess_sem_fid',
+    STRIPE_PRICE_STARTUP_ANUAL: 'price_ess_12m',
+    STRIPE_PRICE_PROFISSIONAL_MENSAL: 'price_comp_sem_fid',
+    STRIPE_PRICE_PROFISSIONAL_ANUAL: 'price_comp_12m',
+    STRIPE_PRICE_IMPLEMENTACAO: 'price_impl',
+  }
+  let anterior: Record<string, string | undefined>
+  beforeEach(() => {
+    anterior = Object.fromEntries(Object.keys(ENV).map((k) => [k, process.env[k]]))
+    Object.assign(process.env, ENV)
+  })
+  afterEach(() => {
+    for (const [k, v] of Object.entries(anterior)) {
+      if (v === undefined) delete process.env[k]
+      else process.env[k] = v
+    }
+  })
+
+  it('na primeira assinatura cobra a mensalidade do plano+ciclo e a taxa de implementação', () => {
+    const itens = montarItensCheckout({ plano: 'profissional', stripeSubscriptionId: null }, 'anual')
+    expect(itens).toEqual([
+      { price: 'price_comp_12m', quantity: 1 },
+      { price: 'price_impl', quantity: 1 },
+    ])
+  })
+
+  it('quem já teve assinatura não paga implementação de novo', () => {
+    const itens = montarItensCheckout({ plano: 'startup', stripeSubscriptionId: 'sub_antiga' }, 'mensal')
+    expect(itens).toEqual([{ price: 'price_ess_sem_fid', quantity: 1 }])
+  })
+
+  it('falha alto se o price da implementação não estiver configurado (nunca cobra a menos em silêncio)', () => {
+    delete process.env['STRIPE_PRICE_IMPLEMENTACAO']
+    expect(() => montarItensCheckout({ plano: 'startup', stripeSubscriptionId: null }, 'mensal')).toThrow(/STRIPE_PRICE_IMPLEMENTACAO/)
+  })
+})
+
+describe('cicloDoPrice', () => {
+  it('usa metadata.ciclo — os dois ciclos agora são mensais', () => {
+    expect(cicloDoPrice({ metadata: { ciclo: 'anual' }, recurring: { interval: 'month' } as never })).toBe('anual')
+    expect(cicloDoPrice({ metadata: { ciclo: 'mensal' }, recurring: { interval: 'month' } as never })).toBe('mensal')
+  })
+
+  it('cai no intervalo pros Prices antigos sem metadata', () => {
+    expect(cicloDoPrice({ metadata: {}, recurring: { interval: 'year' } as never })).toBe('anual')
+    expect(cicloDoPrice({ metadata: {}, recurring: { interval: 'month' } as never })).toBe('mensal')
+  })
+})
+
+describe('planos (print de 2026-11)', () => {
+  it('Essencial 497 (12 meses) / 697 (sem fidelidade); Completo 797 / 997; implementação 1.997', () => {
+    expect(listarPlanosComCheckout().map((p) => p.nomeMarketing)).toEqual(['Essencial', 'Completo'])
+    expect(getConfigPlano('startup')).toMatchObject({ precoAnualMensalCentavos: 49_700, precoMensalCentavos: 69_700, taxaImplementacaoCentavos: 199_700 })
+    expect(getConfigPlano('profissional')).toMatchObject({ precoAnualMensalCentavos: 79_700, precoMensalCentavos: 99_700, taxaImplementacaoCentavos: 199_700 })
   })
 })
