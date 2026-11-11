@@ -6,6 +6,8 @@ import {
   IconFileSpreadsheet, IconHeadset, IconNotes, IconPuzzle, IconRefresh, IconRocket, IconUsers, IconX,
 } from '@tabler/icons-react'
 import { useToast } from '../hooks/useToast'
+import { useAuth } from '../hooks/useAuth'
+import { destinoDoUsuario } from '../utils/destino'
 import { api } from '../services/api'
 import AlphaDataLogo from '../components/AlphaDataLogo'
 import { CICLO_PADRAO, OPCOES_CICLO, ROTULO_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
@@ -294,6 +296,12 @@ function FaqItem({ item, aberta, onToggle }) {
 export default function Landing() {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { isAuthenticated, user } = useAuth()
+
+  function irParaPainel() {
+    const { para, state } = destinoDoUsuario(user)
+    navigate(para, state ? { state } : undefined)
+  }
 
   const [faqAberta, setFaqAberta] = useState(0)
   const [nome, setNome] = useState('')
@@ -335,15 +343,20 @@ export default function Landing() {
           <nav className="flex items-center gap-4 sm:gap-6">
             <a href="#precos" className="hidden sm:block text-base font-medium hover:opacity-70 transition-opacity">Preços</a>
             <a href="#contato" className="hidden sm:block text-base font-medium hover:opacity-70 transition-opacity">Fale com a gente</a>
+            {!isAuthenticated && (
+              <button type="button" onClick={() => navigate('/login')} className="text-base font-medium hover:opacity-70 transition-opacity">
+                Entrar
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => irParaCadastro('startup')}
+              onClick={isAuthenticated ? irParaPainel : () => irParaCadastro('startup')}
               className="rounded-[8px] text-white px-4 sm:px-5 py-2.5 text-base font-semibold transition-colors duration-300"
               style={{ backgroundColor: AZUL }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = AZUL_HOVER)}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = AZUL)}
             >
-              Entrar grátis
+              {isAuthenticated ? 'Ir para o meu painel' : 'Testar grátis'}
             </button>
           </nav>
         </div>

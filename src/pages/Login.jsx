@@ -18,6 +18,7 @@ import { supabase } from '../services/supabase'
 import PasswordInput from '../components/ui/PasswordInput'
 import AlphaDataLogo from '../components/AlphaDataLogo'
 import SeletorNicho from '../components/SeletorNicho'
+import { destinoDoUsuario } from '../utils/destino'
 import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
 import PainelMarcaAuth from '../components/PainelMarcaAuth'
 import fundoLogin from '../assets/login-fundo.jpeg'
@@ -80,7 +81,7 @@ function PassosOnboarding({ atual }) {
 // Rota /cadastro usa apenasCadastro=true: link "limpo" pra mandar pra
 // gente de fora — só o formulário de criar conta, sem aba "Entrar".
 export default function Login({ apenasCadastro = false }) {
-  const { login, registrar, selecionarTipoNegocio, atualizarBranding } = useAuth()
+  const { login, registrar, selecionarTipoNegocio, atualizarBranding, user, isAuthenticated, logout } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -253,6 +254,34 @@ export default function Login({ apenasCadastro = false }) {
   }
 
   const telaAuth = modo === 'entrar' || modo === 'criar-conta'
+
+  /** Sessão salva no navegador: oferece seguir pro painel em vez de pedir login de novo. */
+  function irParaPainelDaSessao() {
+    if (!user.tipoNegocio && user.papel !== 'superadmin') {
+      // Mesma página (/login): navegar pra cá não remonta o componente, então troca o passo direto.
+      setSessaoPendente(user)
+      setModo('escolher-negocio')
+      return
+    }
+    const { para, state } = destinoDoUsuario(user)
+    navigate(para, state ? { state } : undefined)
+  }
+
+  const avisoSessaoAtiva = isAuthenticated && user && !enviando && (
+    <div className="mb-6 rounded-card border border-primary-light bg-primary-light px-4 py-3">
+      <p className="text-body text-[#1a1a1a]">
+        Você já está conectado como <span className="font-semibold break-words">{user.email}</span>.
+      </p>
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        <button type="button" onClick={irParaPainelDaSessao} className="text-label font-semibold text-primary hover:underline">
+          Ir para o meu painel →
+        </button>
+        <button type="button" onClick={logout} className="text-label text-[#666] hover:underline">
+          Sair desta conta
+        </button>
+      </div>
+    </div>
+  )
   const emCadastro = modo === 'criar-conta' || apenasCadastro
 
   const formularioAuth = (
@@ -483,6 +512,7 @@ export default function Login({ apenasCadastro = false }) {
               <div className="flex justify-center mb-7">
                 <AlphaDataLogo />
               </div>
+              {avisoSessaoAtiva}
               {formularioAuth}
             </div>
           </main>

@@ -59,15 +59,12 @@ function AdminDashboardRoteado() {
   return user?.tipoNegocio && user.tipoNegocio !== 'manutencao' ? <AdminDashboardVertical /> : <AdminDashboard />
 }
 
+/**
+ * A raiz é sempre o site (landing), com ou sem sessão — quem está logado
+ * entra no sistema pelo botão "Ir para o meu painel" (ver utils/destino.js).
+ * Antes, quem tinha sessão salva era redirecionado e não conseguia ver o site.
+ */
 function RaizApp() {
-  const { isAuthenticated, user } = useAuth()
-  if (isAuthenticated) {
-    if (user.papel === 'superadmin') return <Navigate to="/superadmin/dashboard" replace />
-    if (!user.tipoNegocio) return <Navigate to="/login" replace state={{ sessaoPendente: user }} />
-    if (user.assinaturaPendente) return <Navigate to="/checkout" replace />
-    return <Navigate to={user.deveTrocarSenha ? '/trocar-senha' : `/${user.userType}/dashboard`} replace />
-  }
-  // Visitante sem sessão: a raiz é a landing page pública, não mais um redirect direto pro /login.
   return <Landing />
 }
 
