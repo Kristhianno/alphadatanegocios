@@ -25,6 +25,7 @@ function paraLocal(c) {
     // então esses dois campos não têm de onde vir de verdade ainda.
     totalOS: 0,
     ultimaOS: null,
+    criadoEm: c.criadoEm ?? null,
   }
 }
 

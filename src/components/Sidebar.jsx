@@ -141,6 +141,19 @@ export default function Sidebar({ userType, aberta, onClose }) {
   const mapaRotas = userType === 'cliente' ? ROTAS_REAIS_POR_ID_CLIENTE : ROTAS_REAIS_POR_ID_ADMIN
   const prefixoEmConstrucao = userType === 'cliente' ? '/cliente/em-construcao' : '/admin/em-construcao'
 
+  // Conta de festas sem o menu da API (carregando ou falha): menu mínimo, nunca
+  // o menu fixo de manutenção (que mostrava "Ordens de Serviço" por um instante).
+  const MENU_MINIMO = {
+    admin: [
+      { to: '/admin/dashboard', label: 'Dashboard', icon: IconChartBar },
+      { to: '/admin/clientes', label: 'Clientes', icon: IconUsers },
+    ],
+    cliente: [
+      { to: '/cliente/dashboard', label: 'Dashboard', icon: IconHome },
+      { to: '/cliente/perfil', label: 'Perfil', icon: IconUser },
+    ],
+  }
+
   const itens = menuDinamico
     ? menuDinamico.map((item) => ({
         to: mapaRotas[item.id] ?? `${prefixoEmConstrucao}/${encodeURIComponent(item.label)}`,
@@ -149,7 +162,9 @@ export default function Sidebar({ userType, aberta, onClose }) {
         // CRM fora do plano: o item continua no menu, com cadeado (a tela mostra o convite pro Completo).
         bloqueado: item.id === 'crm' && !temCrm(user),
       }))
-    : (MENUS[userType] ?? [])
+    : precisaMenuDinamico
+      ? (MENU_MINIMO[userType] ?? [])
+      : (MENUS[userType] ?? [])
 
   return (
     <>

@@ -4,6 +4,7 @@ import { useClientes } from '../../hooks/useClientes'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { useToast } from '../../hooks/useToast'
 import { useBranding } from '../../hooks/useBranding'
+import { useAuth } from '../../hooks/useAuth'
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
@@ -13,6 +14,7 @@ const CAMPOS_INICIAIS = { nome: '', telefone: '', email: '', endereco: '', cidad
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
 
+/** "Histórico" lista ordens de serviço — só existe pra manutenção (onHistorico ausente = item some). */
 function AcoesDropdown({ cliente, onHistorico, onEditar, onDeletar, onMensagem }) {
   const [aberto, setAberto] = useState(false)
   return (
@@ -24,9 +26,9 @@ function AcoesDropdown({ cliente, onHistorico, onEditar, onDeletar, onMensagem }
         <>
           <div className="fixed inset-0 z-10" onClick={() => setAberto(false)} />
           <div className="absolute right-0 mt-1 w-48 bg-surface rounded-card shadow-cardHover z-20 overflow-hidden border border-muted-dark">
-            <button onClick={() => { onHistorico(cliente); setAberto(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-body hover:bg-primary-light text-left">
+            {onHistorico && <button onClick={() => { onHistorico(cliente); setAberto(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-body hover:bg-primary-light text-left">
               <IconHistory size={16} /> Histórico
-            </button>
+            </button>}
             <button onClick={() => { onEditar(cliente); setAberto(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-body hover:bg-primary-light text-left">
               <IconEdit size={16} /> Editar
             </button>
@@ -48,6 +50,9 @@ export default function Clientes() {
   const { ordens } = useOrdensServico()
   const { showToast } = useToast()
   const { nomeExibido } = useBranding()
+  const { user } = useAuth()
+  // Ordens de serviço (Total OS, Última OS, histórico de OS) só fazem sentido em manutenção.
+  const ehManutencao = user?.tipoNegocio === 'manutencao'
 
   const [busca, setBusca] = useState('')
   const [ordenarPor, setOrdenarPor] = useState('nome')
@@ -68,6 +73,7 @@ export default function Clientes() {
       if (ordenarPor === 'nome') return a.nome.localeCompare(b.nome)
       if (ordenarPor === 'totalOS') return b.totalOS - a.totalOS
       if (ordenarPor === 'ultimaOS') return (b.ultimaOS ?? '').localeCompare(a.ultimaOS ?? '')
+      if (ordenarPor === 'recentes') return (b.criadoEm ?? '').localeCompare(a.criadoEm ?? '')
       return 0
     })
     return lista
@@ -140,8 +146,18 @@ export default function Clientes() {
     { header: 'Telefone', accessorKey: 'telefone' },
     { header: 'Email', accessorKey: 'email' },
     { header: 'Cidade/UF', accessorFn: (c) => `${c.cidade}/${c.estado}` },
-    { header: 'Total OS', accessorKey: 'totalOS' },
-    { header: 'Última OS', accessorKey: 'ultimaOS', cell: (info) => info.getValue() ?? '—' },
+    ...(ehManutencao
+      ? [
+          { header: 'Total OS', accessorKey: 'totalOS' },
+          { header: 'Última OS', accessorKey: 'ultimaOS', cell: (info) => info.getValue() ?? '—' },
+        ]
+      : [
+          {
+            header: 'Cliente desde',
+            accessorKey: 'criadoEm',
+            cell: (info) => (info.getValue() ? new Date(info.getValue()).toLocaleDateString('pt-BR') : '—'),
+          },
+        ]),
     { header: 'Status', accessorKey: 'ativo', cell: (info) => (
         <span className={`text-label font-medium rounded-full px-2.5 py-1 ${info.getValue() ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
           {info.getValue() ? 'Ativo' : 'Inativo'}
@@ -150,7 +166,7 @@ export default function Clientes() {
     { header: 'Ações', id: 'acoes', cell: (info) => (
         <AcoesDropdown
           cliente={info.row.original}
-          onHistorico={setHistoricoCliente}
+          onHistorico={ehManutencao ? setHistoricoCliente : undefined}
           onEditar={abrirEdicao}
           onDeletar={setClienteParaDeletar}
           onMensagem={(c) => showToast(`Mensagem enviada para ${c.nome}.`)}
@@ -185,8 +201,14 @@ export default function Clientes() {
           <label className={labelClasse}>Ordenar por</label>
           <select className={inputClasse} value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)}>
             <option value="nome">Nome</option>
-            <option value="totalOS">Total OS</option>
-            <option value="ultimaOS">Últimas OS</option>
+            {ehManutencao ? (
+              <>
+                <option value="totalOS">Total OS</option>
+                <option value="ultimaOS">Últimas OS</option>
+              </>
+            ) : (
+              <option value="recentes">Mais recentes</option>
+            )}
           </select>
         </div>
         <div>
