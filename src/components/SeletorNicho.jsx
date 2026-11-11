@@ -1,23 +1,11 @@
 import { useMemo, useState } from 'react'
 import {
-  IconArrowLeft, IconArrowRight, IconBalloon, IconBuildingCommunity, IconCake, IconCamera, IconCandy, IconCheck,
-  IconConfetti, IconHorseToy, IconLoader2, IconLock, IconMasksTheater, IconMoodKid, IconPlus, IconToolsKitchen2, IconTruck,
+  IconArrowLeft, IconArrowRight, IconCheck, IconConfetti, IconLoader2, IconLock, IconPlus,
 } from '@tabler/icons-react'
+import { ICONE_NICHO as ICONES_NICHOS } from '../data/nichos'
 
-/** Ícone por `id` de nicho (server/src/config/segmentos-onboarding.config.ts). Sem entrada = confete. */
-const ICONE_NICHO = {
-  'salao-de-festas': IconBuildingCommunity,
-  'aluguel-brinquedos': IconHorseToy,
-  'aluguel-barracas-foodtruck': IconTruck,
-  decoracao: IconBalloon,
-  'personagens-vivos': IconMasksTheater,
-  recreacao: IconMoodKid,
-  'doces-personalizados': IconCandy,
-  'bolos-e-doces': IconCake,
-  salgados: IconToolsKitchen2,
-  'fotografia-filmagem': IconCamera,
-  outro: IconPlus,
-}
+/** Ícone por `id` de nicho; 'outro' ganha um "+". Sem entrada = confete. */
+const ICONE_NICHO = { ...ICONES_NICHOS, outro: IconPlus }
 
 const NOME_CAMPO = 'nicho-festas'
 

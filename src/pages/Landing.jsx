@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  IconArrowRight, IconBalloon, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandWhatsapp,
-  IconBuildingCommunity, IconCake, IconCalendarEvent, IconCalendarX, IconCamera, IconCandy, IconCheck,
-  IconChevronDown, IconConfetti, IconCrown, IconFileSpreadsheet, IconHeadset, IconHorseToy, IconMasksTheater,
-  IconMoodKid, IconNotes, IconPuzzle, IconRefresh, IconRocket, IconToolsKitchen2, IconTruck, IconUsers, IconX,
+  IconArrowRight, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandWhatsapp, IconCake,
+  IconCalendarEvent, IconCalendarX, IconCamera, IconCheck, IconChevronDown, IconConfetti, IconCrown,
+  IconFileSpreadsheet, IconHeadset, IconNotes, IconPuzzle, IconRefresh, IconRocket, IconUsers, IconX,
 } from '@tabler/icons-react'
 import { useToast } from '../hooks/useToast'
 import { api } from '../services/api'
 import AlphaDataLogo from '../components/AlphaDataLogo'
 import { CICLO_PADRAO, OPCOES_CICLO, ROTULO_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
+import { NICHOS } from '../data/nichos'
 import heroLaptop from '../assets/landing/hero-mockup-laptop.png'
 import heroMobileMenu from '../assets/landing/hero-mockup-mobile-menu.png'
 import heroMobileDashboard from '../assets/landing/hero-mockup-mobile-dashboard.png'
@@ -42,20 +42,6 @@ const PASSOS = [
   { numero: '01', titulo: 'O cliente pede, você responde na hora', texto: 'Monte o orçamento a partir dos seus pacotes e envie. O cliente aprova online, sem vai e volta.' },
   { numero: '02', titulo: 'Fechou? A data fica travada', texto: 'Contrato digital, sinal registrado e o evento já entra no calendário da equipe.' },
   { numero: '03', titulo: 'Depois da festa, você sabe quanto lucrou', texto: 'Receitas e custos de cada evento num só lugar. No fim do mês, o resultado aparece sozinho.' },
-]
-
-/** Nichos atendidos — os mesmos cards do onboarding (server/src/config/segmentos-onboarding.config.ts). */
-const NICHOS = [
-  { icon: IconBuildingCommunity, label: 'Salão de Festas' },
-  { icon: IconBalloon, label: 'Decoração' },
-  { icon: IconCamera, label: 'Fotografia e Filmagem' },
-  { icon: IconMasksTheater, label: 'Personagens Vivos' },
-  { icon: IconMoodKid, label: 'Recreação' },
-  { icon: IconHorseToy, label: 'Aluguel de Brinquedos' },
-  { icon: IconTruck, label: 'Barracas e Food Truck' },
-  { icon: IconCandy, label: 'Doces Personalizados' },
-  { icon: IconToolsKitchen2, label: 'Salgados' },
-  { icon: IconCake, label: 'Bolos e Doces' },
 ]
 
 /** Um item de "por segmento" ganha o ícone do grupo de nichos em vez do check padrão. */

@@ -8,6 +8,7 @@ import {
   IconLock,
   IconBuildingStore,
   IconCheck,
+  IconPhotoUp,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -18,14 +19,18 @@ import PasswordInput from '../components/ui/PasswordInput'
 import AlphaDataLogo from '../components/AlphaDataLogo'
 import SeletorNicho from '../components/SeletorNicho'
 import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
+import PainelMarcaAuth from '../components/PainelMarcaAuth'
 import fundoLogin from '../assets/login-fundo.jpeg'
-import foto1 from '../assets/login-foto-1.jpeg'
-import foto2 from '../assets/login-foto-2.jpeg'
-import foto3 from '../assets/login-foto-3.jpeg'
 
 
-const inputComIconeClasse = 'w-full rounded-input border border-muted-dark pl-10 pr-3 py-2.5 text-body focus:outline-none focus:ring-2 focus:ring-primary'
-const iconeCampoClasse = 'absolute left-3 top-1/2 -translate-y-1/2 text-[#999] pointer-events-none'
+const inputComIconeClasse =
+  'w-full rounded-btn border border-muted-dark bg-surface pl-10 pr-3 py-3 text-body text-[#1a1a1a] placeholder:text-[#aaa] transition-shadow focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
+// z-10: o PasswordInput tem um wrapper `relative` próprio que, sem isso, era pintado por cima do ícone de cadeado.
+const iconeCampoClasse = 'absolute left-3 top-1/2 -translate-y-1/2 z-10 text-[#999] pointer-events-none'
+const rotuloClasse = 'block mb-1.5 text-label font-medium text-[#444]'
+const erroClasse = 'rounded-btn bg-red-50 border border-red-100 px-3 py-2 text-label text-danger'
+const botaoPrincipalClasse =
+  'flex items-center justify-center gap-2 rounded-btn bg-primary hover:bg-primary-dark text-white py-3 text-body font-semibold transition-colors disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
 
 function IconGoogle(props) {
   return (
@@ -247,37 +252,261 @@ export default function Login({ apenasCadastro = false }) {
     if (error) showToast('Não foi possível iniciar o login com Google. Tente novamente.', 'erro')
   }
 
-  return (
-    <div
-      className="min-h-screen relative bg-cover bg-center"
-      style={{ backgroundImage: `url(${fundoLogin})` }}
-    >
-      <Link
-        to="/"
-        aria-label="Voltar para a página inicial"
-        className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 flex items-center justify-center h-10 w-10 rounded-full bg-surface/90 backdrop-blur-sm shadow-card text-[#333] hover:bg-surface transition-colors"
-      >
-        <IconArrowLeft size={20} />
-      </Link>
+  const telaAuth = modo === 'entrar' || modo === 'criar-conta'
+  const emCadastro = modo === 'criar-conta' || apenasCadastro
 
-      <div
-        className={`relative z-10 min-h-screen flex items-center justify-center px-3 sm:px-10 2xl:px-16 py-16 sm:py-10 ${
-          telaLarga ? '' : 'md:pr-[38%] lg:pr-[34%]'
-        }`}
+  const formularioAuth = (
+    <>
+      <h1 className="text-[24px] sm:text-[28px] font-bold leading-tight text-[#1a1a1a] text-center">
+        {emCadastro ? 'Crie sua conta' : 'Que bom ter você de volta!'}
+      </h1>
+      <p className="mt-1.5 mb-6 text-body text-[#666] text-center">
+        {!emCadastro
+          ? 'Entre para acessar o painel do seu negócio.'
+          : planoEscolhido
+            ? `Plano ${NOME_MARKETING_PLANO[planoEscolhido] ?? ''} escolhido. Falta só criar sua conta para começar o teste grátis de 7 dias.`
+            : '7 dias grátis para testar, sem cartão de crédito.'}
+      </p>
+
+      {!apenasCadastro && (
+        <div className="flex rounded-btn bg-muted p-1 mb-6" role="tablist" aria-label="Entrar ou criar conta">
+          {[
+            ['entrar', 'Entrar'],
+            ['criar-conta', 'Criar conta'],
+          ].map(([valor, rotulo]) => (
+            <button
+              key={valor}
+              type="button"
+              role="tab"
+              aria-selected={modo === valor}
+              onClick={() => { setModo(valor); setErro('') }}
+              className={`flex-1 rounded-btn py-2.5 text-body font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                modo === valor ? 'bg-surface shadow-card text-primary' : 'text-[#666] hover:text-[#333]'
+              }`}
+            >
+              {rotulo}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={handleGoogleEntrar}
+        className="w-full flex items-center justify-center gap-2.5 rounded-btn border border-muted-dark bg-surface py-3 text-body font-medium text-[#333] hover:bg-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
-        {/* Cartão de login/cadastro */}
+        <IconGoogle /> {emCadastro ? 'Criar conta com Google' : 'Continuar com Google'}
+      </button>
+
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 h-px bg-muted-dark" />
+        <span className="text-label text-[#999]">ou com e-mail e senha</span>
+        <div className="flex-1 h-px bg-muted-dark" />
+      </div>
+
+      {!emCadastro ? (
+        <form onSubmit={handleEntrar} className="flex flex-col gap-4">
+          <div>
+            <label htmlFor="login-email" className={rotuloClasse}>E-mail</label>
+            <div className="relative">
+              <IconMail size={18} className={iconeCampoClasse} />
+              <input
+                id="login-email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                inputMode="email"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com"
+                className={inputComIconeClasse}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="login-senha" className={rotuloClasse}>Senha</label>
+            <div className="relative">
+              <IconLock size={18} className={iconeCampoClasse} />
+              <PasswordInput
+                id="login-senha"
+                name="senha"
+                autoComplete="current-password"
+                required
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="Sua senha"
+                className={inputComIconeClasse}
+              />
+            </div>
+          </div>
+
+          {erro && <p role="alert" className={erroClasse}>{erro}</p>}
+
+          <button type="submit" disabled={enviando} className={botaoPrincipalClasse}>
+            <IconLogin2 size={20} />
+            {enviando ? 'Entrando...' : 'Entrar no meu negócio'}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleCriarConta} className="flex flex-col gap-4">
+          {!planoEscolhido && planos.length > 0 && (
+            <fieldset>
+              <legend className={rotuloClasse}>Escolha seu plano</legend>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {planos.map((p) => (
+                  <button
+                    key={p.plano}
+                    type="button"
+                    aria-pressed={planoForm === p.plano}
+                    onClick={() => setPlanoForm(p.plano)}
+                    className={`rounded-btn border px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      planoForm === p.plano ? 'border-primary bg-primary-light' : 'border-muted-dark hover:bg-muted'
+                    }`}
+                  >
+                    <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
+                    <span className="block text-label text-[#777]">{formatarPreco(precoMensalDoCiclo(p, cicloForm))}/mês</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex rounded-btn bg-muted p-1">
+                {OPCOES_CICLO.map(([valor, rotulo]) => (
+                  <button
+                    key={valor}
+                    type="button"
+                    aria-pressed={cicloForm === valor}
+                    onClick={() => setCicloForm(valor)}
+                    className={`flex-1 rounded-btn py-1.5 text-label font-medium transition-colors ${cicloForm === valor ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
+                  >
+                    {rotulo}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-label text-[#999]">Você só paga depois do teste grátis, quando escolher assinar.</p>
+            </fieldset>
+          )}
+
+          <div>
+            <label htmlFor="cadastro-empresa" className={rotuloClasse}>Nome da empresa</label>
+            <div className="relative">
+              <IconBuildingStore size={18} className={iconeCampoClasse} />
+              <input
+                id="cadastro-empresa"
+                name="nomeEmpresa"
+                autoComplete="organization"
+                required
+                value={nomeEmpresa}
+                onChange={(e) => setNomeEmpresa(e.target.value)}
+                placeholder="Ex: Festa Mágica Eventos"
+                className={inputComIconeClasse}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="cadastro-email" className={rotuloClasse}>E-mail</label>
+            <div className="relative">
+              <IconMail size={18} className={iconeCampoClasse} />
+              <input
+                id="cadastro-email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                inputMode="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com"
+                className={inputComIconeClasse}
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="cadastro-senha" className={rotuloClasse}>Senha</label>
+            <div className="relative">
+              <IconLock size={18} className={iconeCampoClasse} />
+              <PasswordInput
+                id="cadastro-senha"
+                name="novaSenha"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="Ao menos 8 caracteres"
+                className={inputComIconeClasse}
+              />
+            </div>
+            {senha.length > 0 && senha.length < 8 && (
+              <p className="mt-1 text-label text-[#999]">Faltam {8 - senha.length} caractere{8 - senha.length === 1 ? '' : 's'}.</p>
+            )}
+          </div>
+
+          {erro && <p role="alert" className={erroClasse}>{erro}</p>}
+
+          <button type="submit" disabled={enviando} className={botaoPrincipalClasse}>
+            <IconUserPlus size={20} />
+            {enviando ? 'Criando conta...' : 'Criar minha conta'}
+          </button>
+
+          <p className="text-label text-[#999] text-center">
+            Ao criar a conta, você concorda com a nossa{' '}
+            <Link to="/privacidade" className="text-primary hover:underline">política de privacidade</Link>.
+          </p>
+
+          {apenasCadastro && (
+            <Link to="/login" className="text-label text-primary hover:underline text-center">
+              Já tem uma conta? Entrar
+            </Link>
+          )}
+        </form>
+      )}
+    </>
+  )
+
+  // Entrar / criar conta: formulário numa coluna de largura confortável +
+  // painel da marca à direita (só em telas largas; no celular, só o formulário).
+  if (telaAuth) {
+    return (
+      <div className="min-h-screen flex bg-surface">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="px-5 sm:px-10 pt-5 sm:pt-8">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 rounded-btn px-2 py-1.5 -ml-2 text-label font-medium text-[#666] hover:text-primary hover:bg-muted transition-colors"
+            >
+              <IconArrowLeft size={16} /> Voltar para o site
+            </Link>
+          </div>
+          <main className="flex-1 flex items-center justify-center px-5 sm:px-10 py-8">
+            <div className="w-full max-w-[420px]">
+              <div className="flex justify-center mb-7">
+                <AlphaDataLogo />
+              </div>
+              {formularioAuth}
+            </div>
+          </main>
+          <p className="px-5 pb-6 text-center text-label text-[#999]">© 2026 ALPHADATA - Negócios</p>
+        </div>
+        <PainelMarcaAuth className="hidden md:flex md:w-[46%] xl:w-1/2 md:sticky md:top-0 md:h-screen" />
+      </div>
+    )
+  }
+
+  // Onboarding (escolher nicho / logo): card sobre o fundo ilustrado.
+  return (
+    <div className="min-h-screen relative bg-cover bg-center" style={{ backgroundImage: `url(${fundoLogin})` }}>
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-3 sm:px-10 2xl:px-16 py-8 sm:py-10">
         <div
           className={`w-full bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-5 sm:p-10 ${
-            telaLarga ? 'max-w-5xl pb-0 sm:pb-0' : 'max-w-2xl'
+            telaLarga ? 'max-w-5xl pb-0 sm:pb-0' : 'max-w-lg'
           }`}
         >
-        <div className={`flex justify-center ${telaLarga ? 'mb-4' : 'mb-6'}`}>
-          <AlphaDataLogo className={telaLarga ? 'scale-90' : ''} />
-        </div>
+          <div className={`flex justify-center ${telaLarga ? 'mb-4' : 'mb-6'}`}>
+            <AlphaDataLogo className={telaLarga ? 'scale-90' : ''} />
+          </div>
 
-        {sessaoPendente && (modo === 'escolher-negocio' || modo === 'escolher-logo') && (
-          <PassosOnboarding atual={modo === 'escolher-negocio' ? 1 : 2} />
-        )}
+          {sessaoPendente && <PassosOnboarding atual={modo === 'escolher-negocio' ? 1 : 2} />}
 
           {modo === 'escolher-negocio' ? (
             <SeletorNicho
@@ -288,34 +517,35 @@ export default function Login({ apenasCadastro = false }) {
               onConfirmar={confirmarNicho}
               onVoltar={sessaoPendente ? () => { setModo('entrar'); setSessaoPendente(null) } : undefined}
             />
-          ) : modo === 'escolher-logo' ? (
+          ) : (
             <>
-              <p className="text-h2 text-[#1a1a1a] mb-1">Personalize sua marca</p>
-              <p className="text-body text-[#666] mb-5">
-                Escolha o logotipo do seu negócio — ele substitui "ALPHADATA" na plataforma pra você e sua equipe. Dá pra fazer isso depois também, em Configurações.
+              <h1 className="text-[22px] sm:text-[26px] font-bold leading-tight text-[#1a1a1a] mb-1.5">Personalize sua marca</h1>
+              <p className="text-body text-[#666] mb-6">
+                Envie o logotipo do seu negócio. Ele aparece no lugar de "ALPHADATA" pra você e sua equipe. Dá pra fazer isso depois também, em Configurações.
               </p>
 
-              <div className="flex items-center gap-4 mb-5">
+              <label className="group flex items-center gap-4 rounded-card border-2 border-dashed border-muted-dark p-4 mb-5 cursor-pointer hover:border-primary hover:bg-primary-light transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary">
                 {logoPreview ? (
-                  <img src={logoPreview} alt="Logotipo" className="h-20 w-20 rounded-card object-cover border border-muted-dark" />
+                  <img src={logoPreview} alt="Prévia do logotipo" className="h-20 w-20 shrink-0 rounded-card object-contain bg-surface border border-muted-dark" />
                 ) : (
-                  <div className="h-20 w-20 rounded-card border border-dashed border-muted-dark flex items-center justify-center text-label text-[#999] text-center px-1">
-                    sem logo
-                  </div>
+                  <span className="h-20 w-20 shrink-0 rounded-card bg-muted flex items-center justify-center text-[#999] group-hover:text-primary">
+                    <IconPhotoUp size={30} stroke={1.5} />
+                  </span>
                 )}
-                <label className="cursor-pointer rounded-btn px-3 py-1.5 text-label font-medium bg-muted border border-muted-dark hover:bg-primary-light text-center">
-                  Escolher imagem
-                  <input type="file" accept="image/*" className="hidden" onChange={selecionarLogo} />
-                </label>
-              </div>
+                <span className="min-w-0">
+                  <span className="block text-body font-semibold text-[#1a1a1a]">{logoPreview ? 'Trocar imagem' : 'Escolher imagem'}</span>
+                  <span className="block text-label text-[#999]">PNG ou JPG, até 300KB. Quadrada fica melhor.</span>
+                </span>
+                <input type="file" accept="image/*" className="sr-only" onChange={selecionarLogo} />
+              </label>
 
-              {erro && <p className="text-danger text-label mb-3">{erro}</p>}
+              {erro && <p role="alert" className={`${erroClasse} mb-4`}>{erro}</p>}
 
-              <div className="flex gap-2">
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
                 <button
                   type="button"
                   onClick={() => irParaDashboard(sessaoPendente)}
-                  className="flex-1 rounded-btn border border-muted-dark py-2.5 text-body text-[#666] hover:bg-muted"
+                  className="flex-1 rounded-btn border border-muted-dark py-3 sm:py-2.5 text-body text-[#666] hover:bg-muted"
                 >
                   Pular por enquanto
                 </button>
@@ -323,218 +553,14 @@ export default function Login({ apenasCadastro = false }) {
                   type="button"
                   onClick={confirmarLogo}
                   disabled={salvandoLogo}
-                  className="flex-1 rounded-btn bg-primary hover:bg-primary-dark text-white py-2.5 text-body font-semibold disabled:opacity-60"
+                  className="flex-1 rounded-btn bg-primary hover:bg-primary-dark text-white py-3 sm:py-2.5 text-body font-semibold disabled:opacity-60"
                 >
-                  {salvandoLogo ? 'Salvando...' : 'Concluir'}
+                  {salvandoLogo ? 'Salvando...' : logoPreview ? 'Salvar e entrar' : 'Concluir'}
                 </button>
               </div>
             </>
-          ) : (
-            <>
-              <p className="text-h2 text-[#1a1a1a] text-center mb-1">
-                {modo === 'entrar' && !apenasCadastro ? 'Bem-vindo de volta!' : 'Crie sua conta'}
-              </p>
-              <p className="text-body text-[#666] text-center mb-6">
-                {modo === 'entrar' && !apenasCadastro
-                  ? 'Faça login para acessar seu negócio'
-                  : planoEscolhido
-                    ? `Plano ${NOME_MARKETING_PLANO[planoEscolhido] ?? ''} escolhido — falta só criar sua conta para começar o teste grátis de 7 dias, sem cartão de crédito`
-                    : 'Comece a organizar seu negócio hoje — 7 dias grátis, sem cartão de crédito'}
-              </p>
-
-              {!apenasCadastro && (
-                <div className="flex rounded-btn bg-muted p-1 mb-6">
-                  <button
-                    onClick={() => { setModo('entrar'); setErro('') }}
-                    className={`flex-1 rounded-btn py-2 text-body font-medium transition-colors ${modo === 'entrar' ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
-                  >
-                    Entrar
-                  </button>
-                  <button
-                    onClick={() => { setModo('criar-conta'); setErro('') }}
-                    className={`flex-1 rounded-btn py-2 text-body font-medium transition-colors ${modo === 'criar-conta' ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
-                  >
-                    Criar conta
-                  </button>
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={handleGoogleEntrar}
-                className="w-full flex items-center justify-center gap-2 rounded-btn border border-muted-dark py-2.5 text-body font-medium text-[#333] hover:bg-muted transition-colors"
-              >
-                <IconGoogle /> Continuar com Google
-              </button>
-
-              <div className="flex items-center gap-3 my-5">
-                <div className="flex-1 h-px bg-muted-dark" />
-                <span className="text-label text-[#999]">ou entre com e-mail e senha</span>
-                <div className="flex-1 h-px bg-muted-dark" />
-              </div>
-
-              {modo === 'entrar' && !apenasCadastro ? (
-                <form onSubmit={handleEntrar} className="flex flex-col gap-4">
-                  <div>
-                    <label className="text-label text-[#666] block mb-1">Email</label>
-                    <div className="relative">
-                      <IconMail size={18} className={iconeCampoClasse} />
-                      <input
-                        type="email"
-                        name="email"
-                        autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="seu@email.com"
-                        className={inputComIconeClasse}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-label text-[#666] block mb-1">Senha</label>
-                    <div className="relative">
-                      <IconLock size={18} className={iconeCampoClasse} />
-                      <PasswordInput
-                        name="senha"
-                        autoComplete="current-password"
-                        required
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        placeholder="••••••••"
-                        className={inputComIconeClasse}
-                      />
-                    </div>
-                  </div>
-
-                  {erro && <p className="text-danger text-label">{erro}</p>}
-
-                  <button
-                    type="submit"
-                    disabled={enviando}
-                    className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn py-2.5 text-body font-semibold transition-colors disabled:opacity-60"
-                  >
-                    <IconLogin2 size={20} />
-                    {enviando ? 'Entrando...' : 'Entrar no meu negócio'}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleCriarConta} className="flex flex-col gap-4">
-                  {!planoEscolhido && planos.length > 0 && (
-                    <div>
-                      <label className="text-label text-[#666] block mb-1">Escolha seu plano</label>
-                      <div className="grid grid-cols-2 gap-2 mb-2">
-                        {planos.map((p) => (
-                          <button
-                            key={p.plano}
-                            type="button"
-                            onClick={() => setPlanoForm(p.plano)}
-                            className={`rounded-card border px-3 py-2 text-left transition-colors ${
-                              planoForm === p.plano ? 'border-primary bg-primary-light' : 'border-muted-dark hover:bg-muted'
-                            }`}
-                          >
-                            <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
-                            <span className="block text-label text-[#999]">
-                              {formatarPreco(precoMensalDoCiclo(p, cicloForm))}/mês
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="flex rounded-btn bg-muted p-1">
-                        {OPCOES_CICLO.map(([valor, rotulo]) => (
-                          <button
-                            key={valor}
-                            type="button"
-                            onClick={() => setCicloForm(valor)}
-                            className={`flex-1 rounded-btn py-1.5 text-label font-medium transition-colors ${cicloForm === valor ? 'bg-surface shadow-card text-primary' : 'text-[#666]'}`}
-                          >
-                            {rotulo}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="text-label text-[#666] block mb-1">Nome da empresa</label>
-                    <div className="relative">
-                      <IconBuildingStore size={18} className={iconeCampoClasse} />
-                      <input
-                        name="nomeEmpresa"
-                        autoComplete="organization"
-                        required
-                        value={nomeEmpresa}
-                        onChange={(e) => setNomeEmpresa(e.target.value)}
-                        placeholder="Ex: Manutenções Silva"
-                        className={inputComIconeClasse}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-label text-[#666] block mb-1">Email</label>
-                    <div className="relative">
-                      <IconMail size={18} className={iconeCampoClasse} />
-                      <input
-                        type="email"
-                        name="email"
-                        autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="seu@email.com"
-                        className={inputComIconeClasse}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-label text-[#666] block mb-1">Senha</label>
-                    <div className="relative">
-                      <IconLock size={18} className={iconeCampoClasse} />
-                      <PasswordInput
-                        name="novaSenha"
-                        autoComplete="new-password"
-                        required
-                        minLength={8}
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        placeholder="Ao menos 8 caracteres"
-                        className={inputComIconeClasse}
-                      />
-                    </div>
-                  </div>
-
-                  {erro && <p className="text-danger text-label">{erro}</p>}
-
-                  <button
-                    type="submit"
-                    disabled={enviando}
-                    className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn py-2.5 text-body font-semibold transition-colors disabled:opacity-60"
-                  >
-                    <IconUserPlus size={20} />
-                    {enviando ? 'Criando conta...' : 'Criar minha conta'}
-                  </button>
-
-                  {apenasCadastro && (
-                    <Link to="/login" className="text-label text-primary hover:underline text-center">
-                      Já tem uma conta? Entrar
-                    </Link>
-                  )}
-                </form>
-              )}
-            </>
           )}
-
-          {!telaLarga && <p className="text-center text-[#999] text-label mt-6">© 2026 ALPHADATA - Negócios</p>}
         </div>
-      </div>
-
-      {/* Coluna de fotos à direita — imagens próprias (não é a mesma foto de
-          fundo recortada por bg-cover), pra cada uma aparecer completa,
-          nunca cortada pela metade. Some abaixo de "md" por falta de espaço. */}
-      <div className={`${telaLarga ? 'hidden' : 'hidden md:flex'} absolute inset-y-0 right-0 w-[38%] lg:w-[34%] flex-col`}>
-        <img src={foto1} alt="" className="flex-1 min-h-0 w-full object-cover" />
-        <img src={foto2} alt="" className="flex-1 min-h-0 w-full object-cover" />
-        <img src={foto3} alt="" className="flex-1 min-h-0 w-full object-cover" />
       </div>
     </div>
   )
