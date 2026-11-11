@@ -9,8 +9,8 @@
 import type { Context, Next } from 'hono'
 import { getSupabase } from '../config/database.config.js'
 import { ContaRepository } from '../repositories/ContaRepository.js'
-import type { TipoNegocio } from '../models/User.js'
-import { ErroNaoAutorizado, ErroNaoEncontrado, ErroProibido } from '../errors/AppError.js'
+import type { Plano, TipoNegocio } from '../models/User.js'
+import { ErroNaoAutorizado, ErroNaoEncontrado, ErroPlanoInsuficiente, ErroProibido } from '../errors/AppError.js'
 import type { AppEnv } from '../types/hono.js'
 
 function contas() { return new ContaRepository(getSupabase()) }
@@ -37,6 +37,18 @@ export function exigirTipoNegocio(...tipos: readonly TipoNegocio[]) {
     }
     if (!tipos.includes(conta.tipoNegocio)) {
       throw new ErroProibido(`Este recurso está disponível apenas para contas do tipo: ${tipos.join(', ')}.`)
+    }
+    await next()
+  }
+}
+
+/** Restringe a rota a contas de certos planos (ex: CRM só no Completo/Enterprise) — sempre depois de {@link carregarContexto}. */
+export function exigirPlano(...planos: readonly Plano[]) {
+  return async (c: Context<AppEnv>, next: Next): Promise<void> => {
+    const conta = c.get('conta')
+    if (!conta) throw new ErroNaoAutorizado('Contexto de negócio não carregado.')
+    if (!planos.includes(conta.plano)) {
+      throw new ErroPlanoInsuficiente('Este recurso faz parte do plano Completo. Mude de plano para usar.')
     }
     await next()
   }

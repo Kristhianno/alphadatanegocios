@@ -5,12 +5,12 @@ import {
   IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX, IconApps,
   IconCalendarEvent, IconCategory, IconClipboardList, IconBook2, IconPackage,
   IconConfetti, IconUsersGroup, IconCamera, IconVideo, IconPhoto, IconContract,
-  IconReportMoney, IconCalculator,
+  IconReportMoney, IconCalculator, IconLayoutKanban, IconLock,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
 import BrandMark from './BrandMark'
-import { NOME_MARKETING_PLANO } from '../data/planos'
+import { NOME_MARKETING_PLANO, temCrm } from '../data/planos'
 
 const MENUS = {
   admin: [
@@ -50,6 +50,7 @@ const MENUS = {
 // mesma, só o dataset muda); o resto é específico de cada vertical.
 const ROTAS_REAIS_POR_ID_ADMIN = {
   dashboard: '/admin/dashboard',
+  crm: '/admin/crm',
   clientes: '/admin/clientes',
   agendamentos: '/admin/agendamentos',
   servicos: '/admin/catalogo',
@@ -86,6 +87,7 @@ const ROTAS_REAIS_POR_ID_CLIENTE = {
 // Um ícone por item — antes todos caíam no mesmo IconApps genérico.
 const ICONES_POR_ID = {
   dashboard: IconChartBar,
+  crm: IconLayoutKanban,
   clientes: IconUsers,
   agendamentos: IconCalendarEvent,
   servicos: IconCategory,
@@ -144,6 +146,8 @@ export default function Sidebar({ userType, aberta, onClose }) {
         to: mapaRotas[item.id] ?? `${prefixoEmConstrucao}/${encodeURIComponent(item.label)}`,
         label: item.label,
         icon: ICONES_POR_ID[item.id] ?? ICONE_PADRAO,
+        // CRM fora do plano: o item continua no menu, com cadeado (a tela mostra o convite pro Completo).
+        bloqueado: item.id === 'crm' && !temCrm(user),
       }))
     : (MENUS[userType] ?? [])
 
@@ -159,7 +163,7 @@ export default function Sidebar({ userType, aberta, onClose }) {
           <button onClick={onClose} aria-label="Fechar menu"><IconX size={22} /></button>
         </div>
         <nav className="p-3 flex flex-col gap-1">
-          {itens.map(({ to, label, icon: Icon }) => (
+          {itens.map(({ to, label, icon: Icon, bloqueado }) => (
             <NavLink
               key={to}
               to={to}
@@ -171,7 +175,8 @@ export default function Sidebar({ userType, aberta, onClose }) {
               }
             >
               <Icon size={20} />
-              {label}
+              <span className="flex-1">{label}</span>
+              {bloqueado && <IconLock size={15} className="opacity-60" aria-label="Disponível no plano Completo" />}
             </NavLink>
           ))}
         </nav>

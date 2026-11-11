@@ -31,6 +31,7 @@ import CatalogoVertical from './pages/Admin/CatalogoVertical'
 import ContratosVertical from './pages/Admin/ContratosVertical'
 import Financeiro from './pages/Admin/Financeiro'
 import AdminOrcamentos from './pages/Admin/Orcamentos'
+import CrmLeads from './pages/Admin/CrmLeads'
 import ReceitasConfeitaria from './pages/Admin/ReceitasConfeitaria'
 import EstoqueConfeitaria from './pages/Admin/EstoqueConfeitaria'
 import EquipeEquipamentosSalao from './pages/Admin/EquipeEquipamentosSalao'
@@ -106,6 +107,7 @@ export default function App() {
         <Route path="contratos" element={<ContratosVertical />} />
         <Route path="financeiro" element={<Financeiro />} />
         <Route path="orcamentos" element={<AdminOrcamentos />} />
+        <Route path="crm" element={<CrmLeads />} />
         <Route path="confeitaria/pedidos" element={<PedidosConfeitaria />} />
         <Route path="confeitaria/receitas" element={<ReceitasConfeitaria />} />
         <Route path="confeitaria/estoque" element={<EstoqueConfeitaria />} />

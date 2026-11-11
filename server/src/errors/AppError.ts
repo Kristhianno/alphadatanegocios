@@ -48,6 +48,12 @@ export class ErroProibido extends AppError {
   readonly codigo = 'PROIBIDO'
 }
 
+/** Recurso que o plano atual da conta não inclui (ex: CRM em kanban só no Completo) — o front usa o código pra mostrar o convite de upgrade. */
+export class ErroPlanoInsuficiente extends AppError {
+  readonly statusCode = 403
+  readonly codigo = 'PLANO_INSUFICIENTE'
+}
+
 /** Falha na camada de persistência (Supabase/Postgres) — sempre embrulha o erro original em `causa`. */
 export class ErroPersistencia extends AppError {
   readonly statusCode = 500

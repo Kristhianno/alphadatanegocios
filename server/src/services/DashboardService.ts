@@ -9,6 +9,7 @@ import type { Cliente } from '../config/database.config.js'
 import type { Conta } from '../models/User.js'
 import { ContaRepository } from '../repositories/ContaRepository.js'
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js'
+import { CrmService, type ResumoCrm } from './CrmService.js'
 import { ErroNaoEncontrado, ErroPersistencia } from '../errors/AppError.js'
 import { logger } from '../utils/logger.js'
 
@@ -21,7 +22,11 @@ export interface ResumoDashboard {
   conta: Conta
   agendamentos: ContagemPorStatus
   ordensServico: ContagemPorStatus
+  /** Funil do CRM — só pra planos com CRM (Completo/Enterprise); null nos outros ou se a tabela ainda não existir. */
+  crm: ResumoCrm | null
 }
+
+const PLANOS_COM_CRM_DASHBOARD: readonly Conta['plano'][] = ['profissional', 'enterprise']
 
 export class DashboardService {
   private readonly usuarios: UsuarioRepository
@@ -38,13 +43,14 @@ export class DashboardService {
     const conta = await this.contas.buscarPorId(usuario.contaId)
     if (!conta) throw new ErroNaoEncontrado('Conta', usuario.contaId)
 
-    const [agendamentos, ordensServico] = await Promise.all([
+    const [agendamentos, ordensServico, crm] = await Promise.all([
       this.contarPorStatus('agendamentos', usuario.contaId),
       this.contarPorStatus('ordens_servico', usuario.contaId),
+      PLANOS_COM_CRM_DASHBOARD.includes(conta.plano) ? new CrmService(this.client).resumoSeDisponivel(usuario.contaId) : Promise.resolve(null),
     ])
 
     logger.debug({ contaId: usuario.contaId }, 'Resumo de dashboard calculado.')
-    return { conta, agendamentos, ordensServico }
+    return { conta, agendamentos, ordensServico, crm }
   }
 
   /**

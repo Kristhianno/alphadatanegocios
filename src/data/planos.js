@@ -22,3 +22,10 @@ export function formatarPreco(centavos) {
 export function precoMensalDoCiclo(config, ciclo) {
   return ciclo === 'anual' ? config.precoAnualMensalCentavos : config.precoMensalCentavos
 }
+
+/** Planos que incluem o CRM em kanban — espelha PLANOS_COM_CRM de server/src/routes/crm.routes.ts. */
+export const PLANOS_COM_CRM = ['profissional', 'enterprise']
+
+export function temCrm(user) {
+  return !!user && PLANOS_COM_CRM.includes(user.plano)
+}

@@ -21,6 +21,11 @@ function itemDashboard(rota = '/dashboard'): MenuItem {
   return { id: 'dashboard', label: 'Dashboard', icone: '📊', rota }
 }
 
+/** CRM em kanban — o item aparece pra todos; no Essencial a tela mostra o convite pro plano Completo (rotas /crm exigem o plano). */
+function itemCrm(): MenuItem {
+  return { id: 'crm', label: 'CRM de Leads', icone: '🗂️', rota: '/crm/leads', papeis: [...EQUIPE_INTERNA] }
+}
+
 function itemAgendamentos(): MenuItem {
   return { id: 'agendamentos', label: 'Agendamentos', icone: '📅', rota: '/agendamentos' }
 }
@@ -52,6 +57,7 @@ const CONFEITARIA: TipoNegocioConfig = {
   modulos: ['catalogo', 'receitas', 'pedidos', 'producao', 'estoque'],
   menuItems: [
     itemDashboard(),
+    itemCrm(),
     itemAgendamentos(),
     itemServicos('Catálogo'),
     { id: 'receitas', label: 'Receitas', icone: '📖', rota: '/confeitaria/receitas', papeis: [...EQUIPE_INTERNA] },
@@ -80,6 +86,7 @@ const SALAO_FESTAS: TipoNegocioConfig = {
   modulos: ['pacotes', 'eventos', 'equipe', 'equipamentos', 'financeiro', 'orcamentos'],
   menuItems: [
     itemDashboard(),
+    itemCrm(),
     itemAgendamentos(),
     itemServicos('Pacotes'),
     { id: 'eventos', label: 'Eventos', icone: '🎪', rota: '/salao-festas/eventos' },
@@ -111,6 +118,7 @@ const FOTOGRAFIA_VIDEO: TipoNegocioConfig = {
   modulos: ['pacotes', 'sessoes', 'edicao', 'portfolio', 'galeria'],
   menuItems: [
     itemDashboard(),
+    itemCrm(),
     itemAgendamentos(),
     itemServicos('Pacotes'),
     { id: 'sessoes', label: 'Sessões', icone: '🖼️', rota: '/fotografia/sessoes' },
@@ -162,7 +170,7 @@ const OUTRO: TipoNegocioConfig = {
   nome: 'Outro tipo de negócio',
   icone: '🧩',
   modulos: ['catalogo'],
-  menuItems: [itemDashboard(), itemAgendamentos(), itemServicos('Serviços'), itemClientes()],
+  menuItems: [itemDashboard(), itemCrm(), itemAgendamentos(), itemServicos('Serviços'), itemClientes()],
   relatorios: [],
   metadadosServico: {} satisfies Record<string, CampoMetadado>,
   metadadosOrdem: {} satisfies Record<string, CampoMetadado>,
