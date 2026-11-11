@@ -20,70 +20,22 @@ import type { SegmentoOnboarding } from '../models/SegmentoOnboarding.js'
 /** Nome do único segmento atendido — exibido como título do seletor. */
 export const SEGMENTO_ATENDIDO = 'Festas & Eventos'
 
+const ESPACO = 'Espaço e estrutura'
+const ANIMACAO = 'Decoração e animação'
+const COMIDA = 'Comida e doces'
+const FOTO = 'Foto e vídeo'
+
+/** Ordem = ordem de exibição (os grupos aparecem na ordem do primeiro card de cada um). */
 export const SEGMENTOS_ONBOARDING: SegmentoOnboarding[] = [
-  {
-    id: 'salao-de-festas',
-    nome: 'Salão de Festas',
-    subtitulo: 'Espaços para festas, chácaras e buffets com salão próprio',
-    tipoNegocio: 'salao_festas',
-  },
-  {
-    id: 'decoracao',
-    nome: 'Decoração',
-    subtitulo: 'Decoração de festas, mesas temáticas, balões e cenografia',
-    tipoNegocio: 'salao_festas',
-  },
-  {
-    id: 'fotografia-filmagem',
-    nome: 'Fotografia e Filmagem',
-    subtitulo: 'Cobertura de festas e eventos, ensaios, vídeos e drone',
-    tipoNegocio: 'fotografia_video',
-  },
-  {
-    id: 'personagens-vivos',
-    nome: 'Personagens Vivos',
-    subtitulo: 'Personagens, cosplays e animadores para festas',
-    tipoNegocio: 'salao_festas',
-  },
-  {
-    id: 'recreacao',
-    nome: 'Recreação',
-    subtitulo: 'Recreadores, monitores e animação infantil',
-    tipoNegocio: 'salao_festas',
-  },
-  {
-    id: 'aluguel-brinquedos',
-    nome: 'Aluguel de Brinquedos',
-    subtitulo: 'Pula-pula, infláveis, piscina de bolinhas e jogos',
-    tipoNegocio: 'salao_festas',
-  },
-  {
-    id: 'aluguel-barracas-foodtruck',
-    nome: 'Aluguel de Barracas e Food Truck',
-    subtitulo: 'Barracas, tendas, carrinhos de comida e food trucks',
-    tipoNegocio: 'salao_festas',
-  },
-  {
-    id: 'doces-personalizados',
-    nome: 'Doces Personalizados',
-    subtitulo: 'Doces finos, temáticos e lembrancinhas comestíveis',
-    tipoNegocio: 'confeitaria',
-  },
-  {
-    id: 'salgados',
-    nome: 'Salgados',
-    subtitulo: 'Salgados para festas, coxinhas, mini lanches e encomendas',
-    tipoNegocio: 'confeitaria',
-  },
-  {
-    id: 'bolos-e-doces',
-    nome: 'Bolos e Doces',
-    subtitulo: 'Bolos decorados, bolos de festa e docinhos',
-    tipoNegocio: 'confeitaria',
-  },
-  {
-    id: 'outro',
-    nome: 'Outro serviço para festas e eventos',
-    tipoNegocio: 'outro',
-  },
+  { id: 'salao-de-festas', grupo: ESPACO, nome: 'Salão de Festas', subtitulo: 'Espaços para festas, chácaras e buffets com salão próprio', tipoNegocio: 'salao_festas' },
+  { id: 'aluguel-brinquedos', grupo: ESPACO, nome: 'Aluguel de Brinquedos', subtitulo: 'Pula-pula, infláveis, piscina de bolinhas e jogos', tipoNegocio: 'salao_festas' },
+  { id: 'aluguel-barracas-foodtruck', grupo: ESPACO, nome: 'Barracas e Food Truck', subtitulo: 'Aluguel de barracas, tendas, carrinhos de comida e food trucks', tipoNegocio: 'salao_festas' },
+  { id: 'decoracao', grupo: ANIMACAO, nome: 'Decoração', subtitulo: 'Mesas temáticas, balões e cenografia', tipoNegocio: 'salao_festas' },
+  { id: 'personagens-vivos', grupo: ANIMACAO, nome: 'Personagens Vivos', subtitulo: 'Personagens, cosplays e animadores', tipoNegocio: 'salao_festas' },
+  { id: 'recreacao', grupo: ANIMACAO, nome: 'Recreação', subtitulo: 'Recreadores, monitores e animação infantil', tipoNegocio: 'salao_festas' },
+  { id: 'doces-personalizados', grupo: COMIDA, nome: 'Doces Personalizados', subtitulo: 'Doces finos, temáticos e lembrancinhas comestíveis', tipoNegocio: 'confeitaria' },
+  { id: 'bolos-e-doces', grupo: COMIDA, nome: 'Bolos e Doces', subtitulo: 'Bolos decorados, bolos de festa e docinhos', tipoNegocio: 'confeitaria' },
+  { id: 'salgados', grupo: COMIDA, nome: 'Salgados', subtitulo: 'Salgados para festas, mini lanches e encomendas', tipoNegocio: 'confeitaria' },
+  { id: 'fotografia-filmagem', grupo: FOTO, nome: 'Fotografia e Filmagem', subtitulo: 'Cobertura de festas, ensaios, vídeos e drone', tipoNegocio: 'fotografia_video' },
+  { id: 'outro', nome: 'Outro serviço para festas e eventos', subtitulo: 'Buffet, DJ, cerimonial, convites…', tipoNegocio: 'outro' },
 ]

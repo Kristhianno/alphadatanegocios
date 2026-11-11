@@ -7,6 +7,7 @@ import {
   IconMail,
   IconLock,
   IconBuildingStore,
+  IconCheck,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -15,6 +16,7 @@ import { api } from '../services/api'
 import { supabase } from '../services/supabase'
 import PasswordInput from '../components/ui/PasswordInput'
 import AlphaDataLogo from '../components/AlphaDataLogo'
+import SeletorNicho from '../components/SeletorNicho'
 import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
 import fundoLogin from '../assets/login-fundo.jpeg'
 import foto1 from '../assets/login-foto-1.jpeg'
@@ -33,6 +35,35 @@ function IconGoogle(props) {
       <path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 35.4 26.9 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.6 39.6 16.2 44 24 44z" />
       <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.6 5.6C39.9 37.9 44 32 44 24c0-1.3-.1-2.7-.4-3.5z" />
     </svg>
+  )
+}
+
+const PASSOS_ONBOARDING = ['Sua conta', 'Seu negócio', 'Sua marca']
+
+/** Indicador de progresso do onboarding (cadastro → nicho → logo). */
+function PassosOnboarding({ atual }) {
+  return (
+    <ol className="flex items-center gap-2 mb-6" aria-label="Etapas do cadastro">
+      {PASSOS_ONBOARDING.map((rotulo, i) => {
+        const feito = i < atual
+        const ativo = i === atual
+        return (
+          <li key={rotulo} className="flex items-center gap-2 min-w-0 flex-1 last:flex-none" aria-current={ativo ? 'step' : undefined}>
+            <span
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+                feito ? 'bg-primary text-white' : ativo ? 'bg-primary-light text-primary ring-2 ring-primary' : 'bg-muted text-[#999]'
+              }`}
+            >
+              {feito ? <IconCheck size={14} stroke={3} /> : i + 1}
+            </span>
+            <span className={`text-label whitespace-nowrap ${ativo ? 'font-semibold text-[#1a1a1a]' : 'text-[#999]'} ${ativo ? '' : 'hidden sm:inline'}`}>
+              {rotulo}
+            </span>
+            {i < PASSOS_ONBOARDING.length - 1 && <span className={`h-px flex-1 min-w-4 ${feito ? 'bg-primary' : 'bg-muted-dark'}`} />}
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 
@@ -63,6 +94,8 @@ export default function Login({ apenasCadastro = false }) {
 
   // 'entrar' | 'criar-conta' | 'escolher-negocio' | 'escolher-logo'
   const [modo, setModo] = useState(sessaoPendenteInicial ? 'escolher-negocio' : apenasCadastro ? 'criar-conta' : 'entrar')
+  // Escolha do nicho: card largo e sem a coluna de fotos (que não são de festas), pra caberem 2-3 colunas de opções.
+  const telaLarga = modo === 'escolher-negocio'
 
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -73,8 +106,6 @@ export default function Login({ apenasCadastro = false }) {
   const [sessaoPendente, setSessaoPendente] = useState(sessaoPendenteInicial)
   const [tiposNegocio, setTiposNegocio] = useState([])
   const [tipoEscolhido, setTipoEscolhido] = useState(null)
-  const [mostrarCampoOutro, setMostrarCampoOutro] = useState(false)
-  const [descricaoOutro, setDescricaoOutro] = useState('')
 
   const [logoPreview, setLogoPreview] = useState(null)
   const [salvandoLogo, setSalvandoLogo] = useState(false)
@@ -163,19 +194,12 @@ export default function Login({ apenasCadastro = false }) {
     setModo('escolher-logo')
   }
 
-  function handleClickTipo(t) {
-    if (t.tipoNegocio === 'outro') {
-      setErro('')
-      setMostrarCampoOutro(true)
+  function confirmarNicho(opcao, descricaoOutro) {
+    if (opcao.tipoNegocio === 'outro') {
+      handleEscolherNegocio('outro', 'outro', descricaoOutro, descricaoOutro)
       return
     }
-    handleEscolherNegocio(t.id, t.tipoNegocio, undefined, t.nome)
-  }
-
-  function confirmarOutro(e) {
-    e.preventDefault()
-    if (!descricaoOutro.trim()) return
-    handleEscolherNegocio('outro', 'outro', descricaoOutro.trim(), descricaoOutro.trim())
+    handleEscolherNegocio(opcao.id, opcao.tipoNegocio, undefined, opcao.nome)
   }
 
   function selecionarLogo(e) {
@@ -236,75 +260,34 @@ export default function Login({ apenasCadastro = false }) {
         <IconArrowLeft size={20} />
       </Link>
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-10 2xl:px-16 py-10 md:pr-[38%] lg:pr-[34%]">
+      <div
+        className={`relative z-10 min-h-screen flex items-center justify-center px-3 sm:px-10 2xl:px-16 py-16 sm:py-10 ${
+          telaLarga ? '' : 'md:pr-[38%] lg:pr-[34%]'
+        }`}
+      >
         {/* Cartão de login/cadastro */}
-        <div className="w-full max-w-2xl bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-6 sm:p-10">
-        <div className="flex justify-center mb-6">
-          <AlphaDataLogo />
+        <div
+          className={`w-full bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-5 sm:p-10 ${
+            telaLarga ? 'max-w-5xl pb-0 sm:pb-0' : 'max-w-2xl'
+          }`}
+        >
+        <div className={`flex justify-center ${telaLarga ? 'mb-4' : 'mb-6'}`}>
+          <AlphaDataLogo className={telaLarga ? 'scale-90' : ''} />
         </div>
 
+        {sessaoPendente && (modo === 'escolher-negocio' || modo === 'escolher-logo') && (
+          <PassosOnboarding atual={modo === 'escolher-negocio' ? 1 : 2} />
+        )}
+
           {modo === 'escolher-negocio' ? (
-            <>
-              <p className="inline-flex items-center gap-1.5 text-label font-semibold uppercase tracking-wide text-primary bg-primary-light rounded-btn px-2.5 py-1 mb-3">
-                🎉 Festas & Eventos
-              </p>
-              <p className="text-h2 text-[#1a1a1a] mb-1">Qual é o seu tipo de negócio?</p>
-              <p className="text-body text-[#666] mb-5">Escolha o que mais combina com o seu trabalho em festas e eventos. Isso define o menu e os módulos que você vai usar, e só pode ser escolhido uma vez.</p>
-
-              {!mostrarCampoOutro ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {tiposNegocio.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      disabled={!!tipoEscolhido}
-                      onClick={() => handleClickTipo(t)}
-                      className={`flex flex-col items-start gap-0.5 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60 ${t.tipoNegocio === 'outro' ? 'sm:col-span-2' : ''}`}
-                    >
-                      <span className="text-body font-medium text-[#1a1a1a]">
-                        {tipoEscolhido === t.id ? 'Configurando...' : t.nome}
-                      </span>
-                      {tipoEscolhido !== t.id && t.subtitulo && (
-                        <span className="text-label text-[#999]">{t.subtitulo}</span>
-                      )}
-                    </button>
-                  ))}
-                  {tiposNegocio.length === 0 && !erro && <p className="sm:col-span-2 text-body text-[#999] text-center py-4">Carregando opções...</p>}
-                </div>
-              ) : (
-                <form onSubmit={confirmarOutro} className="flex flex-col gap-3">
-                  <div>
-                    <label className="text-label text-[#666] block mb-1">Que serviço você oferece para festas e eventos?</label>
-                    <input
-                      autoFocus
-                      required
-                      value={descricaoOutro}
-                      onChange={(e) => setDescricaoOutro(e.target.value)}
-                      placeholder="Ex: Buffet, DJ, Cerimonial, Convites..."
-                      className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => { setMostrarCampoOutro(false); setDescricaoOutro(''); setErro('') }}
-                      className="flex-1 rounded-btn border border-muted-dark py-2.5 text-body text-[#666] hover:bg-muted"
-                    >
-                      Voltar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={!!tipoEscolhido}
-                      className="flex-1 rounded-btn bg-primary hover:bg-primary-dark text-white py-2.5 text-body font-semibold disabled:opacity-60"
-                    >
-                      {tipoEscolhido ? 'Configurando...' : 'Confirmar'}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {erro && <p className="text-danger text-label mt-3">{erro}</p>}
-            </>
+            <SeletorNicho
+              opcoes={tiposNegocio}
+              carregando={tiposNegocio.length === 0 && !erro}
+              enviandoId={tipoEscolhido}
+              erro={erro}
+              onConfirmar={confirmarNicho}
+              onVoltar={sessaoPendente ? () => { setModo('entrar'); setSessaoPendente(null) } : undefined}
+            />
           ) : modo === 'escolher-logo' ? (
             <>
               <p className="text-h2 text-[#1a1a1a] mb-1">Personalize sua marca</p>
@@ -541,23 +524,14 @@ export default function Login({ apenasCadastro = false }) {
             </>
           )}
 
-          {modo === 'escolher-negocio' && sessaoPendente && !mostrarCampoOutro && (
-            <button
-              onClick={() => { setModo('entrar'); setSessaoPendente(null) }}
-              className="flex items-center gap-1.5 text-label text-primary hover:underline mt-4"
-            >
-              <IconArrowLeft size={14} /> Voltar
-            </button>
-          )}
-
-          <p className="text-center text-[#999] text-label mt-6">© 2026 ALPHADATA - Negócios</p>
+          {!telaLarga && <p className="text-center text-[#999] text-label mt-6">© 2026 ALPHADATA - Negócios</p>}
         </div>
       </div>
 
       {/* Coluna de fotos à direita — imagens próprias (não é a mesma foto de
           fundo recortada por bg-cover), pra cada uma aparecer completa,
           nunca cortada pela metade. Some abaixo de "md" por falta de espaço. */}
-      <div className="hidden md:flex absolute inset-y-0 right-0 w-[38%] lg:w-[34%] flex-col">
+      <div className={`${telaLarga ? 'hidden' : 'hidden md:flex'} absolute inset-y-0 right-0 w-[38%] lg:w-[34%] flex-col`}>
         <img src={foto1} alt="" className="flex-1 min-h-0 w-full object-cover" />
         <img src={foto2} alt="" className="flex-1 min-h-0 w-full object-cover" />
         <img src={foto3} alt="" className="flex-1 min-h-0 w-full object-cover" />

@@ -54,7 +54,7 @@ describe('listarSegmentosOnboarding', () => {
       'Personagens Vivos',
       'Recreação',
       'Aluguel de Brinquedos',
-      'Aluguel de Barracas e Food Truck',
+      'Barracas e Food Truck',
       'Doces Personalizados',
       'Salgados',
       'Bolos e Doces',
@@ -63,5 +63,17 @@ describe('listarSegmentosOnboarding', () => {
     }
     expect(lista.some((s) => s.tipoNegocio === 'manutencao')).toBe(false)
     expect(new Set(lista.map((s) => s.id)).size).toBe(lista.length)
+  })
+
+  it('cada card traz a prévia do menu do seu template (sem Dashboard) e um grupo, exceto "outro"', () => {
+    const lista = listarSegmentosOnboarding()
+    const salao = lista.find((s) => s.id === 'salao-de-festas')!
+    expect(salao.modulos).toEqual(getConfigTipoNegocio('salao_festas').menuItems.filter((i) => i.id !== 'dashboard').map((i) => i.label))
+    expect(salao.modulos).not.toContain('Dashboard')
+    for (const s of lista) {
+      expect(s.modulos.length).toBeGreaterThan(0)
+      if (s.tipoNegocio === 'outro') expect(s.grupo).toBeUndefined()
+      else expect(s.grupo).toBeTruthy()
+    }
   })
 })

@@ -225,7 +225,7 @@ function PricingCard({ config, ciclo, destaque, onEscolher }) {
 /** "Monte seu plano" — sem checkout: leva pro formulário de contato. */
 function CardPlanoEspecial() {
   return (
-    <div className="flex flex-col rounded-card p-6 sm:p-8 bg-surface shadow-card border-2 border-dashed border-primary/40">
+    <div className="flex flex-col rounded-card p-6 sm:p-8 bg-surface shadow-card border-2 border-dashed border-[color-mix(in_srgb,var(--color-primary)_40%,transparent)]">
       <p className="text-label font-bold uppercase tracking-widest mb-1 text-primary">Plano Especial · monte seu plano</p>
       <p className="text-body mb-5 text-[#666]">Precisa de algo diferente? A gente monta com você.</p>
 

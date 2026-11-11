@@ -6,7 +6,7 @@
  */
 import type { TipoNegocio } from '../models/User.js'
 import type { TipoNegocioConfig } from '../models/TipoNegocioConfig.js'
-import type { SegmentoOnboarding } from '../models/SegmentoOnboarding.js'
+import type { SegmentoOnboardingComModulos } from '../models/SegmentoOnboarding.js'
 import { TIPOS_NEGOCIO_CONFIG } from '../config/tipos-negocio.config.js'
 import { SEGMENTOS_ONBOARDING } from '../config/segmentos-onboarding.config.js'
 
@@ -14,7 +14,18 @@ export function getConfigTipoNegocio(tipoNegocio: TipoNegocio): TipoNegocioConfi
   return TIPOS_NEGOCIO_CONFIG[tipoNegocio]
 }
 
-/** Cards do seletor de segmento no cadastro/login — antes de a conta ter escolhido um vertical. */
-export function listarSegmentosOnboarding(): SegmentoOnboarding[] {
-  return SEGMENTOS_ONBOARDING
+/**
+ * Cards do seletor de nicho no cadastro/login — antes de a conta ter
+ * escolhido um vertical. `modulos` sai do próprio menu do template, pra
+ * prévia do seletor nunca divergir do menu que a conta vai ganhar.
+ */
+export function listarSegmentosOnboarding(): SegmentoOnboardingComModulos[] {
+  return SEGMENTOS_ONBOARDING.map((segmento) => ({
+    ...segmento,
+    modulos: [
+      ...new Set(
+        TIPOS_NEGOCIO_CONFIG[segmento.tipoNegocio].menuItems.filter((item) => item.id !== 'dashboard').map((item) => item.label),
+      ),
+    ],
+  }))
 }

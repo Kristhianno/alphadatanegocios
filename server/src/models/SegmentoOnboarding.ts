@@ -18,4 +18,12 @@ export interface SegmentoOnboarding {
   subtitulo?: string
   /** Template técnico que esse card mapeia — é o que vai em POST /auth/selecionar-tipo-negocio. */
   tipoNegocio: TipoNegocio
+  /** Grupo visual no seletor (ex: "Comida e doces"). Ausente em 'outro', que fica sozinho no fim. */
+  grupo?: string
+}
+
+/** O que GET /config/tipos-negocio-disponiveis devolve: o card + prévia do menu que o template monta. */
+export interface SegmentoOnboardingComModulos extends SegmentoOnboarding {
+  /** Rótulos do menu do template (sem o Dashboard), ex: ["Pacotes", "Eventos", ...]. */
+  modulos: string[]
 }
