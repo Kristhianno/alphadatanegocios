@@ -23,6 +23,7 @@ import contratosRoutes from './routes/contratos.routes.js'
 import financeiroRoutes from './routes/financeiro.routes.js'
 import billingRoutes from './routes/billing.routes.js'
 import leadsRoutes from './routes/leads.routes.js'
+import plataformaRoutes from './routes/plataforma.routes.js'
 import { tratarErro } from './middleware/erro.middleware.js'
 import type { AppEnv } from './types/hono.js'
 
@@ -67,6 +68,7 @@ app.route('/contratos', contratosRoutes)
 app.route('/financeiro', financeiroRoutes)
 app.route('/billing', billingRoutes)
 app.route('/leads', leadsRoutes)
+app.route('/plataforma', plataformaRoutes)
 
 app.notFound((c) => c.json({ erro: { codigo: 'ROTA_NAO_ENCONTRADA', mensagem: `Rota "${c.req.method} ${c.req.path}" não existe.` } }, 404))
 

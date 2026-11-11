@@ -9,8 +9,9 @@
 export const CHAVE_DEMO_VERTICAL_FIXADO = 'alphadata_demo_vertical_fixado'
 
 export const CONTAS_DEMO_VERTICAIS = [
-  { slug: 'manutencao', label: 'Manutenção', email: 'admin@alphadata.com', senha: 'admin123' },
-  { slug: 'confeitaria', label: 'Confeitaria', email: 'confeitaria@alphadata.com', senha: 'admin123' },
+  // Pivô Festas & Eventos (2026-11): a demo de manutenção (admin@alphadata.com)
+  // saiu da lista — /demo/manutencao agora cai em "link inválido".
   { slug: 'salao-festas', label: 'Salão de Festas / Eventos', email: 'salaodefestas@alphadata.com', senha: 'admin123' },
-  { slug: 'fotografia', label: 'Fotografia', email: 'fotografia@alphadata.com', senha: 'admin123' },
+  { slug: 'confeitaria', label: 'Bolos, Doces e Salgados', email: 'confeitaria@alphadata.com', senha: 'admin123' },
+  { slug: 'fotografia', label: 'Fotografia e Filmagem', email: 'fotografia@alphadata.com', senha: 'admin123' },
 ]

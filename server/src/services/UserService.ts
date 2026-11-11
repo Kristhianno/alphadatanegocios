@@ -200,11 +200,20 @@ export class UserService {
     let usuario = await this.usuarios.buscarPorAuthUserId(identidade.id)
     if (!usuario) {
       const credenciais = await this.usuarios.buscarComCredenciaisPorEmail(identidade.email)
+      // Superadmin nunca entra por identidade externa (Google / link de
+      // redefinição): o email dele pode ser uma caixa de terceiros, e
+      // vincular por email daria acesso à plataforma inteira pra quem
+      // controla essa caixa. Só email + senha local (POST /auth/login).
+      if (credenciais?.papel === 'superadmin') {
+        throw new ErroProibido('Este usuário só pode entrar com email e senha.')
+      }
       if (credenciais) {
         const { senhaHash: _senhaHashDescartada, ...usuarioExistente } = credenciais
         usuario = await this.usuarios.atualizar(usuarioExistente.id, { authUserId: identidade.id })
       }
     }
+
+    if (usuario?.papel === 'superadmin') throw new ErroProibido('Este usuário só pode entrar com email e senha.')
 
     let conta: Conta
     if (usuario) {

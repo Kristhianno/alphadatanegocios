@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout'
 import CheckoutSucesso from './pages/CheckoutSucesso'
 import EmConstrucao from './pages/EmConstrucao'
 import Privacidade from './pages/Privacidade'
+import PainelSuperadmin from './pages/Superadmin/Painel'
 
 import AdminDashboard from './pages/Admin/Dashboard'
 import AdminDashboardVertical from './pages/Admin/DashboardVertical'
@@ -61,6 +62,7 @@ function AdminDashboardRoteado() {
 function RaizApp() {
   const { isAuthenticated, user } = useAuth()
   if (isAuthenticated) {
+    if (user.papel === 'superadmin') return <Navigate to="/superadmin/dashboard" replace />
     if (!user.tipoNegocio) return <Navigate to="/login" replace state={{ sessaoPendente: user }} />
     if (user.assinaturaPendente) return <Navigate to="/checkout" replace />
     return <Navigate to={user.deveTrocarSenha ? '/trocar-senha' : `/${user.userType}/dashboard`} replace />
@@ -91,6 +93,7 @@ export default function App() {
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
       <Route path="/privacidade" element={<Privacidade />} />
+      <Route path="/superadmin/dashboard" element={<PainelSuperadmin />} />
 
       <Route path="/admin" element={<Layout userType="admin" />}>
         <Route path="dashboard" element={<AdminDashboardRoteado />} />

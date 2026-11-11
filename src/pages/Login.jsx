@@ -247,18 +247,21 @@ export default function Login({ apenasCadastro = false }) {
 
           {modo === 'escolher-negocio' ? (
             <>
+              <p className="inline-flex items-center gap-1.5 text-label font-semibold uppercase tracking-wide text-primary bg-primary-light rounded-btn px-2.5 py-1 mb-3">
+                🎉 Festas & Eventos
+              </p>
               <p className="text-h2 text-[#1a1a1a] mb-1">Qual é o seu tipo de negócio?</p>
-              <p className="text-body text-[#666] mb-5">Isso define o menu e os módulos que você vai usar. Só pode ser escolhido uma vez.</p>
+              <p className="text-body text-[#666] mb-5">Escolha o que mais combina com o seu trabalho em festas e eventos. Isso define o menu e os módulos que você vai usar, e só pode ser escolhido uma vez.</p>
 
               {!mostrarCampoOutro ? (
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {tiposNegocio.map((t) => (
                     <button
                       key={t.id}
                       type="button"
                       disabled={!!tipoEscolhido}
                       onClick={() => handleClickTipo(t)}
-                      className="flex flex-col items-start gap-0.5 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60"
+                      className={`flex flex-col items-start gap-0.5 rounded-card border border-muted-dark px-4 py-3 text-left hover:border-primary hover:bg-primary-light transition-colors disabled:opacity-60 ${t.tipoNegocio === 'outro' ? 'sm:col-span-2' : ''}`}
                     >
                       <span className="text-body font-medium text-[#1a1a1a]">
                         {tipoEscolhido === t.id ? 'Configurando...' : t.nome}
@@ -268,18 +271,18 @@ export default function Login({ apenasCadastro = false }) {
                       )}
                     </button>
                   ))}
-                  {tiposNegocio.length === 0 && !erro && <p className="text-body text-[#999] text-center py-4">Carregando opções...</p>}
+                  {tiposNegocio.length === 0 && !erro && <p className="sm:col-span-2 text-body text-[#999] text-center py-4">Carregando opções...</p>}
                 </div>
               ) : (
                 <form onSubmit={confirmarOutro} className="flex flex-col gap-3">
                   <div>
-                    <label className="text-label text-[#666] block mb-1">Qual é o tipo do seu negócio?</label>
+                    <label className="text-label text-[#666] block mb-1">Que serviço você oferece para festas e eventos?</label>
                     <input
                       autoFocus
                       required
                       value={descricaoOutro}
                       onChange={(e) => setDescricaoOutro(e.target.value)}
-                      placeholder="Ex: Pet Shop, Barbearia..."
+                      placeholder="Ex: Buffet, DJ, Cerimonial, Convites..."
                       className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>

@@ -43,4 +43,25 @@ describe('listarSegmentosOnboarding', () => {
     const lista = listarSegmentosOnboarding()
     expect(lista.some((s) => s.tipoNegocio === 'outro')).toBe(true)
   })
+
+  it('pivô Festas & Eventos: oferece todos os nichos do segmento e nenhum de manutenção', () => {
+    const lista = listarSegmentosOnboarding()
+    const nomes = lista.map((s) => s.nome)
+    for (const nicho of [
+      'Salão de Festas',
+      'Decoração',
+      'Fotografia e Filmagem',
+      'Personagens Vivos',
+      'Recreação',
+      'Aluguel de Brinquedos',
+      'Aluguel de Barracas e Food Truck',
+      'Doces Personalizados',
+      'Salgados',
+      'Bolos e Doces',
+    ]) {
+      expect(nomes).toContain(nicho)
+    }
+    expect(lista.some((s) => s.tipoNegocio === 'manutencao')).toBe(false)
+    expect(new Set(lista.map((s) => s.id)).size).toBe(lista.length)
+  })
 })

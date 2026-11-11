@@ -25,6 +25,11 @@ function papelParaUserType(papel) {
   return papel === 'gestor' ? 'admin' : papel
 }
 
+/** Superadmin (dono da plataforma) usa uma conta interna sem vertical — nunca passa pelo seletor de tipo de negócio. */
+function precisaEscolherNegocio(usuario, conta) {
+  return usuario.papel !== 'superadmin' && !conta.tipoNegocio
+}
+
 function montarSessao(usuario, conta) {
   const ponte = PONTES_DEMO_MOCK[usuario.email] ?? {}
   return {
@@ -82,7 +87,7 @@ export function AuthProvider({ children }) {
       setToken(token)
       const sessao = montarSessao(usuario, conta)
       setUser(sessao)
-      return { ok: true, sessao, precisaEscolherNegocio: !conta.tipoNegocio, deveTrocarSenha: usuario.deveTrocarSenha }
+      return { ok: true, sessao, precisaEscolherNegocio: precisaEscolherNegocio(usuario, conta), deveTrocarSenha: usuario.deveTrocarSenha }
     } catch (erro) {
       return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao entrar. Tente novamente.' }
     }
@@ -95,7 +100,7 @@ export function AuthProvider({ children }) {
       setToken(token)
       const sessao = montarSessao(usuario, conta)
       setUser(sessao)
-      return { ok: true, sessao, precisaEscolherNegocio: !conta.tipoNegocio, deveTrocarSenha: usuario.deveTrocarSenha }
+      return { ok: true, sessao, precisaEscolherNegocio: precisaEscolherNegocio(usuario, conta), deveTrocarSenha: usuario.deveTrocarSenha }
     } catch (erro) {
       return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao entrar com Google. Tente novamente.' }
     }

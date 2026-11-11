@@ -42,8 +42,8 @@ const PLANOS_CONFIG: Record<Plano, ConfigPlano> = {
     limiteAgendamentosMes: 200,
     limiteContratosMes: 200,
     recursos: [
-      'Ordens de serviço com checklist, fotos e assinatura do cliente',
-      'Agenda em tempo real e catálogo de serviços',
+      'Calendário de eventos em tempo real, sem choque de data',
+      'Catálogo de pacotes e cadastro de clientes',
       'Suporte por email',
     ],
   },

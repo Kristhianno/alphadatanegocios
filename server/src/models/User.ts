@@ -18,8 +18,13 @@ export type TipoNegocio =
   | 'manutencao'
   | 'outro'
 
-/** Papel de login dentro de uma conta. */
-export type Papel = 'admin' | 'gestor' | 'tecnico' | 'cliente'
+/**
+ * Papel de login. `superadmin` é o dono da plataforma ALPHADATA (não de
+ * um tenant): tem uma conta interna própria (configuracoesGerais.interna)
+ * só pra manter `usuarios.conta_id` NOT NULL, e enxerga todas as contas
+ * via /plataforma — ver PlataformaService.
+ */
+export type Papel = 'admin' | 'gestor' | 'tecnico' | 'cliente' | 'superadmin'
 
 export type Plano = 'startup' | 'profissional' | 'enterprise'
 
@@ -111,8 +116,10 @@ export interface NovoUsuarioInput {
  * {@link ../config/tipos-negocio.config.ts | TIPOS_NEGOCIO_CONFIG}, não
  * aqui, para não duplicar a mesma decisão em dois lugares.
  */
-export function rotuloPapel(papel: Papel): 'Administrador' | 'Operacional' | 'Cliente' {
+export function rotuloPapel(papel: Papel): 'Superadmin' | 'Administrador' | 'Operacional' | 'Cliente' {
   switch (papel) {
+    case 'superadmin':
+      return 'Superadmin'
     case 'admin':
       return 'Administrador'
     case 'gestor':

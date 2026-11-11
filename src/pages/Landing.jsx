@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  IconArrowRight, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandWhatsapp,
-  IconCake, IconCalculator, IconCalendarEvent, IconCamera, IconCategory, IconCheck, IconChevronDown,
-  IconConfetti, IconCrown, IconFileSpreadsheet, IconFileTypePdf, IconHeadset, IconMicrophone, IconNotes,
-  IconRefresh, IconRocket, IconTools, IconUsers, IconWallet, IconX,
+  IconArrowRight, IconBalloon, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandWhatsapp,
+  IconBuildingCommunity, IconCake, IconCalculator, IconCalendarEvent, IconCalendarX, IconCamera, IconCandy,
+  IconCategory, IconCheck, IconChevronDown, IconConfetti, IconCrown, IconFileSpreadsheet, IconFileTypePdf,
+  IconHeadset, IconHorseToy, IconMasksTheater, IconMoodKid, IconNotes, IconRefresh, IconRocket,
+  IconToolsKitchen2, IconTruck, IconUsers, IconWallet, IconX,
 } from '@tabler/icons-react'
 import { useToast } from '../hooks/useToast'
 import { api } from '../services/api'
@@ -23,35 +24,67 @@ const VERDE_HOVER = '#0EA372'
 const VERMELHO = '#EF4444'
 
 const DORES = [
-  { icon: IconBrandWhatsapp, texto: 'WhatsApp pra confirmar agendamento (e fica perdido em 50 conversas)' },
-  { icon: IconFileSpreadsheet, texto: 'Planilha pra saber quanto ganhou (e fica confuso se fechou ou não)' },
-  { icon: IconNotes, texto: 'Papel pra lembrar que o cliente pediu aquilo mês passado' },
-  { icon: IconMicrophone, texto: 'Mensagem de voz pra avisar o time o que fazer' },
+  { icon: IconBrandWhatsapp, texto: 'Pedido de orçamento perdido no meio de 50 conversas de WhatsApp' },
+  { icon: IconCalendarX, texto: 'Medo de fechar duas festas na mesma data (ou esquecer uma)' },
+  { icon: IconNotes, texto: 'Contrato em papel, sinal anotado no caderno e cliente jurando que já pagou' },
+  { icon: IconFileSpreadsheet, texto: 'Planilha pra saber se a festa deu lucro, que nunca está atualizada' },
 ]
 
 const ANTES_DEPOIS = [
-  { antes: 'Agendamento (WhatsApp + ligação)', depois: 'Cliente agenda online + aviso automático' },
-  { antes: 'Histórico do cliente (anotação + memória)', depois: 'Histórico completo, sempre à mão' },
-  { antes: 'Faturamento (planilha)', depois: 'Dashboard automático no final do dia' },
-  { antes: 'Equipe (grupos de WhatsApp)', depois: 'Tarefas automáticas, todos sabem o que fazer' },
+  { antes: 'Orçamento (vai e volta no WhatsApp)', depois: 'Orçamento enviado e aprovado pelo cliente online' },
+  { antes: 'Agenda de festas (caderno + memória)', depois: 'Calendário de eventos sem choque de data' },
+  { antes: 'Contrato e sinal (papel + print de PIX)', depois: 'Contrato digital e controle do que já foi pago' },
+  { antes: 'Lucro da festa (planilha)', depois: 'Financeiro de cada evento, sem fazer conta' },
 ]
 
 const PASSOS = [
-  { numero: '01', titulo: 'Seus clientes agora marcam sozinhos', texto: 'Eles veem horários livres, escolhem um, e você recebe aviso automático + número do cliente.' },
-  { numero: '02', titulo: 'Quando voltam, você sabe tudo', texto: 'Histórico de todos os serviços dele, quanto pagou, do que reclamou. Atendimento perfeito.' },
-  { numero: '03', titulo: 'No final do mês, sabe exatamente quanto lucrou', texto: 'Relatório automático mostra receita por serviço, por dia, por funcionário. Sem planilha.' },
+  { numero: '01', titulo: 'O cliente pede, você responde na hora', texto: 'Monte o orçamento a partir dos seus pacotes e envie. O cliente aprova online, sem vai e volta.' },
+  { numero: '02', titulo: 'Fechou? A data fica travada', texto: 'Contrato digital, sinal registrado e o evento já entra no calendário da equipe.' },
+  { numero: '03', titulo: 'Depois da festa, você sabe quanto lucrou', texto: 'Receitas e custos de cada evento num só lugar. No fim do mês, o resultado aparece sozinho.' },
 ]
 
-/** Um item de "por segmento" ganha o ícone do segmento em vez do check padrão. */
+/** Nichos atendidos — os mesmos cards do onboarding (server/src/config/segmentos-onboarding.config.ts). */
+const NICHOS = [
+  { icon: IconBuildingCommunity, label: 'Salão de Festas' },
+  { icon: IconBalloon, label: 'Decoração' },
+  { icon: IconCamera, label: 'Fotografia e Filmagem' },
+  { icon: IconMasksTheater, label: 'Personagens Vivos' },
+  { icon: IconMoodKid, label: 'Recreação' },
+  { icon: IconHorseToy, label: 'Aluguel de Brinquedos' },
+  { icon: IconTruck, label: 'Barracas e Food Truck' },
+  { icon: IconCandy, label: 'Doces Personalizados' },
+  { icon: IconToolsKitchen2, label: 'Salgados' },
+  { icon: IconCake, label: 'Bolos e Doces' },
+]
+
+/** Um item de "por segmento" ganha o ícone do grupo de nichos em vez do check padrão. */
 const SEGMENTOS_FEATURE = {
-  confeitaria: { icon: IconCake, label: 'Confeitaria e Salgados' },
-  salaoFestas: { icon: IconConfetti, label: 'Salão de Festas / Eventos' },
-  fotografia: { icon: IconCamera, label: 'Fotografia e Vídeo' },
-  manutencao: { icon: IconTools, label: 'Manutenção e Assistência' },
+  eventos: { icon: IconConfetti, label: 'Espaços, decoração, recreação e locações' },
+  doces: { icon: IconCake, label: 'Bolos, doces e salgados' },
+  fotografia: { icon: IconCamera, label: 'Fotografia e filmagem' },
 }
 
-/** Carrossel do hero: os segmentos + um item final convidando os demais tipos de negócio. */
-const SEGMENTOS_CARROSSEL = [...Object.values(SEGMENTOS_FEATURE), { icon: null, label: 'e outros negócios de serviço' }]
+/** O que cada grupo de nichos recebe — seção "um sistema, cada negócio de festa". */
+const GRUPOS_NICHO = [
+  {
+    ...SEGMENTOS_FEATURE.eventos,
+    nichos: 'Salão de Festas, Decoração, Personagens Vivos, Recreação, Aluguel de Brinquedos, Barracas e Food Truck',
+    recursos: ['Pacotes e agenda de eventos', 'Equipe e equipamentos de cada festa', 'Orçamentos, contratos e financeiro por evento'],
+  },
+  {
+    ...SEGMENTOS_FEATURE.doces,
+    nichos: 'Doces Personalizados, Salgados, Bolos e Doces',
+    recursos: ['Catálogo de produtos e encomendas', 'Receitas com custo de produção', 'Estoque de ingredientes'],
+  },
+  {
+    ...SEGMENTOS_FEATURE.fotografia,
+    nichos: 'Fotografia e Filmagem de festas e eventos',
+    recursos: ['Pacotes e agenda de sessões', 'Produções de vídeo e edição', 'Portfólio e galeria do cliente'],
+  },
+]
+
+/** Carrossel do hero: os nichos + um item final convidando os demais serviços de festa. */
+const SEGMENTOS_CARROSSEL = [...NICHOS, { icon: null, label: 'e outros serviços para festas' }]
 
 /**
  * Conteúdo rico da vitrine de planos — mapeado por `Plano` técnico
@@ -62,22 +95,21 @@ const VITRINE_PLANOS = {
     subtitulo: 'Ideal para quem está começando a organizar o negócio',
     grupos: [
       {
-        titulo: 'Atendimento e agenda',
+        titulo: 'Agenda e clientes',
         icon: IconCalendarEvent,
         itens: [
-          { texto: 'Agenda em tempo real, sem choque de horário' },
-          { texto: 'Ordens de serviço com checklist, fotos e assinatura do cliente' },
-          { texto: 'Cadastro de clientes com histórico completo' },
+          { texto: 'Calendário de eventos em tempo real, sem choque de data' },
+          { texto: 'Catálogo de pacotes e serviços' },
+          { texto: 'Cadastro de clientes com histórico de festas' },
         ],
       },
       {
         titulo: 'Recursos do seu segmento',
         icon: IconCategory,
         itens: [
-          { segmento: 'confeitaria', texto: 'Catálogo, receitas e pedidos' },
-          { segmento: 'salaoFestas', texto: 'Pacotes e agenda de eventos' },
+          { segmento: 'eventos', texto: 'Pacotes e agenda de eventos' },
+          { segmento: 'doces', texto: 'Catálogo, receitas e encomendas' },
           { segmento: 'fotografia', texto: 'Sessões e portfólio' },
-          { segmento: 'manutencao', texto: 'Chamados e ordens de serviço' },
         ],
       },
       {
@@ -109,10 +141,9 @@ const VITRINE_PLANOS = {
         titulo: 'Recursos avançados por segmento',
         icon: IconCalculator,
         itens: [
-          { segmento: 'confeitaria', texto: 'Controle de produção e estoque de ingredientes' },
-          { segmento: 'salaoFestas', texto: 'Equipe, equipamentos e financeiro do evento' },
-          { segmento: 'fotografia', texto: 'Edição, galeria e portfólio do cliente' },
-          { segmento: 'manutencao', texto: 'Técnicos, preventivas e contratos de manutenção' },
+          { segmento: 'eventos', texto: 'Equipe, equipamentos e financeiro de cada evento' },
+          { segmento: 'doces', texto: 'Controle de produção e estoque de ingredientes' },
+          { segmento: 'fotografia', texto: 'Produções de vídeo, edição e galeria do cliente' },
         ],
       },
       {
@@ -233,11 +264,15 @@ function PricingCard({ config, ciclo, destaque, onEscolher }) {
 }
 
 const FAQ = [
-  { pergunta: 'Quanto tempo demora pra migrar meus dados?', resposta: 'Sem migração complicada. Você adiciona clientes aos poucos enquanto usa. Começa hoje, migra no seu ritmo.' },
-  { pergunta: 'Meu time vai conseguir usar sem treinamento?', resposta: 'Sim. A interface é tão simples que gerente de salão sem email usa. Enviamos 1 vídeo de 5 min se quiser.' },
-  { pergunta: 'Integra com meu app de nota fiscal?', resposta: 'Integra com principais apps do mercado. E você exporta dados em Excel quando quiser.' },
-  { pergunta: 'E se depois de 3 meses não quiser mais?', resposta: 'Seus dados saem com você em 1 clique. Sem punição, sem aviso prévio. Isso é teu.' },
-  { pergunta: 'Meus dados ficam seguros?', resposta: 'Sim. Criptografia de ponta a ponta, backup automático diário, certificação de segurança.' },
+  {
+    pergunta: 'Serve pro meu tipo de negócio?',
+    resposta: 'Se você trabalha com festas e eventos, sim: salão de festas, decoração, fotografia e filmagem, personagens vivos, recreação, aluguel de brinquedos, barracas e food truck, doces personalizados, salgados, bolos e doces. Na hora do cadastro você escolhe o seu, e o sistema monta o menu certo pra ele.',
+  },
+  { pergunta: 'Meu cliente consegue ver o orçamento e o contrato?', resposta: 'Sim. Ele recebe acesso ao portal do cliente, onde aprova orçamentos, vê os contratos e acompanha a festa dele.' },
+  { pergunta: 'Consigo organizar a equipe e os equipamentos de cada festa?', resposta: 'Sim. Em cada evento você define quem trabalha e quais equipamentos vão, e vê tudo no calendário.' },
+  { pergunta: 'Quanto tempo demora pra começar?', resposta: 'Uns 10 minutos. Você cadastra seus pacotes e clientes aos poucos, enquanto usa. Sem migração complicada.' },
+  { pergunta: 'E se eu não quiser mais?', resposta: 'Você cancela direto pelas configurações, sem multa e sem aviso prévio. E pode exportar seus relatórios em PDF e planilha quando quiser.' },
+  { pergunta: 'Meus dados ficam seguros?', resposta: 'Sim. A conexão é sempre criptografada (HTTPS) e cada empresa só enxerga os próprios dados.' },
 ]
 
 function FaqItem({ item, aberta, onToggle }) {
@@ -325,16 +360,16 @@ export default function Landing() {
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
             <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-5 text-white">
-              A plataforma que se adapta ao seu negócio de serviço: agendamento, histórico de cliente e faturamento, tudo num só lugar,{' '}
+              O sistema de quem vive de festas e eventos: orçamento, agenda, contrato e lucro de cada festa num só lugar,{' '}
               <span style={{ color: VERDE }}>sem planilha</span>
             </h1>
             <p className="text-base sm:text-lg leading-relaxed mb-6" style={{ color: '#CFE0FF' }}>
-              Parou de ficar 2h digitando cliente em planilha, achando contato velho, e descobrindo no mês que lucrou menos que esperava.
+              Chega de perder orçamento no WhatsApp, fechar festa sem contrato e descobrir só no fim do mês que o evento deu prejuízo.
             </p>
 
             <div className="flex flex-col gap-2.5 mb-8">
               <span className="text-sm font-semibold uppercase tracking-wide text-center lg:text-left" style={{ color: '#9FC1FA' }}>
-                Feito sob medida pro seu segmento
+                Feito sob medida pro seu tipo de negócio
               </span>
               <div className="w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
                 <div className="flex w-max gap-3 motion-safe:animate-marquee hover:[animation-play-state:paused]">
@@ -370,7 +405,7 @@ export default function Landing() {
 
           {/* Mobile: laptop em destaque + celulares lado a lado abaixo (evita sobreposição apertada em telas pequenas) */}
           <div className="sm:hidden flex flex-col items-center gap-5">
-            <img src={heroLaptop} alt="Dashboard de Ordens de Serviço da AlphaData aberto num notebook" className="w-full drop-shadow-[0_20px_35px_rgba(0,0,0,0.3)]" />
+            <img src={heroLaptop} alt="Dashboard da AlphaData aberto num notebook" className="w-full drop-shadow-[0_20px_35px_rgba(0,0,0,0.3)]" />
             <div className="flex justify-center gap-6">
               <img src={heroMobileMenu} alt="Menu do app AlphaData num celular" className="w-[38%] drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]" />
               <img src={heroMobileDashboard} alt="Dashboard do app AlphaData num celular" className="w-[38%] drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)]" />
@@ -379,7 +414,7 @@ export default function Landing() {
 
           {/* sm+: composição em camadas — notebook em destaque com os dois celulares "apoiados" nos cantos de baixo */}
           <div className="hidden sm:block relative w-full max-w-[560px] mx-auto lg:mx-0 pb-10 lg:pb-12">
-            <img src={heroLaptop} alt="Dashboard de Ordens de Serviço da AlphaData aberto num notebook" className="w-full drop-shadow-[0_25px_45px_rgba(0,0,0,0.35)]" />
+            <img src={heroLaptop} alt="Dashboard da AlphaData aberto num notebook" className="w-full drop-shadow-[0_25px_45px_rgba(0,0,0,0.35)]" />
             <img
               src={heroMobileMenu}
               alt="Menu do app AlphaData num celular"
@@ -409,15 +444,8 @@ export default function Landing() {
           ))}
         </div>
 
-        <blockquote className="max-w-2xl mx-auto text-center border-l-4 pl-6 py-2 mb-10" style={{ borderColor: AZUL }}>
-          <p className="text-xl sm:text-2xl italic font-medium mb-2" style={{ color: CINZA_TEXTO }}>
-            "A gente só descobre que o mês não vai fechar na semana 3"
-          </p>
-          <cite className="text-sm not-italic" style={{ color: '#999999' }}>— Gerente de salão</cite>
-        </blockquote>
-
         <p className="text-center text-lg font-semibold max-w-2xl mx-auto" style={{ color: CINZA_TEXTO }}>
-          Resultado: <span style={{ color: VERMELHO }}>2-3 horas por dia</span> viram perda, confusão com cliente, receita que escapa
+          Resultado: <span style={{ color: VERMELHO }}>horas toda semana</span> perdidas em conversa, data confirmada errado e festa que fecha no prejuízo sem você perceber
         </p>
       </section>
 
@@ -463,19 +491,31 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* 7. CASE / RESULTADO */}
+      {/* 7. UM SISTEMA, CADA NEGÓCIO DE FESTA */}
       <section className="py-16 sm:py-24 text-white" style={{ backgroundColor: AZUL }}>
-        <div className="max-w-[900px] mx-auto px-4 sm:px-6 text-center">
-          <p className="text-5xl sm:text-6xl font-bold mb-3">25% mais faturamento</p>
-          <p className="text-base sm:text-lg mb-12" style={{ color: '#CFE0FF' }}>
-            Em média, clientes aumentam faturamento em 25% no primeiro trimestre
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl sm:text-4xl font-bold text-center mb-3">Um sistema, cada negócio de festa do seu jeito</h2>
+          <p className="text-base sm:text-lg text-center mb-12 max-w-2xl mx-auto" style={{ color: '#CFE0FF' }}>
+            No cadastro você escolhe o que faz, e o menu já vem com as ferramentas certas pro seu dia a dia.
           </p>
 
-          <div className="bg-white rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.08)] p-6 sm:p-10 max-w-xl mx-auto">
-            <p className="text-lg sm:text-xl italic font-medium mb-4" style={{ color: CINZA_TEXTO }}>
-              "Florista em SP reduziu tempo de atendimento de 1h/dia pra 15 minutos. Faturamento subiu 25%."
-            </p>
-            <cite className="text-sm not-italic font-semibold" style={{ color: '#999999' }}>— Mariana, Dona da Flor Linda</cite>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {GRUPOS_NICHO.map(({ icon: Icon, label, nichos, recursos }) => (
+              <div key={label} className="bg-white rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.08)] p-6 flex flex-col">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: AZUL_CLARO }}>
+                  <Icon size={22} style={{ color: AZUL }} />
+                </div>
+                <p className="text-lg font-bold mb-1" style={{ color: CINZA_TEXTO }}>{label}</p>
+                <p className="text-sm mb-4" style={{ color: '#999999' }}>{nichos}</p>
+                <ul className="flex flex-col gap-2 mt-auto">
+                  {recursos.map((r) => (
+                    <li key={r} className="flex items-start gap-2 text-base" style={{ color: CINZA_TEXTO }}>
+                      <IconCheck size={18} className="shrink-0 mt-0.5" style={{ color: VERDE }} /> {r}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -549,7 +589,7 @@ export default function Landing() {
       {/* 10. CTA FINAL */}
       <section className="py-16 sm:py-24 text-white text-center" style={{ backgroundColor: AZUL }}>
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-4xl font-bold mb-8">Pronto pra sair dessa rotina de planilha e WhatsApp?</h2>
+          <h2 className="text-2xl sm:text-4xl font-bold mb-8">Pronto pra organizar suas festas sem planilha e sem WhatsApp perdido?</h2>
           <button
             type="button"
             onClick={() => irParaCadastro('startup')}
@@ -568,7 +608,7 @@ export default function Landing() {
       <section id="contato" className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
         <div className="rounded-[8px] p-6 sm:p-10 text-center" style={{ backgroundColor: AZUL_CLARO }}>
           <h2 className="text-2xl font-bold mb-2" style={{ color: CINZA_TEXTO }}>Prefere conversar antes?</h2>
-          <p className="text-base mb-6" style={{ color: '#666666' }}>Deixa seu contato que nossa equipe te chama pra tirar dúvidas ou agendar uma demo com seus dados.</p>
+          <p className="text-base mb-6" style={{ color: '#666666' }}>Deixa seu contato que nossa equipe te chama pra tirar dúvidas ou mostrar o sistema funcionando pro seu tipo de festa.</p>
 
           <form onSubmit={enviarLead} className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
             <input

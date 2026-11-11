@@ -94,6 +94,23 @@ describe('UserService.autenticarViaSupabase', () => {
     expect(usuario.authUserId).toBe(token)
   })
 
+  it('nunca entrega o superadmin via Google/reset — nem vincula a identidade externa por email', async () => {
+    const cliente = criarClienteFake()
+    const conta = cliente.semear('contas', [{ nome_empresa: 'ALPHADATA Plataforma', tipo_negocio: null, plano: 'enterprise', status: 'ativo', configuracoes_gerais: { interna: true } }])[0]!
+    cliente.semear('usuarios', [
+      { conta_id: conta['id'], email: 'super@gmail.com', senha_hash: await hashSenha('senha12345'), auth_user_id: null, nome: 'Super', papel: 'superadmin', cliente_id: null, status: 'ativo' },
+    ])
+    const { token } = cliente.auth.criarIdentidade('super@gmail.com')
+    const service = new UserService(paraTipado(cliente))
+
+    await expect(service.autenticarViaSupabase(token)).rejects.toBeInstanceOf(ErroProibido)
+    await expect(service.autenticarViaSupabase(token, 'senhaTrocada1')).rejects.toBeInstanceOf(ErroProibido)
+    expect(cliente.linhasDe('usuarios')[0]!['auth_user_id']).toBeNull()
+
+    const { usuario } = await service.autenticar('super@gmail.com', 'senha12345')
+    expect(usuario.papel).toBe('superadmin')
+  })
+
   it('reconhece a mesma identidade em logins seguintes, sem duplicar usuario', async () => {
     const cliente = criarClienteFake()
     const { token } = cliente.auth.criarIdentidade('repete@google.com')
