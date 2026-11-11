@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import {
   IconArrowRight, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandWhatsapp, IconCake,
   IconCalendarEvent, IconCalendarX, IconCamera, IconCheck, IconChevronDown, IconConfetti, IconCrown,
-  IconFileSpreadsheet, IconHeadset, IconNotes, IconPuzzle, IconRefresh, IconRocket, IconUsers, IconX,
+  IconFileSpreadsheet, IconHeadset, IconLayoutDashboard, IconNotes, IconPlugConnected, IconPlus, IconPuzzle, IconRefresh,
+  IconRocket, IconUsers, IconX,
 } from '@tabler/icons-react'
 import { useToast } from '../hooks/useToast'
 import { useAuth } from '../hooks/useAuth'
@@ -351,7 +352,7 @@ export default function Landing() {
             <button
               type="button"
               onClick={isAuthenticated ? irParaPainel : () => irParaCadastro('startup')}
-              className="rounded-[8px] text-white px-4 sm:px-5 py-2.5 text-base font-semibold transition-colors duration-300"
+              className="whitespace-nowrap rounded-[8px] text-white px-3.5 sm:px-5 py-2.5 text-sm sm:text-base font-semibold transition-colors duration-300"
               style={{ backgroundColor: AZUL }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = AZUL_HOVER)}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = AZUL)}
@@ -366,13 +367,37 @@ export default function Landing() {
       <section className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${AZUL} 0%, #003A94 60%, #002A6B 100%)` }}>
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-14 sm:py-24 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="text-center lg:text-left">
-            <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-5 text-white">
-              Seu WhatsApp atendendo 24h com IA, e cada festa organizada do orçamento ao lucro,{' '}
-              <span style={{ color: VERDE }}>sem planilha</span>
+            {/* A oferta em uma linha: os dois produtos + "tudo integrado" */}
+            <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-2 mb-6">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold" style={{ color: AZUL }}>
+                <IconBrandWhatsapp size={17} style={{ color: VERDE }} /> Assistente de IA no WhatsApp
+              </span>
+              <IconPlus size={16} className="text-white/70" aria-label="mais" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold" style={{ color: AZUL }}>
+                <IconLayoutDashboard size={17} /> Sistema completo de gestão
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-white" style={{ backgroundColor: VERDE }}>
+                <IconPlugConnected size={16} /> Tudo integrado
+              </span>
+            </div>
+
+            <h1 className="text-[34px] leading-[1.1] sm:text-[52px] font-extrabold tracking-tight mb-5 text-white">
+              Enquanto você faz a festa,{' '}
+              <span style={{ color: VERDE }}>a IA já está vendendo a próxima.</span>
             </h1>
             <p className="text-base sm:text-lg leading-relaxed mb-6" style={{ color: '#CFE0FF' }}>
-              A IA responde seus clientes com texto e áudio, manda orçamento em PDF e reserva a data. O sistema ALPHADATA cuida da agenda, dos contratos e do financeiro de cada evento.
+              O cliente chama no WhatsApp às 23h e recebe resposta na hora, com orçamento em PDF e data reservada na sua agenda.{' '}
+              <span className="font-semibold text-white">Tudo cai direto no sistema</span>: contrato, sinal, equipe e o lucro de cada evento. Sem planilha, sem caderno,
+              sem cliente esperando.
             </p>
+
+            <ul className="flex flex-col sm:flex-row sm:flex-wrap items-center lg:items-start justify-center lg:justify-start gap-x-5 gap-y-2 mb-8">
+              {['Atende 24h, inclusive no fim de semana', 'Texto e áudio, do jeito do cliente', 'Orçamento e agenda sem você digitar nada'].map((texto) => (
+                <li key={texto} className="inline-flex items-center gap-1.5 text-sm font-medium text-white">
+                  <IconCheck size={17} style={{ color: VERDE }} /> {texto}
+                </li>
+              ))}
+            </ul>
 
             <div className="flex flex-col gap-2.5 mb-8">
               <span className="text-sm font-semibold uppercase tracking-wide text-center lg:text-left" style={{ color: '#9FC1FA' }}>
@@ -401,12 +426,17 @@ export default function Landing() {
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = VERDE_HOVER)}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = VERDE)}
               >
-                COMECE GRÁTIS — SEM CARTÃO
+                QUERO TESTAR GRÁTIS
               </button>
-              <p className="text-sm" style={{ color: '#9FC1FA' }}>Setup em 10 minutos. Cancele quando quiser.</p>
-              <a href="#contato" className="text-base font-semibold text-white underline underline-offset-2 hover:opacity-80">
-                Ou agendar uma demo com seus dados
-              </a>
+              <p className="text-sm" style={{ color: '#9FC1FA' }}>7 dias grátis no sistema, sem cartão de crédito.</p>
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-1">
+                <a href="#precos" className="text-base font-semibold text-white underline underline-offset-2 hover:opacity-80">
+                  Ver planos e preços
+                </a>
+                <a href="#contato" className="text-base font-semibold text-white/80 underline underline-offset-2 hover:opacity-80">
+                  Falar com um especialista
+                </a>
+              </div>
             </div>
           </div>
 
@@ -607,7 +637,10 @@ export default function Landing() {
       {/* 10. CTA FINAL */}
       <section className="py-16 sm:py-24 text-white text-center" style={{ backgroundColor: AZUL }}>
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
-          <h2 className="text-2xl sm:text-4xl font-bold mb-8">Pronto pra organizar suas festas sem planilha e sem WhatsApp perdido?</h2>
+          <h2 className="text-2xl sm:text-4xl font-bold mb-4">Agora mesmo pode ter um cliente esperando resposta no seu WhatsApp.</h2>
+          <p className="text-base sm:text-lg mb-8" style={{ color: '#CFE0FF' }}>
+            Coloque a IA pra atender e o sistema pra organizar. Assistente no WhatsApp + gestão completa, tudo integrado.
+          </p>
           <button
             type="button"
             onClick={() => irParaCadastro('startup')}
@@ -616,9 +649,9 @@ export default function Landing() {
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = VERDE_HOVER)}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = VERDE)}
           >
-            COMECE AGORA — SEM CARTÃO, SEM RISCO
+            QUERO TESTAR GRÁTIS
           </button>
-          <p className="text-sm" style={{ color: '#CFE0FF' }}>Teste 7 dias. Se não gostar, seus dados saem com você. Sem pergunta.</p>
+          <p className="text-sm" style={{ color: '#CFE0FF' }}>7 dias grátis no sistema, sem cartão de crédito.</p>
         </div>
       </section>
 
