@@ -1,5 +1,5 @@
 import {
-  IconBalloon, IconBuildingCommunity, IconCake, IconCamera, IconCandy, IconHorseToy, IconMasksTheater, IconMoodKid,
+  IconBalloon, IconBuildingCommunity, IconCake, IconCamera, IconCandy, IconGift, IconHorseToy, IconMasksTheater, IconMoodKid,
   IconToolsKitchen2, IconTruck,
 } from '@tabler/icons-react'
 
@@ -16,6 +16,7 @@ export const NICHOS = [
   { id: 'recreacao', label: 'Recreação', icon: IconMoodKid },
   { id: 'aluguel-brinquedos', label: 'Aluguel de Brinquedos', icon: IconHorseToy },
   { id: 'aluguel-barracas-foodtruck', label: 'Barracas e Food Truck', icon: IconTruck },
+  { id: 'lembrancinhas-convites', label: 'Lembrancinhas e Convites', icon: IconGift },
   { id: 'doces-personalizados', label: 'Doces Personalizados', icon: IconCandy },
   { id: 'salgados', label: 'Salgados', icon: IconToolsKitchen2 },
   { id: 'bolos-e-doces', label: 'Bolos e Doces', icon: IconCake },

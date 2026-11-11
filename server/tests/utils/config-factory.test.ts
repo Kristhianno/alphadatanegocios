@@ -58,6 +58,7 @@ describe('listarSegmentosOnboarding', () => {
       'Doces Personalizados',
       'Salgados',
       'Bolos e Doces',
+      'Lembrancinhas e Convites',
     ]) {
       expect(nomes).toContain(nicho)
     }

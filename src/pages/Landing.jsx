@@ -48,7 +48,7 @@ const PASSOS = [
 
 /** Um item de "por segmento" ganha o ícone do grupo de nichos em vez do check padrão. */
 const SEGMENTOS_FEATURE = {
-  eventos: { icon: IconConfetti, label: 'Espaços, decoração, recreação e locações' },
+  eventos: { icon: IconConfetti, label: 'Espaços, decoração, animação e personalizados' },
   doces: { icon: IconCake, label: 'Bolos, doces e salgados' },
   fotografia: { icon: IconCamera, label: 'Fotografia e filmagem' },
 }
@@ -57,7 +57,7 @@ const SEGMENTOS_FEATURE = {
 const GRUPOS_NICHO = [
   {
     ...SEGMENTOS_FEATURE.eventos,
-    nichos: 'Salão de Festas, Decoração, Personagens Vivos, Recreação, Aluguel de Brinquedos, Barracas e Food Truck',
+    nichos: 'Salão de Festas, Decoração, Personagens Vivos, Recreação, Aluguel de Brinquedos, Barracas e Food Truck, Lembrancinhas e Convites',
     recursos: ['Pacotes e agenda de eventos', 'Equipe e equipamentos de cada festa', 'Orçamentos, contratos e financeiro por evento'],
   },
   {
@@ -250,7 +250,7 @@ function CardPlanoEspecial() {
 const FAQ = [
   {
     pergunta: 'Serve pro meu tipo de negócio?',
-    resposta: 'Se você trabalha com festas e eventos, sim: salão de festas, decoração, fotografia e filmagem, personagens vivos, recreação, aluguel de brinquedos, barracas e food truck, doces personalizados, salgados, bolos e doces. Na hora do cadastro você escolhe o seu, e o sistema monta o menu certo pra ele.',
+    resposta: 'Se você trabalha com festas e eventos, sim: salão de festas, decoração, fotografia e filmagem, personagens vivos, recreação, aluguel de brinquedos, barracas e food truck, lembrancinhas e convites, doces personalizados, salgados, bolos e doces. Na hora do cadastro você escolhe o seu, e o sistema monta o menu certo pra ele.',
   },
   {
     pergunta: 'Como funciona a IA no WhatsApp?',

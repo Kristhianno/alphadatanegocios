@@ -9,7 +9,8 @@
  * encaixam:
  * - salao_festas → pacotes, agenda de eventos, equipe/equipamentos,
  *   orçamentos, contratos, financeiro (serve espaços, decoração,
- *   recreação, personagens e locações);
+ *   recreação, personagens, locações e lembrancinhas/convites — pedido
+ *   com data de festa, orçamento e sinal);
  * - fotografia_video → sessões, produções de vídeo, portfólio;
  * - confeitaria → catálogo, receitas, pedidos, estoque.
  * O nome do card fica gravado em `configuracoesGerais.segmentoEscolhido`
@@ -22,6 +23,7 @@ export const SEGMENTO_ATENDIDO = 'Festas & Eventos'
 
 const ESPACO = 'Espaço e estrutura'
 const ANIMACAO = 'Decoração e animação'
+const PERSONALIZADOS = 'Papelaria e personalizados'
 const COMIDA = 'Comida e doces'
 const FOTO = 'Foto e vídeo'
 
@@ -33,6 +35,7 @@ export const SEGMENTOS_ONBOARDING: SegmentoOnboarding[] = [
   { id: 'decoracao', grupo: ANIMACAO, nome: 'Decoração', subtitulo: 'Mesas temáticas, balões e cenografia', tipoNegocio: 'salao_festas' },
   { id: 'personagens-vivos', grupo: ANIMACAO, nome: 'Personagens Vivos', subtitulo: 'Personagens, cosplays e animadores', tipoNegocio: 'salao_festas' },
   { id: 'recreacao', grupo: ANIMACAO, nome: 'Recreação', subtitulo: 'Recreadores, monitores e animação infantil', tipoNegocio: 'salao_festas' },
+  { id: 'lembrancinhas-convites', grupo: PERSONALIZADOS, nome: 'Lembrancinhas e Convites', subtitulo: 'Lembrancinhas personalizadas, convites impressos e digitais, kits de festa', tipoNegocio: 'salao_festas' },
   { id: 'doces-personalizados', grupo: COMIDA, nome: 'Doces Personalizados', subtitulo: 'Doces finos, temáticos e lembrancinhas comestíveis', tipoNegocio: 'confeitaria' },
   { id: 'bolos-e-doces', grupo: COMIDA, nome: 'Bolos e Doces', subtitulo: 'Bolos decorados, bolos de festa e docinhos', tipoNegocio: 'confeitaria' },
   { id: 'salgados', grupo: COMIDA, nome: 'Salgados', subtitulo: 'Salgados para festas, mini lanches e encomendas', tipoNegocio: 'confeitaria' },
