@@ -20,8 +20,6 @@ import AlphaDataLogo from '../components/AlphaDataLogo'
 import SeletorNicho from '../components/SeletorNicho'
 import { destinoDoUsuario } from '../utils/destino'
 import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
-import PainelMarcaAuth from '../components/PainelMarcaAuth'
-import fundoLogin from '../assets/login-fundo.jpeg'
 
 
 const inputComIconeClasse =
@@ -41,6 +39,20 @@ function IconGoogle(props) {
       <path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 35.4 26.9 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.6 39.6 16.2 44 24 44z" />
       <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.6 5.6C39.9 37.9 44 32 44 24c0-1.3-.1-2.7-.4-3.5z" />
     </svg>
+  )
+}
+
+/** Fundo da tela de login/cadastro: o gradiente azul da marca (o mesmo do hero da landing), com luzes suaves. */
+function FundoAzul({ children }) {
+  return (
+    <div
+      className="relative min-h-screen overflow-hidden"
+      style={{ background: 'linear-gradient(140deg, #0052CC 0%, #003A94 55%, #002A6B 100%)' }}
+    >
+      <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-white/10 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-[#10B981]/15 blur-3xl" aria-hidden="true" />
+      <div className="relative z-10">{children}</div>
+    </div>
   )
 }
 
@@ -493,42 +505,40 @@ export default function Login({ apenasCadastro = false }) {
     </>
   )
 
-  // Entrar / criar conta: formulário numa coluna de largura confortável +
-  // painel da marca à direita (só em telas largas; no celular, só o formulário).
+  // Entrar / criar conta: só o card do formulário, centralizado sobre o fundo azul da marca.
   if (telaAuth) {
     return (
-      <div className="min-h-screen flex bg-surface">
-        <div className="flex-1 min-w-0 flex flex-col">
-          <div className="px-5 sm:px-10 pt-5 sm:pt-8">
+      <FundoAzul>
+        <div className="min-h-screen flex flex-col">
+          <div className="px-4 sm:px-8 pt-4 sm:pt-6">
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 rounded-btn px-2 py-1.5 -ml-2 text-label font-medium text-[#666] hover:text-primary hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-btn px-2.5 py-1.5 text-label font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors"
             >
               <IconArrowLeft size={16} /> Voltar para o site
             </Link>
           </div>
-          <main className="flex-1 flex items-center justify-center px-5 sm:px-10 py-8">
-            <div className="w-full max-w-[420px]">
-              <div className="flex justify-center mb-7">
+          <main className="flex-1 flex items-center justify-center px-3 sm:px-6 py-6 sm:py-10">
+            <div className="w-full max-w-[460px] rounded-[14px] bg-surface p-6 sm:p-10 shadow-[0_24px_60px_rgba(0,20,60,0.35)]">
+              <div className="flex justify-center mb-6">
                 <AlphaDataLogo />
               </div>
               {avisoSessaoAtiva}
               {formularioAuth}
             </div>
           </main>
-          <p className="px-5 pb-6 text-center text-label text-[#999]">© 2026 ALPHADATA - Negócios</p>
+          <p className="px-5 pb-6 text-center text-label text-blue-100/70">© 2026 ALPHADATA - Negócios</p>
         </div>
-        <PainelMarcaAuth className="hidden md:flex md:w-[46%] xl:w-1/2 md:sticky md:top-0 md:h-screen" />
-      </div>
+      </FundoAzul>
     )
   }
 
-  // Onboarding (escolher nicho / logo): card sobre o fundo ilustrado.
+  // Onboarding (escolher nicho / logo): card sobre o mesmo fundo azul.
   return (
-    <div className="min-h-screen relative bg-cover bg-center" style={{ backgroundImage: `url(${fundoLogin})` }}>
+    <FundoAzul>
       <div className="relative z-10 min-h-screen flex items-center justify-center px-3 sm:px-10 2xl:px-16 py-8 sm:py-10">
         <div
-          className={`w-full bg-surface/95 backdrop-blur-sm rounded-card shadow-cardHover p-5 sm:p-10 ${
+          className={`w-full bg-surface rounded-[14px] shadow-[0_24px_60px_rgba(0,20,60,0.35)] p-5 sm:p-10 ${
             telaLarga ? 'max-w-5xl pb-0 sm:pb-0' : 'max-w-lg'
           }`}
         >
@@ -592,6 +602,6 @@ export default function Login({ apenasCadastro = false }) {
           )}
         </div>
       </div>
-    </div>
+    </FundoAzul>
   )
 }

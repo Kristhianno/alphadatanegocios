@@ -178,7 +178,7 @@ export default function SeletorNicho({ opcoes, carregando, enviandoId, erro, onC
       )}
 
       {/* Rodapé fixo no fim da tela enquanto o card está visível — no celular o botão nunca fica escondido lá embaixo. */}
-      <div className="sticky bottom-0 -mx-5 sm:-mx-10 mt-6 px-5 sm:px-10 py-3 sm:py-4 bg-surface/95 backdrop-blur-sm border-t border-muted-dark flex flex-col-reverse sm:flex-row sm:items-center gap-3 sm:justify-between rounded-b-card">
+      <div className="sticky bottom-0 -mx-5 sm:-mx-10 mt-6 px-5 sm:px-10 py-3 sm:py-4 bg-surface/95 backdrop-blur-sm border-t border-muted-dark flex flex-col-reverse sm:flex-row sm:items-center gap-3 sm:justify-between rounded-b-[14px]">
         <div className="flex items-center justify-between gap-3 sm:justify-start sm:gap-4">
           {onVoltar && (
             <button type="button" onClick={onVoltar} disabled={enviando} className="flex items-center gap-1.5 text-label text-primary hover:underline disabled:opacity-50">
