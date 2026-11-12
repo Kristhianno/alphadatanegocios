@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { diasRestantesTrial } from '../utils/trial'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import { usePersisted } from '../hooks/usePersisted'
 
 /** Só admin mexe em assinatura (ver requererPapel('admin') nas rotas de /billing) — só ele vê o aviso. */
 function AvisoTrialAcabando({ dias }) {
@@ -23,6 +24,8 @@ function AvisoTrialAcabando({ dias }) {
 export default function Layout({ userType }) {
   const { user, isAuthenticated } = useAuth()
   const [sidebarAberta, setSidebarAberta] = useState(false)
+  // Menu lateral recolhido (só ícones) no computador — lembrado entre visitas.
+  const [menuRecolhido, setMenuRecolhido] = usePersisted('alphadata_menu_recolhido', false)
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
   // Conta autenticada mas sem vertical escolhido ainda (ex: fechou a aba no
@@ -40,7 +43,13 @@ export default function Layout({ userType }) {
       {userType === 'admin' && <AvisoTrialAcabando dias={diasRestantesTrial(user.trialTerminaEm)} />}
       <Header onToggleSidebar={() => setSidebarAberta(true)} />
       <div className="flex">
-        <Sidebar userType={userType} aberta={sidebarAberta} onClose={() => setSidebarAberta(false)} />
+        <Sidebar
+          userType={userType}
+          aberta={sidebarAberta}
+          onClose={() => setSidebarAberta(false)}
+          recolhida={menuRecolhido}
+          onAlternarRecolhida={() => setMenuRecolhido((v) => !v)}
+        />
         <main className="flex-1 min-w-0 p-4 sm:p-6">
           <Outlet />
         </main>
