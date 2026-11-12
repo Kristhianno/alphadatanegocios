@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './hooks/useAuth'
 import { ToastProvider } from './hooks/useToast'
+import { VisualizadorProvider } from './components/visualizador/Visualizador'
 import { OrdensProvider } from './hooks/useOrdensServico'
 import { ClientesProvider } from './hooks/useClientes'
 import { EquipeProvider } from './hooks/useEquipe'
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
+      <VisualizadorProvider>
         <AuthProvider>
           <ClientesProvider>
             <EquipeProvider>
@@ -34,6 +36,7 @@ createRoot(document.getElementById('root')).render(
             </EquipeProvider>
           </ClientesProvider>
         </AuthProvider>
+      </VisualizadorProvider>
       </ToastProvider>
     </BrowserRouter>
   </StrictMode>,

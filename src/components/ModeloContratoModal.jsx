@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  IconAlertTriangle, IconCheck, IconExternalLink, IconFileText, IconFileTypePdf, IconRefresh, IconSparkles, IconTrash, IconUpload,
+  IconAlertTriangle, IconCheck, IconEye, IconFileText, IconFileTypePdf, IconRefresh, IconSparkles, IconTrash, IconUpload,
 } from '@tabler/icons-react'
 import { api, ApiError } from '../services/api'
 import { enviarArquivo, formatarTamanho } from '../services/arquivos'
 import { useToast } from '../hooks/useToast'
 import Modal from './ui/Modal'
+import { useVisualizador } from './visualizador/Visualizador'
 
 const ACEITA = 'application/pdf,.doc,.docx'
 
@@ -16,6 +17,7 @@ const ACEITA = 'application/pdf,.doc,.docx'
  */
 export default function ModeloContratoModal({ open, onClose, onAtualizado }) {
   const { showToast } = useToast()
+  const abrirVisualizador = useVisualizador()
   const inputRef = useRef(null)
   const textoRef = useRef(null)
 
@@ -163,9 +165,9 @@ export default function ModeloContratoModal({ open, onClose, onAtualizado }) {
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              <a href={arquivo.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-btn border border-muted-dark px-2.5 py-1.5 text-label font-medium text-[#333] hover:border-primary hover:text-primary">
-                <IconExternalLink size={15} /> Abrir
-              </a>
+              <button type="button" onClick={() => abrirVisualizador([arquivo])} className="inline-flex items-center gap-1 rounded-btn border border-muted-dark px-2.5 py-1.5 text-label font-medium text-[#333] hover:border-primary hover:text-primary">
+                <IconEye size={15} /> Visualizar
+              </button>
               <button type="button" onClick={() => inputRef.current?.click()} className="inline-flex items-center gap-1 rounded-btn border border-muted-dark px-2.5 py-1.5 text-label font-medium text-[#333] hover:border-primary hover:text-primary">
                 <IconRefresh size={15} /> Substituir
               </button>

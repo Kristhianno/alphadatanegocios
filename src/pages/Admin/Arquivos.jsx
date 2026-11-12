@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  IconCloudUpload, IconCopy, IconExternalLink, IconFileTypePdf, IconFile, IconFolder, IconLock, IconPhoto, IconTrash,
+  IconCloudUpload, IconCopy, IconEye, IconFileTypePdf, IconFile, IconFolder, IconLock, IconPhoto, IconTrash,
   IconVideo, IconWorld, IconX,
 } from '@tabler/icons-react'
 import { useToast } from '../../hooks/useToast'
 import { api, ApiError } from '../../services/api'
 import { ACEITOS, CATEGORIAS_ARQUIVO, enviarArquivo, formatarTamanho } from '../../services/arquivos'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import { useVisualizador } from '../../components/visualizador/Visualizador'
 import Selecao from '../../components/ui/Selecao'
 
 const FILTROS_TIPO = [
@@ -54,6 +55,7 @@ function BarraUso({ uso }) {
 
 export default function Arquivos() {
   const { showToast } = useToast()
+  const abrirVisualizador = useVisualizador()
   const inputRef = useRef(null)
 
   const [arquivos, setArquivos] = useState([])
@@ -263,9 +265,14 @@ export default function Arquivos() {
         )
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {visiveis.map((a) => (
+          {visiveis.map((a, indice) => (
             <li key={a.id} className="group flex flex-col overflow-hidden rounded-card bg-surface shadow-card">
-              <a href={a.url} target="_blank" rel="noreferrer" className="relative block aspect-square overflow-hidden bg-muted">
+              <button
+                type="button"
+                onClick={() => abrirVisualizador(visiveis, indice)}
+                aria-label={`Abrir ${a.nomeOriginal}`}
+                className="relative block aspect-square w-full overflow-hidden bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
                 <Previa arquivo={a} />
                 {a.tipo === 'video' && (
                   <span className="absolute left-2 top-2 rounded-full bg-black/60 p-1 text-white"><IconVideo size={14} /></span>
@@ -276,14 +283,14 @@ export default function Arquivos() {
                 >
                   {a.urlTemporaria ? <IconLock size={13} /> : <IconWorld size={13} />}
                 </span>
-              </a>
+              </button>
               <div className="flex flex-1 flex-col gap-1 p-2.5">
                 <p className="truncate text-label font-semibold text-[#1a1a1a]" title={a.nomeOriginal}>{a.nomeOriginal}</p>
                 <p className="text-[11px] text-[#999]">{ROTULO_CATEGORIA[a.categoria] ?? a.categoria} · {formatarTamanho(a.tamanhoBytes)}</p>
                 <div className="mt-auto flex items-center gap-1 pt-1">
-                  <a href={a.url} target="_blank" rel="noreferrer" aria-label="Abrir" className="rounded-btn p-1.5 text-[#666] hover:bg-muted hover:text-primary">
-                    <IconExternalLink size={16} />
-                  </a>
+                  <button type="button" onClick={() => abrirVisualizador(visiveis, indice)} aria-label="Visualizar" className="rounded-btn p-1.5 text-[#666] hover:bg-muted hover:text-primary">
+                    <IconEye size={16} />
+                  </button>
                   <button type="button" onClick={() => copiarLink(a)} aria-label="Copiar link" className="rounded-btn p-1.5 text-[#666] hover:bg-muted hover:text-primary">
                     <IconCopy size={16} />
                   </button>

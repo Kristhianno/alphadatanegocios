@@ -9,6 +9,7 @@ import { api, ApiError } from '../../services/api'
 import { enviarArquivo } from '../../services/arquivos'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import { useVisualizador } from '../../components/visualizador/Visualizador'
 
 /** Abas do portfólio — `tipo` é o mesmo de server/src/models/PortfolioItem.ts. */
 const ABAS = [
@@ -113,12 +114,18 @@ function ListaEnvios({ envios, onDispensar }) {
   )
 }
 
-/** Miniatura de um arquivo (foto ou PDF) com abrir/excluir. */
-function MiniaturaArquivo({ arquivo, destaque, onExcluir }) {
+/** Miniatura de um arquivo (foto ou PDF): clique abre no visualizador do sistema; lixeira exclui. */
+function MiniaturaArquivo({ arquivo, destaque, onExcluir, onAbrir }) {
   const ehPdf = arquivo.tipo === 'documento'
   return (
     <div className="group relative w-full overflow-hidden rounded-card border border-muted-dark bg-surface">
-      <a href={arquivo.url} target="_blank" rel="noreferrer" className="block aspect-square bg-muted" title={arquivo.nomeOriginal}>
+      <button
+        type="button"
+        onClick={onAbrir}
+        aria-label={`Abrir ${arquivo.nomeOriginal}`}
+        title={arquivo.nomeOriginal}
+        className="block aspect-square w-full bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
         {ehPdf ? (
           <div className="flex h-full w-full flex-col items-center justify-center gap-1 p-2 text-center text-danger">
             <IconFileTypePdf size={34} stroke={1.25} />
@@ -127,7 +134,7 @@ function MiniaturaArquivo({ arquivo, destaque, onExcluir }) {
         ) : (
           <img src={arquivo.url} alt={arquivo.nomeOriginal} loading="lazy" className="h-full w-full object-cover" />
         )}
-      </a>
+      </button>
       {destaque && <span className="absolute bottom-1 left-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">{destaque}</span>}
       <button
         type="button"
@@ -142,6 +149,7 @@ function MiniaturaArquivo({ arquivo, destaque, onExcluir }) {
 }
 
 function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
+  const abrirVisualizador = useVisualizador()
   const [materiais, setMateriais] = useState(null)
   const adicionar = useCallback((a) => setMateriais((atuais) => [a, ...(atuais ?? [])]), [])
   const { envios, enviar, dispensar } = useEnvios(adicionar)
@@ -184,10 +192,11 @@ function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
         envios.length === 0 && <p className="mt-4 rounded-btn bg-muted px-3 py-3 text-label text-[#999]">Nenhum material enviado nesta aba ainda.</p>
       ) : (
         <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
-          {materiais.map((m) => (
+          {materiais.map((m, indice) => (
             <MiniaturaArquivo
               key={m.id}
               arquivo={m}
+              onAbrir={() => abrirVisualizador(materiais, indice)}
               onExcluir={(a) => onExcluirArquivo(a, () => setMateriais((atuais) => atuais.filter((x) => x.id !== a.id)))}
             />
           ))}
@@ -228,6 +237,7 @@ const rotuloClasse = 'mb-1 block text-label font-medium text-[#444]'
 
 function ModalItem({ aba, item, onFechar, onSalvo, onExcluir, onExcluirArquivo }) {
   const { showToast } = useToast()
+  const abrirVisualizador = useVisualizador()
   const [atual, setAtual] = useState(item) // null = novo
   const [form, setForm] = useState(paraForm(item))
   const [salvando, setSalvando] = useState(false)
@@ -348,10 +358,11 @@ function ModalItem({ aba, item, onFechar, onSalvo, onExcluir, onExcluirArquivo }
         <ListaEnvios envios={envios} onDispensar={dispensar} />
         {atual && atual.fotos.length + atual.pdfs.length > 0 && (
           <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {[...atual.fotos, ...atual.pdfs].map((a, i) => (
+            {[...atual.fotos, ...atual.pdfs].map((a, i, todos) => (
               <MiniaturaArquivo
                 key={a.id}
                 arquivo={a}
+                onAbrir={() => abrirVisualizador(todos, i)}
                 destaque={i === 0 && a.tipo === 'imagem' ? 'Principal' : null}
                 onExcluir={(arq) =>
                   onExcluirArquivo(arq, () =>
