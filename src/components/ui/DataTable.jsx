@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { flexRender, getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table'
 import { IconChevronLeft, IconChevronRight, IconChevronUp, IconChevronDown } from '@tabler/icons-react'
+import Selecao from './Selecao'
 
 export default function DataTable({ data, columns, pageSize = 10, pageSizeOptions = [10, 25, 50] }) {
   const [sorting, setSorting] = useState([])
@@ -64,7 +65,7 @@ export default function DataTable({ data, columns, pageSize = 10, pageSizeOption
       <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
         <div className="flex items-center gap-2 text-label text-[#666]">
           Linhas por página:
-          <select
+          <Selecao
             value={pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
             className="rounded-input border border-muted-dark px-2 py-1"
@@ -72,7 +73,7 @@ export default function DataTable({ data, columns, pageSize = 10, pageSizeOption
             {pageSizeOptions.map((n) => (
               <option key={n} value={n}>{n}</option>
             ))}
-          </select>
+          </Selecao>
         </div>
         <div className="flex items-center gap-2 text-label text-[#666]">
           <span>

@@ -13,6 +13,7 @@ import Assinatura from '../../components/Assinatura'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import Badge from '../../components/ui/Badge'
+import Selecao from '../../components/ui/Selecao'
 
 const FILTROS_INICIAIS = { status: '', clienteId: '', tecnicoId: '', dataInicio: '', dataFim: '' }
 
@@ -77,24 +78,24 @@ export default function OrdensServico() {
       <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap items-end gap-3">
         <div>
           <label className="text-label text-[#666] block mb-1">Status</label>
-          <select className={inputClasse} value={filtros.status} onChange={(e) => setFiltros((f) => ({ ...f, status: e.target.value }))}>
+          <Selecao className={inputClasse} value={filtros.status} onChange={(e) => setFiltros((f) => ({ ...f, status: e.target.value }))}>
             <option value="">Todos</option>
             {STATUS_OS.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className="text-label text-[#666] block mb-1">Cliente</label>
-          <select className={inputClasse} value={filtros.clienteId} onChange={(e) => setFiltros((f) => ({ ...f, clienteId: e.target.value }))}>
+          <Selecao className={inputClasse} value={filtros.clienteId} onChange={(e) => setFiltros((f) => ({ ...f, clienteId: e.target.value }))}>
             <option value="">Todos</option>
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className="text-label text-[#666] block mb-1">Técnico</label>
-          <select className={inputClasse} value={filtros.tecnicoId} onChange={(e) => setFiltros((f) => ({ ...f, tecnicoId: e.target.value }))}>
+          <Selecao className={inputClasse} value={filtros.tecnicoId} onChange={(e) => setFiltros((f) => ({ ...f, tecnicoId: e.target.value }))}>
             <option value="">Todos</option>
             {prestadores.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className="text-label text-[#666] block mb-1">De</label>
@@ -186,7 +187,7 @@ export default function OrdensServico() {
 
             <div>
               <label className="text-label text-[#666] block mb-1">Status</label>
-              <select
+              <Selecao
                 className={inputClasse}
                 value={ordemSelecionada.status}
                 onChange={(e) => {
@@ -195,7 +196,7 @@ export default function OrdensServico() {
                 }}
               >
                 {STATUS_OS.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+              </Selecao>
               <div className="mt-2"><Badge status={ordemSelecionada.status} /></div>
             </div>
           </div>

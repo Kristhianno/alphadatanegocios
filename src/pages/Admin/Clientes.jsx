@@ -9,6 +9,7 @@ import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import Badge from '../../components/ui/Badge'
+import Selecao from '../../components/ui/Selecao'
 
 const CAMPOS_INICIAIS = { nome: '', telefone: '', email: '', endereco: '', cidade: '', estado: '', cnpj: '', ativo: true }
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
@@ -199,7 +200,7 @@ export default function Clientes() {
         </div>
         <div>
           <label className={labelClasse}>Ordenar por</label>
-          <select className={inputClasse} value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)}>
+          <Selecao className={inputClasse} value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)}>
             <option value="nome">Nome</option>
             {ehManutencao ? (
               <>
@@ -209,15 +210,15 @@ export default function Clientes() {
             ) : (
               <option value="recentes">Mais recentes</option>
             )}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className={labelClasse}>Status</label>
-          <select className={inputClasse} value={filtroAtivo} onChange={(e) => setFiltroAtivo(e.target.value)}>
+          <Selecao className={inputClasse} value={filtroAtivo} onChange={(e) => setFiltroAtivo(e.target.value)}>
             <option value="">Todos</option>
             <option value="ativo">Ativo</option>
             <option value="inativo">Inativo</option>
-          </select>
+          </Selecao>
         </div>
       </div>
 

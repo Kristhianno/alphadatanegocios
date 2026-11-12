@@ -6,6 +6,7 @@ import { useBranding } from '../../hooks/useBranding'
 import { useOrdensServico } from '../../hooks/useOrdensServico'
 import { STATUS_OS } from '../../data/mock'
 import Badge from '../../components/ui/Badge'
+import Selecao from '../../components/ui/Selecao'
 
 function tempoRestante(dataAgendada, hora) {
   const alvo = new Date(`${dataAgendada}T${hora || '00:00'}`)
@@ -57,10 +58,10 @@ export default function MinhasOrdens() {
         </div>
         <div>
           <label className={labelClasse}>Status</label>
-          <select className={inputClasse} value={status} onChange={(e) => setStatus(e.target.value)}>
+          <Selecao className={inputClasse} value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">Todos</option>
             {STATUS_OS.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className={labelClasse}>De</label>

@@ -6,6 +6,7 @@ import { RECEITAS_CONFEITARIA } from '../../data/mock'
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -82,9 +83,9 @@ export default function ReceitasConfeitaria() {
           </div>
           <div>
             <label className={labelClasse}>Categoria</label>
-            <select className={inputClasse} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+            <Selecao className={inputClasse} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
               {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div>
             <label className={labelClasse}>Tempo de preparo (min)</label>

@@ -6,6 +6,9 @@
   --color-primary: #0066CC;
   --color-primary-light: #E6F0FF;
   --color-primary-dark: #004C99;
+  /* O app é só tema claro: sem isto, no modo escuro do sistema os controles
+     nativos que sobraram (calendário de data/hora, barras de rolagem) abrem cinza escuro. */
+  color-scheme: light;
 }
 
 body {

@@ -6,6 +6,7 @@ import { CLIENTES_FOTOGRAFIA, PACOTES_FOTOGRAFIA, STATUS_SESSAO, STATUS_SESSAO_C
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -114,10 +115,10 @@ export default function SessoesFotografia() {
         </div>
         <div>
           <label className={labelClasse}>Status</label>
-          <select className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+          <Selecao className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
             <option value="">Todos</option>
             {STATUS_SESSAO.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          </Selecao>
         </div>
       </div>
 
@@ -129,21 +130,21 @@ export default function SessoesFotografia() {
         <form onSubmit={handleCriar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className={labelClasse}>Cliente *</label>
-            <select required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+            <Selecao required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
               {CLIENTES_FOTOGRAFIA.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div>
             <label className={labelClasse}>Tipo de sessão *</label>
-            <select required className={inputClasse} value={tipoSessao} onChange={(e) => setTipoSessao(e.target.value)}>
+            <Selecao required className={inputClasse} value={tipoSessao} onChange={(e) => setTipoSessao(e.target.value)}>
               {['Ensaio', 'Casamento', 'Evento', 'Produto', 'Institucional', 'Outro'].map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div>
             <label className={labelClasse}>Pacote / Kit *</label>
-            <select required className={inputClasse} value={pacoteId} onChange={(e) => setPacoteId(e.target.value)}>
+            <Selecao required className={inputClasse} value={pacoteId} onChange={(e) => setPacoteId(e.target.value)}>
               {PACOTES_FOTOGRAFIA.map((p) => <option key={p.id} value={p.id}>{p.nome} — R$ {p.precoBase.toLocaleString('pt-BR')}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div>
             <label className={labelClasse}>Data da sessão *</label>
@@ -151,9 +152,9 @@ export default function SessoesFotografia() {
           </div>
           <div className="md:col-span-2">
             <label className={labelClasse}>Local</label>
-            <select className={inputClasse} value={local} onChange={(e) => setLocal(e.target.value)}>
+            <Selecao className={inputClasse} value={local} onChange={(e) => setLocal(e.target.value)}>
               {LOCAIS_SESSAO.map((l) => <option key={l} value={l}>{l}</option>)}
-            </select>
+            </Selecao>
           </div>
 
           <div className="md:col-span-2 flex justify-end gap-3 pt-2 border-t border-muted-dark">
@@ -194,7 +195,7 @@ export default function SessoesFotografia() {
 
             <div>
               <label className={labelClasse}>Alterar status</label>
-              <select
+              <Selecao
                 className={inputClasse}
                 value={sessaoDetalhe.status}
                 onChange={(e) => {
@@ -203,7 +204,7 @@ export default function SessoesFotografia() {
                 }}
               >
                 {STATUS_SESSAO.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+              </Selecao>
             </div>
           </div>
         )}

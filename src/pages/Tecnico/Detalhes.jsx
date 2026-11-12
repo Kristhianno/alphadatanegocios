@@ -12,6 +12,7 @@ import Assinatura from '../../components/Assinatura'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const ABAS = ['Informações', 'Checklist', 'Fotos', 'Assinatura', 'Consentimento', 'Status & Ação']
 
@@ -156,9 +157,9 @@ export default function Detalhes() {
             <h2 className="text-h2 text-[#1a1a1a]">Status da Ordem</h2>
             <div>
               <label className="text-label text-[#666] block mb-1">Status</label>
-              <select className={inputClasse} value={ordem.status} onChange={(e) => updateOrdem(id, { status: e.target.value })}>
+              <Selecao className={inputClasse} value={ordem.status} onChange={(e) => updateOrdem(id, { status: e.target.value })}>
                 {STATUS_OS.filter((s) => s !== 'Cancelada').map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+              </Selecao>
               <div className="mt-2"><Badge status={ordem.status} /></div>
             </div>
 

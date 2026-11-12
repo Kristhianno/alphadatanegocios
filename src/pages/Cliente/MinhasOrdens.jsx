@@ -4,6 +4,7 @@ import { useToast } from '../../hooks/useToast'
 import { api, ApiError } from '../../services/api'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -81,10 +82,10 @@ export default function MinhasOrdens() {
       <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap items-end gap-3">
         <div>
           <label className={labelClasse}>Categoria</label>
-          <select className={inputClasse} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+          <Selecao className={inputClasse} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
             <option value="">Todas</option>
             {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          </Selecao>
         </div>
       </div>
 

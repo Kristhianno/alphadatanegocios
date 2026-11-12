@@ -10,6 +10,7 @@ import Modal from '../../components/ui/Modal'
 import StarRating from '../../components/ui/StarRating'
 import Checklist from '../../components/Checklist'
 import Assinatura from '../../components/Assinatura'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -72,18 +73,18 @@ export default function Historico() {
         <div><label className={labelClasse}>Até</label><input type="date" className={inputClasse} value={dataFim} onChange={(e) => setDataFim(e.target.value)} /></div>
         <div>
           <label className={labelClasse}>Cliente</label>
-          <select className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+          <Selecao className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
             <option value="">Todos</option>
             {clientesComOrdem.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className={labelClasse}>Ordenar por</label>
-          <select className={inputClasse} value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)}>
+          <Selecao className={inputClasse} value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)}>
             <option value="data">Data</option>
             <option value="cliente">Cliente</option>
             <option value="valor">Valor</option>
-          </select>
+          </Selecao>
         </div>
       </div>
 

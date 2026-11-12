@@ -13,6 +13,7 @@ import { temCrm } from '../../data/planos'
 import { diasRestantesTrial } from '../../utils/trial'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const ETAPAS = [
   { id: 'novo', titulo: 'Novo lead', descricao: 'Chegou e ainda não foi atendido', cor: 'bg-blue-500', claro: 'bg-blue-50 text-blue-700' },
@@ -547,9 +548,9 @@ export default function CrmLeads() {
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="lead-origem" className={rotuloClasse}>De onde veio</label>
-            <select id="lead-origem" value={form.origem} onChange={alterar('origem')} className={campoClasse}>
+            <Selecao id="lead-origem" value={form.origem} onChange={alterar('origem')} className={campoClasse}>
               {Object.entries(ORIGENS).map(([valor, { label }]) => <option key={valor} value={valor}>{label}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div className="sm:col-span-2">
             <label htmlFor="lead-obs" className={rotuloClasse}>Observações</label>

@@ -6,6 +6,7 @@ import { api, ApiError } from '../../services/api'
 import DataTable from '../../components/ui/DataTable'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -78,10 +79,10 @@ function FormularioNovoOrcamentoSalao({ onCriado, onCancelar }) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
         <label className={labelClasse}>Cliente *</label>
-        <select required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+        <Selecao required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
           <option value="">Selecione...</option>
           {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-        </select>
+        </Selecao>
       </div>
       <div>
         <label className={labelClasse}>Nome do evento *</label>
@@ -90,9 +91,9 @@ function FormularioNovoOrcamentoSalao({ onCriado, onCancelar }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelClasse}>Tipo de evento *</label>
-          <select required className={inputClasse} value={tipoEvento} onChange={(e) => setTipoEvento(e.target.value)}>
+          <Selecao required className={inputClasse} value={tipoEvento} onChange={(e) => setTipoEvento(e.target.value)}>
             {TIPOS_EVENTO.map((t) => <option key={t.valor} value={t.valor}>{t.label}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className={labelClasse}>Data do evento *</label>
@@ -167,16 +168,16 @@ function FormularioNovoOrcamentoManutencao({ chamados, onGerar, gerando, onCance
       <form onSubmit={handleAbrirEGerar} className="flex flex-col gap-4">
         <div>
           <label className={labelClasse}>Cliente *</label>
-          <select required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+          <Selecao required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
             <option value="">Selecione...</option>
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className={labelClasse}>Categoria *</label>
-          <select required className={inputClasse} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+          <Selecao required className={inputClasse} value={categoria} onChange={(e) => setCategoria(e.target.value)}>
             {CATEGORIAS_MANUTENCAO.map((c) => <option key={c.valor} value={c.valor}>{c.label}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className={labelClasse}>Descreva o problema *</label>
@@ -209,9 +210,9 @@ function FormularioNovoOrcamentoManutencao({ chamados, onGerar, gerando, onCance
     <div className="flex flex-col gap-4">
       <div>
         <label className={labelClasse}>Chamado *</label>
-        <select className={inputClasse} value={chamadoId} onChange={(e) => setChamadoId(e.target.value)}>
+        <Selecao className={inputClasse} value={chamadoId} onChange={(e) => setChamadoId(e.target.value)}>
           {chamados.map((c) => <option key={c.id} value={c.id}>{c.categoria_manutencao} — {c.descricao}</option>)}
-        </select>
+        </Selecao>
       </div>
       <button type="button" onClick={() => setModoNovoChamado(true)} className="text-label text-primary hover:underline self-start">
         Ou abrir um novo chamado

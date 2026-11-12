@@ -7,6 +7,7 @@ import { useToast } from '../../hooks/useToast'
 import { api, ApiError } from '../../services/api'
 import { ACEITOS, CATEGORIAS_ARQUIVO, enviarArquivo, formatarTamanho } from '../../services/arquivos'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const FILTROS_TIPO = [
   { id: '', label: 'Todos' },
@@ -156,14 +157,14 @@ export default function Arquivos() {
       <div className="rounded-card bg-surface p-4 sm:p-5 shadow-card">
         <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
           <label htmlFor="categoria-upload" className="text-body font-semibold text-[#1a1a1a]">Enviar para:</label>
-          <select
+          <Selecao
             id="categoria-upload"
             value={categoriaUpload}
             onChange={(e) => setCategoriaUpload(e.target.value)}
             className="rounded-btn border border-muted-dark bg-surface px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {CATEGORIAS_ARQUIVO.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-          </select>
+          </Selecao>
           <span className="flex items-center gap-1 text-label text-[#999]">
             {categoriaAtual?.publico ? <IconWorld size={14} /> : <IconLock size={14} />} {categoriaAtual?.descricao}
           </span>
@@ -233,7 +234,7 @@ export default function Arquivos() {
             </button>
           ))}
         </div>
-        <select
+        <Selecao
           value={filtroCategoria}
           onChange={(e) => setFiltroCategoria(e.target.value)}
           aria-label="Filtrar por categoria"
@@ -241,7 +242,7 @@ export default function Arquivos() {
         >
           <option value="">Todas as categorias</option>
           {CATEGORIAS_ARQUIVO.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-        </select>
+        </Selecao>
         {!carregando && <span className="text-label text-[#999]">{visiveis.length} arquivo(s)</span>}
       </div>
 

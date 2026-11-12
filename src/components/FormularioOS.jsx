@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { TIPOS_SERVICO } from '../data/mock'
 import { useClientes } from '../hooks/useClientes'
 import { usePrestadores } from '../hooks/usePrestadores'
+import Selecao from './ui/Selecao'
 
 const PRIORIDADES = ['Normal', 'Alta', 'Urgente']
 
@@ -101,7 +102,7 @@ export default function FormularioOS({ ordemExistente, onSubmit, onCancel, onDel
               onChange={(e) => setBusca(e.target.value)}
               className={`${inputClasse} mb-1.5`}
             />
-            <select
+            <Selecao
               value={dados.clienteId}
               onChange={(e) => handleClienteChange(e.target.value)}
               onBlur={() => setTocado((t) => ({ ...t, clienteId: true }))}
@@ -111,13 +112,13 @@ export default function FormularioOS({ ordemExistente, onSubmit, onCancel, onDel
               {clientesFiltrados.map((c) => (
                 <option key={c.id} value={c.id}>{c.nome}</option>
               ))}
-            </select>
+            </Selecao>
             {tocado.clienteId && erros.clienteId && <p className={erroClasse}>{erros.clienteId}</p>}
           </div>
 
           <div>
             <label className={labelClasse}>Tipo de Serviço *</label>
-            <select
+            <Selecao
               value={dados.tipoServicoId}
               onChange={(e) => set('tipoServicoId', e.target.value)}
               onBlur={() => setTocado((t) => ({ ...t, tipoServicoId: true }))}
@@ -127,7 +128,7 @@ export default function FormularioOS({ ordemExistente, onSubmit, onCancel, onDel
               {TIPOS_SERVICO.map((t) => (
                 <option key={t.id} value={t.id}>{t.nome}</option>
               ))}
-            </select>
+            </Selecao>
             {tocado.tipoServicoId && erros.tipoServicoId && <p className={erroClasse}>{erros.tipoServicoId}</p>}
           </div>
 
@@ -165,7 +166,7 @@ export default function FormularioOS({ ordemExistente, onSubmit, onCancel, onDel
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelClasse}>Técnico *</label>
-            <select
+            <Selecao
               value={dados.tecnicoId}
               onChange={(e) => set('tecnicoId', e.target.value)}
               onBlur={() => setTocado((t) => ({ ...t, tecnicoId: true }))}
@@ -175,7 +176,7 @@ export default function FormularioOS({ ordemExistente, onSubmit, onCancel, onDel
               {prestadores.map((p) => (
                 <option key={p.id} value={p.id}>{p.nome} — {p.especialidade}</option>
               ))}
-            </select>
+            </Selecao>
             {tocado.tecnicoId && erros.tecnicoId && <p className={erroClasse}>{erros.tecnicoId}</p>}
           </div>
 
@@ -196,11 +197,11 @@ export default function FormularioOS({ ordemExistente, onSubmit, onCancel, onDel
 
           <div>
             <label className={labelClasse}>Prioridade</label>
-            <select value={dados.prioridade} onChange={(e) => set('prioridade', e.target.value)} className={inputClasse}>
+            <Selecao value={dados.prioridade} onChange={(e) => set('prioridade', e.target.value)} className={inputClasse}>
               {PRIORIDADES.map((p) => (
                 <option key={p} value={p}>{p}</option>
               ))}
-            </select>
+            </Selecao>
           </div>
         </div>
       </div>

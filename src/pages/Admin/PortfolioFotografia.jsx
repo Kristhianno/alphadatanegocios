@@ -4,6 +4,7 @@ import { usePersisted } from '../../hooks/usePersisted'
 import { useToast } from '../../hooks/useToast'
 import { PORTFOLIO_FOTOGRAFIA } from '../../data/mock'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -37,10 +38,10 @@ export default function PortfolioFotografia() {
         <h1 className="text-h1 text-primary">Portfólio</h1>
         <div>
           <label className={labelClasse}>Filtrar por tipo</label>
-          <select className={inputClasse} value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
+          <Selecao className={inputClasse} value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
             <option value="">Todos</option>
             {tipos.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
+          </Selecao>
         </div>
       </div>
 

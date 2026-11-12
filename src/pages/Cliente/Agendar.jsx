@@ -6,6 +6,7 @@ import { useBranding } from '../../hooks/useBranding'
 import { useToast } from '../../hooks/useToast'
 import { api, ApiError } from '../../services/api'
 import CalendarioMensal from '../../components/ui/CalendarioMensal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -66,10 +67,10 @@ function FormularioChamado() {
     <form onSubmit={handleSubmit} className="bg-surface rounded-card shadow-card p-5 flex flex-col gap-4 max-w-xl">
       <div>
         <label className={labelClasse}>Tipo de Manutenção *</label>
-        <select required className={inputClasse} value={tipoManutencao} onChange={(e) => setTipoManutencao(e.target.value)}>
+        <Selecao required className={inputClasse} value={tipoManutencao} onChange={(e) => setTipoManutencao(e.target.value)}>
           <option value="">Selecione...</option>
           {CATEGORIAS_MANUTENCAO.map((c) => <option key={c.valor} value={c.valor}>{c.label}</option>)}
-        </select>
+        </Selecao>
       </div>
       <div>
         <label className={labelClasse}>Descreva o problema *</label>
@@ -197,10 +198,10 @@ function FormularioAgendamento({ user }) {
     <form onSubmit={handleSubmit} className="bg-surface rounded-card shadow-card p-5 flex flex-col gap-5 max-w-3xl">
       <div>
         <label className={labelClasse}>Serviço {restricoes.exigeServico && '*'}</label>
-        <select required={restricoes.exigeServico} className={inputClasse} value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
+        <Selecao required={restricoes.exigeServico} className={inputClasse} value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
           <option value="">Selecione...</option>
           {servicos.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
-        </select>
+        </Selecao>
       </div>
 
       <div>

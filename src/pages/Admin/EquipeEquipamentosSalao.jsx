@@ -5,6 +5,7 @@ import { useToast } from '../../hooks/useToast'
 import { EQUIPE_SALAO, EQUIPAMENTOS_SALAO } from '../../data/mock'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -126,9 +127,9 @@ export default function EquipeEquipamentosSalao() {
           </div>
           <div>
             <label className={labelClasse}>Cargo</label>
-            <select className={inputClasse} value={cargoMembro} onChange={(e) => setCargoMembro(e.target.value)}>
+            <Selecao className={inputClasse} value={cargoMembro} onChange={(e) => setCargoMembro(e.target.value)}>
               {CARGOS.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div>
             <label className={labelClasse}>Telefone</label>

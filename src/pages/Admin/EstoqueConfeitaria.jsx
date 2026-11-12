@@ -6,6 +6,7 @@ import { INGREDIENTES_CONFEITARIA } from '../../data/mock'
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -117,9 +118,9 @@ export default function EstoqueConfeitaria() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClasse}>Unidade</label>
-              <select className={inputClasse} value={unidadeMedida} onChange={(e) => setUnidadeMedida(e.target.value)}>
+              <Selecao className={inputClasse} value={unidadeMedida} onChange={(e) => setUnidadeMedida(e.target.value)}>
                 {['kg', 'g', 'l', 'ml', 'unidade', 'dúzia', 'lata'].map((u) => <option key={u} value={u}>{u}</option>)}
-              </select>
+              </Selecao>
             </div>
             <div>
               <label className={labelClasse}>Custo unitário (R$)</label>

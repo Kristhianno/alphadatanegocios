@@ -8,6 +8,7 @@ import { usePDF } from '../../hooks/usePDF'
 import { useBranding } from '../../hooks/useBranding'
 import { STATUS_OS } from '../../data/mock'
 import Badge from '../../components/ui/Badge'
+import Selecao from '../../components/ui/Selecao'
 
 const TIPOS_RELATORIO = ['Ordens de Serviço', 'Faturamento', 'Desempenho por Técnico', 'Satisfação do Cliente']
 const RELATORIOS_KEY = 'alphadata_relatorios'
@@ -141,32 +142,32 @@ export default function Relatorios() {
             </div>
             <div>
               <label className={labelClasse}>Tipo de Relatório</label>
-              <select className={inputClasse} value={filtros.tipo} onChange={(e) => setFiltros((f) => ({ ...f, tipo: e.target.value }))}>
+              <Selecao className={inputClasse} value={filtros.tipo} onChange={(e) => setFiltros((f) => ({ ...f, tipo: e.target.value }))}>
                 {TIPOS_RELATORIO.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+              </Selecao>
             </div>
           </div>
           <div className="flex flex-col gap-4">
             <div>
               <label className={labelClasse}>Técnico (opcional)</label>
-              <select className={inputClasse} value={filtros.tecnicoId} onChange={(e) => setFiltros((f) => ({ ...f, tecnicoId: e.target.value }))}>
+              <Selecao className={inputClasse} value={filtros.tecnicoId} onChange={(e) => setFiltros((f) => ({ ...f, tecnicoId: e.target.value }))}>
                 <option value="">Todos</option>
                 {prestadores.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
-              </select>
+              </Selecao>
             </div>
             <div>
               <label className={labelClasse}>Cliente (opcional)</label>
-              <select className={inputClasse} value={filtros.clienteId} onChange={(e) => setFiltros((f) => ({ ...f, clienteId: e.target.value }))}>
+              <Selecao className={inputClasse} value={filtros.clienteId} onChange={(e) => setFiltros((f) => ({ ...f, clienteId: e.target.value }))}>
                 <option value="">Todos</option>
                 {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
+              </Selecao>
             </div>
             <div>
               <label className={labelClasse}>Status (opcional)</label>
-              <select className={inputClasse} value={filtros.status} onChange={(e) => setFiltros((f) => ({ ...f, status: e.target.value }))}>
+              <Selecao className={inputClasse} value={filtros.status} onChange={(e) => setFiltros((f) => ({ ...f, status: e.target.value }))}>
                 <option value="">Todos</option>
                 {STATUS_OS.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+              </Selecao>
             </div>
           </div>
         </div>

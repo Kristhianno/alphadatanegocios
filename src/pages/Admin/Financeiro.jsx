@@ -5,6 +5,7 @@ import { api, ApiError } from '../../services/api'
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import Badge from '../../components/ui/Badge'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -169,10 +170,10 @@ export default function Financeiro() {
           <form onSubmit={handleSalvar} className="flex flex-col gap-4">
             <div>
               <label className={labelClasse}>Tipo *</label>
-              <select required className={inputClasse} value={form.tipo} onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}>
+              <Selecao required className={inputClasse} value={form.tipo} onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}>
                 <option value="receita">Receita</option>
                 <option value="despesa">Despesa</option>
-              </select>
+              </Selecao>
             </div>
             <div>
               <label className={labelClasse}>Descrição *</label>

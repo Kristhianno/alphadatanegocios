@@ -6,6 +6,7 @@ import { useBranding } from '../../hooks/useBranding'
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const ROTULO_PAPEL = { gestor: 'Gestor', tecnico: 'Técnico' }
 
@@ -112,14 +113,14 @@ export default function Equipe() {
             <>
               <div>
                 <label className="text-label text-[#666] block mb-1">Papel</label>
-                <select
+                <Selecao
                   className="w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
                   value={papelConvite}
                   onChange={(e) => setPapelConvite(e.target.value)}
                 >
                   <option value="tecnico">Técnico</option>
                   <option value="gestor">Gestor</option>
-                </select>
+                </Selecao>
               </div>
               <button
                 onClick={handleGerarConvite}

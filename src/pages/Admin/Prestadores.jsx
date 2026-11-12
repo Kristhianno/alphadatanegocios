@@ -11,6 +11,7 @@ import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import StarRating from '../../components/ui/StarRating'
 import Badge from '../../components/ui/Badge'
+import Selecao from '../../components/ui/Selecao'
 
 const CAMPOS_INICIAIS = { nome: '', especialidade: ESPECIALIDADES[0], telefone: '', email: '', ativo: true }
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
@@ -134,26 +135,26 @@ export default function Prestadores() {
       <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap items-end gap-3">
         <div>
           <label className={labelClasse}>Especialidade</label>
-          <select className={inputClasse} value={filtroEspecialidade} onChange={(e) => setFiltroEspecialidade(e.target.value)}>
+          <Selecao className={inputClasse} value={filtroEspecialidade} onChange={(e) => setFiltroEspecialidade(e.target.value)}>
             <option value="">Todas</option>
             {ESPECIALIDADES.map((e) => <option key={e} value={e}>{e}</option>)}
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className={labelClasse}>Status</label>
-          <select className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+          <Selecao className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
             <option value="">Todos</option>
             <option value="ativo">Ativo</option>
             <option value="inativo">Inativo</option>
-          </select>
+          </Selecao>
         </div>
         <div>
           <label className={labelClasse}>Ordenar por</label>
-          <select className={inputClasse} value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)}>
+          <Selecao className={inputClasse} value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)}>
             <option value="nome">Nome</option>
             <option value="avaliacao">Avaliação</option>
             <option value="totalOS">OS Concluídas</option>
-          </select>
+          </Selecao>
         </div>
       </div>
 
@@ -179,9 +180,9 @@ export default function Prestadores() {
           <div><label className={labelClasse}>Nome *</label><input required className={inputClasse} value={dados.nome} onChange={(e) => setDados((d) => ({ ...d, nome: e.target.value }))} /></div>
           <div>
             <label className={labelClasse}>Especialidade</label>
-            <select className={inputClasse} value={dados.especialidade} onChange={(e) => setDados((d) => ({ ...d, especialidade: e.target.value }))}>
+            <Selecao className={inputClasse} value={dados.especialidade} onChange={(e) => setDados((d) => ({ ...d, especialidade: e.target.value }))}>
               {ESPECIALIDADES.map((e) => <option key={e} value={e}>{e}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div><label className={labelClasse}>Telefone</label><input className={inputClasse} value={dados.telefone} onChange={(e) => setDados((d) => ({ ...d, telefone: e.target.value }))} /></div>
           <div><label className={labelClasse}>Email</label><input type="email" className={inputClasse} value={dados.email} onChange={(e) => setDados((d) => ({ ...d, email: e.target.value }))} /></div>

@@ -6,6 +6,7 @@ import { PRODUCOES_VIDEO_FOTOGRAFIA, CLIENTES_FOTOGRAFIA, STATUS_PRODUCAO_VIDEO 
 import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -60,13 +61,13 @@ export default function ProducoesVideoFotografia() {
     { header: 'Editor', accessorKey: 'editor' },
     {
       header: 'Status', accessorKey: 'status', cell: (info) => (
-        <select
+        <Selecao
           value={info.getValue()}
           onChange={(e) => alterarStatus(info.row.original.id, e.target.value)}
           className="text-label border-none bg-transparent focus:outline-none cursor-pointer"
         >
           {STATUS_PRODUCAO_VIDEO.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
+        </Selecao>
       ),
     },
     {
@@ -95,9 +96,9 @@ export default function ProducoesVideoFotografia() {
         <form onSubmit={handleCriar} className="flex flex-col gap-4">
           <div>
             <label className={labelClasse}>Cliente *</label>
-            <select required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+            <Selecao required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
               {CLIENTES_FOTOGRAFIA.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div>
             <label className={labelClasse}>Título *</label>

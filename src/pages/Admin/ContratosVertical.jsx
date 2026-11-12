@@ -13,6 +13,7 @@ import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import CameraCapture from '../../components/CameraCapture'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -129,13 +130,13 @@ export default function ContratosVertical() {
     { header: 'Valor', accessorKey: 'valorTotal', cell: (info) => `R$ ${Number(info.getValue() ?? 0).toLocaleString('pt-BR')}` },
     {
       header: 'Status', accessorKey: 'status', cell: (info) => (
-        <select
+        <Selecao
           value={info.getValue()}
           onChange={(e) => alterarStatus(info.row.original.id, e.target.value)}
           className="text-label border-none bg-transparent focus:outline-none cursor-pointer"
         >
           {STATUS_CONTRATO.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
+        </Selecao>
       ),
     },
     {
@@ -170,10 +171,10 @@ export default function ContratosVertical() {
         </div>
         <div>
           <label className={labelClasse}>Status</label>
-          <select className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+          <Selecao className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
             <option value="">Todos</option>
             {STATUS_CONTRATO.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          </Selecao>
         </div>
       </div>
 
@@ -186,15 +187,15 @@ export default function ContratosVertical() {
           <form onSubmit={handleSalvar} className="flex flex-col gap-4">
             <div>
               <label className={labelClasse}>Cliente *</label>
-              <select required className={inputClasse} value={form.clienteId} onChange={(e) => setForm((f) => ({ ...f, clienteId: e.target.value }))}>
+              <Selecao required className={inputClasse} value={form.clienteId} onChange={(e) => setForm((f) => ({ ...f, clienteId: e.target.value }))}>
                 {config.clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-              </select>
+              </Selecao>
             </div>
             <div>
               <label className={labelClasse}>{config.tituloItem} *</label>
-              <select required className={inputClasse} value={form.pacoteId} onChange={(e) => setForm((f) => ({ ...f, pacoteId: e.target.value }))}>
+              <Selecao required className={inputClasse} value={form.pacoteId} onChange={(e) => setForm((f) => ({ ...f, pacoteId: e.target.value }))}>
                 {config.pacotes.map((p) => <option key={p.id} value={p.id}>{p.nome} — R$ {Number(p[config.campoPreco] ?? 0).toLocaleString('pt-BR')}</option>)}
-              </select>
+              </Selecao>
               {pacoteSelecionado && (
                 <p className="text-label text-[#666] mt-1">Valor do contrato: R$ {Number(pacoteSelecionado[config.campoPreco] ?? 0).toLocaleString('pt-BR')}</p>
               )}
@@ -206,9 +207,9 @@ export default function ContratosVertical() {
               </div>
               <div>
                 <label className={labelClasse}>Status</label>
-                <select className={inputClasse} value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}>
+                <Selecao className={inputClasse} value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}>
                   {STATUS_CONTRATO.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                </Selecao>
               </div>
             </div>
 

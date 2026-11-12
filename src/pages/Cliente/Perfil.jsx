@@ -9,6 +9,7 @@ import { useToast } from '../../hooks/useToast'
 import { usePDF } from '../../hooks/usePDF'
 import Modal from '../../components/ui/Modal'
 import PasswordInput from '../../components/ui/PasswordInput'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:text-[#999]'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -157,12 +158,12 @@ export default function Perfil() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className={labelClasse}>Método</label>
-            <select className={inputClasse} value={preferencias.pagamento.metodo} onChange={(e) => setPreferencias((p) => ({ ...p, pagamento: { ...p.pagamento, metodo: e.target.value } }))}>
+            <Selecao className={inputClasse} value={preferencias.pagamento.metodo} onChange={(e) => setPreferencias((p) => ({ ...p, pagamento: { ...p.pagamento, metodo: e.target.value } }))}>
               <option>Cartão</option>
               <option>PIX</option>
               <option>Boleto</option>
               <option>Transferência</option>
-            </select>
+            </Selecao>
           </div>
           {preferencias.pagamento.metodo === 'Cartão' && (
             <div>
@@ -224,10 +225,10 @@ export default function Perfil() {
         </div>
         <div>
           <label className={labelClasse}>Privacidade</label>
-          <select className={`${inputClasse} max-w-xs`} value={preferencias.privacidade} onChange={(e) => setPreferencias((p) => ({ ...p, privacidade: e.target.value }))}>
+          <Selecao className={`${inputClasse} max-w-xs`} value={preferencias.privacidade} onChange={(e) => setPreferencias((p) => ({ ...p, privacidade: e.target.value }))}>
             <option>Pública</option>
             <option>Privada</option>
-          </select>
+          </Selecao>
         </div>
       </div>
 

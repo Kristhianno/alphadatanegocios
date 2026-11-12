@@ -7,6 +7,7 @@ import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import Checklist from '../../components/Checklist'
+import Selecao from '../../components/ui/Selecao'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -127,10 +128,10 @@ export default function EventosSalao() {
         </div>
         <div>
           <label className={labelClasse}>Status</label>
-          <select className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+          <Selecao className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
             <option value="">Todos</option>
             {STATUS_EVENTO.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          </Selecao>
         </div>
       </div>
 
@@ -142,15 +143,15 @@ export default function EventosSalao() {
         <form onSubmit={handleCriar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className={labelClasse}>Cliente *</label>
-            <select required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
+            <Selecao required className={inputClasse} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
               {CLIENTES_SALAO.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div>
             <label className={labelClasse}>Tipo de evento *</label>
-            <select required className={inputClasse} value={tipoEvento} onChange={(e) => setTipoEvento(e.target.value)}>
+            <Selecao required className={inputClasse} value={tipoEvento} onChange={(e) => setTipoEvento(e.target.value)}>
               {['Aniversário', 'Casamento', 'Corporativo', 'Formatura', 'Confraternização', 'Outro'].map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div className="md:col-span-2">
             <label className={labelClasse}>Nome do evento</label>
@@ -158,9 +159,9 @@ export default function EventosSalao() {
           </div>
           <div>
             <label className={labelClasse}>Pacote / Kit *</label>
-            <select required className={inputClasse} value={pacoteId} onChange={(e) => setPacoteId(e.target.value)}>
+            <Selecao required className={inputClasse} value={pacoteId} onChange={(e) => setPacoteId(e.target.value)}>
               {PACOTES_SALAO.map((p) => <option key={p.id} value={p.id}>{p.nome} — R$ {p.precoBase.toLocaleString('pt-BR')}</option>)}
-            </select>
+            </Selecao>
           </div>
           <div>
             <label className={labelClasse}>Data do evento *</label>
@@ -198,7 +199,7 @@ export default function EventosSalao() {
 
             <div>
               <label className={labelClasse}>Alterar status</label>
-              <select
+              <Selecao
                 className={inputClasse}
                 value={eventoDetalhe.status}
                 onChange={(e) => {
@@ -207,7 +208,7 @@ export default function EventosSalao() {
                 }}
               >
                 {STATUS_EVENTO.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+              </Selecao>
             </div>
           </div>
         )}
