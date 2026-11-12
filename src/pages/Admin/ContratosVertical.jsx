@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { IconPlus, IconTrash, IconEdit } from '@tabler/icons-react'
+import { useEffect, useMemo, useState } from 'react'
+import { IconPlus, IconTrash, IconEdit, IconFileCertificate, IconCircleCheckFilled } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
 import { usePersisted } from '../../hooks/usePersisted'
 import { useToast } from '../../hooks/useToast'
@@ -14,6 +14,8 @@ import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import CameraCapture from '../../components/CameraCapture'
 import Selecao from '../../components/ui/Selecao'
+import ModeloContratoModal from '../../components/ModeloContratoModal'
+import { api } from '../../services/api'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -61,6 +63,14 @@ export default function ContratosVertical() {
   const [form, setForm] = useState(null)
   const [editandoId, setEditandoId] = useState(null)
   const [paraDeletar, setParaDeletar] = useState(null)
+  // Modelo de contrato da empresa (arquivo + texto com campos) que a IA do WhatsApp preenche.
+  const [modeloAberto, setModeloAberto] = useState(false)
+  const [modelo, setModelo] = useState(null)
+
+  useEffect(() => {
+    api.get('/modelo-contrato').then(setModelo).catch(() => {})
+  }, [])
+  const modeloConfigurado = !!(modelo?.arquivo || modelo?.texto)
 
   const filtrados = useMemo(() => {
     let lista = contratos.filter((c) => c.clienteNome.toLowerCase().includes(busca.toLowerCase()))
@@ -159,10 +169,35 @@ export default function ContratosVertical() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-h1 text-primary">Contratos</h1>
-        <button onClick={abrirCriar} className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn px-4 py-2 text-body font-medium">
-          <IconPlus size={18} /> Novo Contrato
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setModeloAberto(true)}
+            className="flex items-center gap-2 rounded-btn border border-primary bg-surface px-4 py-2 text-body font-medium text-primary hover:bg-primary-light"
+          >
+            <IconFileCertificate size={18} /> Modelo de contrato
+            {modeloConfigurado && <IconCircleCheckFilled size={16} className="text-emerald-500" aria-label="configurado" />}
+          </button>
+          <button onClick={abrirCriar} className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white rounded-btn px-4 py-2 text-body font-medium">
+            <IconPlus size={18} /> Novo Contrato
+          </button>
+        </div>
       </div>
+
+      {modelo && !modeloConfigurado && (
+        <button
+          type="button"
+          onClick={() => setModeloAberto(true)}
+          className="flex items-center gap-3 rounded-card border border-dashed border-primary bg-primary-light px-4 py-3 text-left hover:bg-blue-100"
+        >
+          <IconFileCertificate size={22} className="shrink-0 text-primary" />
+          <span className="text-body text-[#333]">
+            <b>Carregue o seu modelo de contrato.</b> A IA do WhatsApp usa ele para montar o contrato de cada cliente com os dados da conversa.
+          </span>
+        </button>
+      )}
+
+      <ModeloContratoModal open={modeloAberto} onClose={() => setModeloAberto(false)} onAtualizado={setModelo} />
 
       <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap items-end gap-3">
         <div className="flex-1 min-w-[200px]">

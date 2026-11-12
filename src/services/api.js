@@ -56,5 +56,6 @@ export const api = {
   get: (caminho, opcoes) => requisicao(caminho, { ...opcoes, method: 'GET' }),
   post: (caminho, body, opcoes) => requisicao(caminho, { ...opcoes, method: 'POST', body }),
   patch: (caminho, body, opcoes) => requisicao(caminho, { ...opcoes, method: 'PATCH', body }),
+  put: (caminho, body, opcoes) => requisicao(caminho, { ...opcoes, method: 'PUT', body }),
   delete: (caminho, opcoes) => requisicao(caminho, { ...opcoes, method: 'DELETE' }),
 }
