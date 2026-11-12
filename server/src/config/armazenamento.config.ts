@@ -42,9 +42,14 @@ export const LIMITE_POR_TIPO_BYTES: Record<TipoArquivo, number> = {
   documento: 20 * MB,
 }
 
-/** Documentos (PDF/Office) nunca vão pro bucket público, mesmo se a categoria for de catálogo. */
-export function bucketDoArquivo(categoria: CategoriaArquivo, tipo: TipoArquivo): Bucket {
-  return tipo === 'documento' ? BUCKET_PRIVADO : bucketDaCategoria(categoria)
+/**
+ * Bucket de um arquivo: fotos/vídeos seguem a categoria; documentos são
+ * privados, exceto o PDF de catálogo/portfólio (a IA envia no WhatsApp).
+ * Word/Excel nunca vão pro público.
+ */
+export function bucketDoArquivo(categoria: CategoriaArquivo, tipo: TipoArquivo, tipoMime?: string): Bucket {
+  if (tipo !== 'documento') return bucketDaCategoria(categoria)
+  return tipoMime === 'application/pdf' ? bucketDaCategoria(categoria) : BUCKET_PRIVADO
 }
 
 /** Validade dos links temporários do bucket privado. */

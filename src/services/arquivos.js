@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 /** Rótulos das categorias — espelha CATEGORIAS_ARQUIVO de server/src/config/armazenamento.config.ts. */
 export const CATEGORIAS_ARQUIVO = [
-  { id: 'catalogo', label: 'Pacotes / Kits', descricao: 'Fotos que a IA envia no WhatsApp (link público)', publico: true },
-  { id: 'portfolio', label: 'Portfólio', descricao: 'Trabalhos já feitos (link público)', publico: true },
+  { id: 'catalogo', label: 'Portfólio', descricao: 'Fotos e PDFs de pacotes, kits e adicionais que a IA envia no WhatsApp (link público)', publico: true },
+  { id: 'portfolio', label: 'Trabalhos realizados', descricao: 'Fotos de festas que você já fez (link público)', publico: true },
   { id: 'evento', label: 'Eventos', descricao: 'Fotos e vídeos de festas (privado)', publico: false },
   { id: 'contrato', label: 'Contratos', descricao: 'Contratos assinados (privado)', publico: false },
   { id: 'documento', label: 'Documentos', descricao: 'PDFs, planilhas e outros (privado)', publico: false },

@@ -109,7 +109,7 @@ export class ArquivoService {
     this.validarTamanho(tipo, validado.tamanhoBytes)
     await this.validarCota(conta, validado.tamanhoBytes)
 
-    const bucket = bucketDoArquivo(validado.categoria, tipo)
+    const bucket = bucketDoArquivo(validado.categoria, tipo, validado.tipoMime.toLowerCase())
     const caminho = `${conta.id}/${validado.categoria}/${randomUUID()}.${extensao}`
     const urlUpload = await this.armazenamento.criarUrlUpload(bucket, caminho)
     return { caminho, bucket, urlUpload }
@@ -127,7 +127,7 @@ export class ArquivoService {
     const esperado = Object.entries(TIPOS_ACEITOS).find(([, info]) => info.extensao === extensao)
     if (!esperado) throw new ErroValidacao('Caminho de upload inválido.')
     const tipo = esperado[1].tipo
-    const bucket = bucketDoArquivo(validado.categoria, tipo)
+    const bucket = bucketDoArquivo(validado.categoria, tipo, esperado[0])
 
     const jaExiste = await this.arquivos.listar({ caminho: validado.caminho }, { limite: 1 })
     if (jaExiste.length > 0) throw new ErroValidacao('Este arquivo já foi registrado.')
@@ -181,6 +181,17 @@ export class ArquivoService {
     await this.armazenamento.remover(arquivo.bucket, [arquivo.caminho])
     await this.arquivos.deletar(arquivoId)
     logger.info({ contaId, arquivoId }, 'Arquivo excluído.')
+  }
+
+  /** Apaga todos os arquivos ligados a um registro (ex: ao excluir um item do portfólio). */
+  async excluirDaEntidade(contaId: string, entidadeTipo: string, entidadeId: string): Promise<number> {
+    const lista = await this.arquivos.listar({ conta_id: contaId, entidade_tipo: entidadeTipo, entidade_id: entidadeId })
+    for (const bucket of [BUCKET_PUBLICO, BUCKET_PRIVADO] as Bucket[]) {
+      const caminhos = lista.filter((a) => a.bucket === bucket).map((a) => a.caminho)
+      if (caminhos.length > 0) await this.armazenamento.remover(bucket, caminhos)
+    }
+    for (const arquivo of lista) await this.arquivos.deletar(arquivo.id)
+    return lista.length
   }
 
   /**

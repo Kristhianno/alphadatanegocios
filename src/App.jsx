@@ -27,7 +27,7 @@ import PedidosConfeitaria from './pages/Admin/PedidosConfeitaria'
 import EventosSalao from './pages/Admin/EventosSalao'
 import SessoesFotografia from './pages/Admin/SessoesFotografia'
 import AgendamentosVertical from './pages/Admin/AgendamentosVertical'
-import CatalogoVertical from './pages/Admin/CatalogoVertical'
+import Portfolio from './pages/Admin/Portfolio'
 import ContratosVertical from './pages/Admin/ContratosVertical'
 import Financeiro from './pages/Admin/Financeiro'
 import AdminOrcamentos from './pages/Admin/Orcamentos'
@@ -104,7 +104,7 @@ export default function App() {
         <Route path="configuracoes" element={<AdminConfiguracoes />} />
         <Route path="perfil" element={<AdminPerfil />} />
         <Route path="agendamentos" element={<AgendamentosVertical />} />
-        <Route path="catalogo" element={<CatalogoVertical />} />
+        <Route path="catalogo" element={<Portfolio />} />
         <Route path="contratos" element={<ContratosVertical />} />
         <Route path="financeiro" element={<Financeiro />} />
         <Route path="orcamentos" element={<AdminOrcamentos />} />

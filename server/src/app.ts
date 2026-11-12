@@ -26,6 +26,7 @@ import leadsRoutes from './routes/leads.routes.js'
 import plataformaRoutes from './routes/plataforma.routes.js'
 import crmRoutes from './routes/crm.routes.js'
 import arquivosRoutes from './routes/arquivos.routes.js'
+import portfolioRoutes from './routes/portfolio.routes.js'
 import { tratarErro } from './middleware/erro.middleware.js'
 import type { AppEnv } from './types/hono.js'
 
@@ -73,6 +74,7 @@ app.route('/leads', leadsRoutes)
 app.route('/plataforma', plataformaRoutes)
 app.route('/crm', crmRoutes)
 app.route('/arquivos', arquivosRoutes)
+app.route('/portfolio', portfolioRoutes)
 
 app.notFound((c) => c.json({ erro: { codigo: 'ROTA_NAO_ENCONTRADA', mensagem: `Rota "${c.req.method} ${c.req.path}" não existe.` } }, 404))
 

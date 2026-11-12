@@ -3,9 +3,9 @@ import { NavLink, Link } from 'react-router-dom'
 import {
   IconChartBar, IconListCheck, IconUsers, IconUserBolt, IconFileTypePdf, IconSettings,
   IconHistory, IconUser, IconHome, IconCalendarPlus, IconList, IconX, IconApps,
-  IconCalendarEvent, IconCategory, IconClipboardList, IconBook2, IconPackage,
+  IconCalendarEvent, IconClipboardList, IconBook2, IconPackage,
   IconConfetti, IconUsersGroup, IconCamera, IconVideo, IconPhoto, IconContract,
-  IconReportMoney, IconCalculator, IconLayoutKanban, IconLock, IconFolder,
+  IconReportMoney, IconCalculator, IconLayoutKanban, IconLock, IconFolder, IconLayoutGrid,
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
@@ -93,7 +93,7 @@ const ICONES_POR_ID = {
   arquivos: IconFolder,
   clientes: IconUsers,
   agendamentos: IconCalendarEvent,
-  servicos: IconCategory,
+  servicos: IconLayoutGrid,
   contratos: IconContract,
   financeiro: IconReportMoney,
   orcamentos: IconCalculator,

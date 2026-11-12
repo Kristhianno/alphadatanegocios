@@ -1,44 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { ArquivoService } from '../../src/services/ArquivoService.js'
-import type { ArmazenamentoObjetos, ItemListado } from '../../src/utils/armazenamento-objetos.js'
-import type { Bucket } from '../../src/config/armazenamento.config.js'
+import { ArmazenamentoMemoria } from '../helpers/armazenamentoMemoria.js'
 import { ErroNaoEncontrado, ErroValidacao } from '../../src/errors/AppError.js'
 import { criarClienteFake, paraTipado } from '../helpers/fakeSupabase.js'
 
 const MB = 1024 * 1024
 const DIA_MS = 24 * 60 * 60 * 1000
-
-/** Storage em memória: chave `bucket:caminho` → metadados do objeto. */
-class ArmazenamentoMemoria implements ArmazenamentoObjetos {
-  objetos = new Map<string, { tamanhoBytes: number; tipoMime: string; criadoEm: Date }>()
-
-  enviar(bucket: Bucket, caminho: string, tamanhoBytes: number, tipoMime: string, criadoEm = new Date()) {
-    this.objetos.set(`${bucket}:${caminho}`, { tamanhoBytes, tipoMime, criadoEm })
-  }
-  async criarUrlUpload(bucket: Bucket, caminho: string) { return `https://storage.teste/upload/${bucket}/${caminho}?token=x` }
-  async metadados(bucket: Bucket, caminho: string) {
-    const o = this.objetos.get(`${bucket}:${caminho}`)
-    return o ? { tamanhoBytes: o.tamanhoBytes, tipoMime: o.tipoMime } : null
-  }
-  urlPublica(bucket: Bucket, caminho: string) { return `https://storage.teste/public/${bucket}/${caminho}` }
-  async urlsAssinadas(bucket: Bucket, caminhos: string[]) {
-    return new Map(caminhos.map((c) => [c, `https://storage.teste/sign/${bucket}/${c}?exp=1h`]))
-  }
-  async remover(bucket: Bucket, caminhos: string[]) { for (const c of caminhos) this.objetos.delete(`${bucket}:${c}`) }
-  async listar(bucket: Bucket, prefixo: string): Promise<ItemListado[]> {
-    const nivel = prefixo ? prefixo.split('/').length : 0
-    const vistos = new Map<string, ItemListado>()
-    for (const [chave, o] of this.objetos) {
-      const [b, caminho] = chave.split(/:(.+)/) as [string, string]
-      if (b !== bucket || (prefixo && !caminho.startsWith(`${prefixo}/`))) continue
-      const partes = caminho.split('/')
-      const nome = partes[nivel]!
-      const ehPasta = partes.length > nivel + 1
-      vistos.set(nome, { nome, ehPasta, criadoEm: ehPasta ? null : o.criadoEm })
-    }
-    return [...vistos.values()]
-  }
-}
 
 function cenario(plano: 'startup' | 'profissional' = 'startup') {
   const fake = criarClienteFake()
@@ -68,10 +35,18 @@ describe('ArquivoService.prepararUpload', () => {
     expect(r.urlUpload).toContain('token=')
   })
 
-  it('contrato e qualquer PDF vão pro privado, mesmo marcado como catálogo', async () => {
+  it('PDF de contrato é privado; PDF do portfólio (catálogo) é público; Word nunca é público', async () => {
     const c = cenario()
+    const docx = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     expect((await c.service.prepararUpload(c.conta, { nome: 'c.pdf', tipoMime: 'application/pdf', tamanhoBytes: 1000, categoria: 'contrato' })).bucket).toBe('privado')
-    expect((await c.service.prepararUpload(c.conta, { nome: 'c.pdf', tipoMime: 'application/pdf', tamanhoBytes: 1000, categoria: 'catalogo' })).bucket).toBe('privado')
+    expect((await c.service.prepararUpload(c.conta, { nome: 'kits.pdf', tipoMime: 'application/pdf', tamanhoBytes: 1000, categoria: 'catalogo' })).bucket).toBe('publico')
+    expect((await c.service.prepararUpload(c.conta, { nome: 'k.docx', tipoMime: docx, tamanhoBytes: 1000, categoria: 'catalogo' })).bucket).toBe('privado')
+  })
+
+  it('PDF do portfólio confirmado volta com link permanente', async () => {
+    const c = cenario()
+    const pdf = await enviarCompleto(c, { tipoMime: 'application/pdf', tamanhoBytes: 2000, categoria: 'catalogo' })
+    expect(pdf).toMatchObject({ bucket: 'publico', urlTemporaria: false })
   })
 
   it('recusa tipo não aceito e arquivo acima do limite do tipo', async () => {

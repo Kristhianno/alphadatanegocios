@@ -18,7 +18,7 @@ const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 tex
 const labelClasse = 'text-label text-[#666] block mb-1'
 
 // Tela genérica pros 3 verticais (mesma ideia de AgendamentosVertical/
-// CatalogoVertical): cliente + pacote/produto contratado + data do
+// tela de Portfólio): cliente + pacote/produto contratado + data do
 // evento + status de assinatura. `tituloItem` só muda o rótulo do
 // select (confeitaria vende "produto", os outros dois vendem "pacote").
 const CONFIG_POR_VERTICAL = {
