@@ -213,7 +213,7 @@ function CampoTema({ inicial = '', rotuloSalvar, onSalvar, onCancelar }) {
 }
 
 /** Um tema dos materiais prontos: título (renomeável), botões de envio e as miniaturas. */
-function GrupoTema({ tema, arquivos, entidadeTipo, novo, onEnviado, onRenomear, onDescartar, onAbrir, onExcluir }) {
+function GrupoTema({ tema, arquivos, entidadeTipo, onEnviado, onRenomear, onApagar, onAbrir, onExcluir }) {
   const [editando, setEditando] = useState(false)
   const { envios, enviar, dispensar } = useEnvios(onEnviado)
   const semTema = tema === SEM_TEMA
@@ -236,7 +236,7 @@ function GrupoTema({ tema, arquivos, entidadeTipo, novo, onEnviado, onRenomear, 
             <IconFolder size={20} className="shrink-0 text-primary" />
             <div className="min-w-0">
               <h3 className={`truncate text-body font-semibold ${semTema ? 'text-[#777]' : 'text-[#1a1a1a]'}`}>{semTema ? 'Sem tema' : tema}</h3>
-              <p className="text-[12px] text-[#999]">{arquivos.length ? contarArquivos(arquivos) : 'Envie os arquivos para salvar este tema'}</p>
+              <p className="text-[12px] text-[#999]">{arquivos.length ? contarArquivos(arquivos) : 'Nenhum arquivo ainda'}</p>
             </div>
             <button
               type="button"
@@ -247,12 +247,12 @@ function GrupoTema({ tema, arquivos, entidadeTipo, novo, onEnviado, onRenomear, 
             >
               <IconPencil size={16} />
             </button>
-            {novo && arquivos.length === 0 && envios.length === 0 && (
+            {!semTema && arquivos.length === 0 && envios.length === 0 && (
               <button
                 type="button"
-                onClick={onDescartar}
-                aria-label={`Descartar tema ${tema}`}
-                title="Descartar tema"
+                onClick={onApagar}
+                aria-label={`Apagar tema ${tema}`}
+                title="Apagar tema"
                 className="shrink-0 rounded-btn p-1.5 text-[#999] hover:bg-muted hover:text-danger"
               >
                 <IconX size={16} />
@@ -287,7 +287,7 @@ function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
   const { showToast } = useToast()
   const abrirVisualizador = useVisualizador()
   const [materiais, setMateriais] = useState(null)
-  const [temasNovos, setTemasNovos] = useState([]) // criados nesta sessão (ficam no topo; só vão pro banco com o 1º arquivo)
+  const [temasSalvos, setTemasSalvos] = useState(null) // temas gravados no banco (inclusive vazios), do mais antigo ao mais novo
   const [criando, setCriando] = useState(false)
   const adicionar = useCallback((a) => setMateriais((atuais) => [a, ...(atuais ?? [])]), [])
   const entidadeTipo = `portfolio_${aba.tipo}`
@@ -295,53 +295,70 @@ function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
   useEffect(() => {
     let cancelado = false
     setMateriais(null)
-    setTemasNovos([])
+    setTemasSalvos(null)
     setCriando(false)
     api.get(`/portfolio/materiais/${aba.tipo}`).then((lista) => !cancelado && setMateriais(lista)).catch(() => !cancelado && setMateriais([]))
+    api.get(`/portfolio/materiais/${aba.tipo}/temas`).then((lista) => !cancelado && setTemasSalvos(lista)).catch(() => !cancelado && setTemasSalvos([]))
     return () => {
       cancelado = true
     }
   }, [aba.tipo, versao])
 
+  const carregando = materiais === null || temasSalvos === null
+
+  // Ordem: temas criados mais recentes no topo, depois os que só existem nos arquivos (A-Z), e "Sem tema" por último.
   const grupos = useMemo(() => {
     const porTema = new Map()
     for (const a of materiais ?? []) porTema.set(temaDe(a), [...(porTema.get(temaDe(a)) ?? []), a])
-    const salvos = [...porTema.keys()]
-      .filter((t) => t !== SEM_TEMA && !temasNovos.includes(t))
+    const salvos = [...(temasSalvos ?? [])].reverse()
+    const soNosArquivos = [...porTema.keys()]
+      .filter((t) => t !== SEM_TEMA && !salvos.includes(t))
       .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
-    const ordem = [...temasNovos, ...salvos, ...(porTema.has(SEM_TEMA) ? [SEM_TEMA] : [])]
-    return ordem.map((tema) => ({ tema, arquivos: porTema.get(tema) ?? [], novo: temasNovos.includes(tema) }))
-  }, [materiais, temasNovos])
+    const ordem = [...salvos, ...soNosArquivos, ...(porTema.has(SEM_TEMA) ? [SEM_TEMA] : [])]
+    return ordem.map((tema) => ({ tema, arquivos: porTema.get(tema) ?? [] }))
+  }, [materiais, temasSalvos])
 
   function existe(nome, ignorar) {
     const chave = nome.toLocaleLowerCase('pt-BR')
     return grupos.find((g) => g.tema !== ignorar && g.tema !== SEM_TEMA && g.tema.toLocaleLowerCase('pt-BR') === chave)
   }
 
-  function criarTema(nome) {
+  async function criarTema(nome) {
     const igual = existe(nome)
     if (igual) {
       showToast(`O tema "${igual.tema}" já existe.`, 'erro')
-    } else {
-      setTemasNovos((atuais) => [nome, ...atuais])
+      setCriando(false)
+      return
     }
-    setCriando(false)
+    try {
+      const salvo = await api.post(`/portfolio/materiais/${aba.tipo}/temas`, { nome })
+      setTemasSalvos((atuais) => (atuais.includes(salvo.nome) ? atuais : [...atuais, salvo.nome]))
+      setCriando(false)
+    } catch (erro) {
+      showToast(erro instanceof ApiError ? erro.message : 'Não foi possível criar o tema.', 'erro')
+    }
   }
 
-  /** Renomeia no banco (se o tema já tem arquivos) e na tela. Devolve true se deu certo. */
+  async function apagarTema(nome) {
+    try {
+      await api.delete(`/portfolio/materiais/${aba.tipo}/temas?nome=${encodeURIComponent(nome)}`)
+      setTemasSalvos((atuais) => atuais.filter((t) => t !== nome))
+    } catch (erro) {
+      showToast(erro instanceof ApiError ? erro.message : 'Não foi possível apagar o tema.', 'erro')
+    }
+  }
+
+  /** Renomeia no banco (tema e arquivos dele) e na tela. Devolve true se deu certo. */
   async function renomearTema(de, para) {
     if (para === de) return true
     const igual = existe(para, de)
     const destino = igual ? igual.tema : para // mesmo nome com outra caixa: junta no tema existente
-    const temArquivos = (materiais ?? []).some((a) => temaDe(a) === de)
     try {
-      if (temArquivos) {
-        await api.patch(`/portfolio/materiais/${aba.tipo}/tema`, { de: de === SEM_TEMA ? null : de, para: destino })
-        setMateriais((atuais) => atuais.map((a) => (temaDe(a) === de ? { ...a, tema: destino } : a)))
-      }
-      setTemasNovos((atuais) => {
-        const semDe = atuais.filter((t) => t !== de)
-        return atuais.includes(de) && !igual ? [destino, ...semDe] : semDe
+      await api.patch(`/portfolio/materiais/${aba.tipo}/tema`, { de: de === SEM_TEMA ? null : de, para: destino })
+      setMateriais((atuais) => atuais.map((a) => (temaDe(a) === de ? { ...a, tema: destino } : a)))
+      setTemasSalvos((atuais) => {
+        if (igual) return atuais.filter((t) => t !== de)
+        return atuais.includes(de) ? atuais.map((t) => (t === de ? destino : t)) : [...atuais, destino]
       })
       if (igual) showToast(`Arquivos juntados no tema "${destino}".`)
       return true
@@ -351,7 +368,7 @@ function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
     }
   }
 
-  const vazio = materiais !== null && grupos.length === 0
+  const vazio = !carregando && grupos.length === 0
 
   return (
     <section className="rounded-card bg-surface p-4 sm:p-5 shadow-card">
@@ -381,7 +398,7 @@ function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
         </div>
       )}
 
-      {materiais === null ? (
+      {carregando ? (
         <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="aspect-square animate-pulse rounded-card bg-muted" />)}
         </div>
@@ -393,11 +410,10 @@ function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
                 key={g.tema || '__sem_tema__'}
                 tema={g.tema}
                 arquivos={g.arquivos}
-                novo={g.novo}
                 entidadeTipo={entidadeTipo}
                 onEnviado={adicionar}
                 onRenomear={renomearTema}
-                onDescartar={() => setTemasNovos((atuais) => atuais.filter((t) => t !== g.tema))}
+                onApagar={() => apagarTema(g.tema)}
                 onAbrir={abrirVisualizador}
                 onExcluir={(a) => onExcluirArquivo(a, () => setMateriais((atuais) => atuais.filter((x) => x.id !== a.id)))}
               />

@@ -9,7 +9,8 @@ const VisualizadorPdf = lazy(() => import('./VisualizadorPdf'))
 
 /**
  * Visualizador de arquivos dentro do sistema (fotos, vídeos e PDFs) — nada
- * abre em outra aba. Uso:
+ * abre em outra aba: um modal quase em tela cheia (no celular ocupa a tela
+ * toda); clicar fora dele ou Esc fecha. Uso:
  *   const abrir = useVisualizador()
  *   abrir(listaDeArquivos, indice)   // arquivo = { url, nomeOriginal, tipo, tipoMime, tamanhoBytes }
  * Teclado: ← → navegam, Esc fecha, + − dão zoom no PDF. No celular, deslizar
@@ -216,7 +217,19 @@ function Visualizador({ lista, indiceInicial, onFechar }) {
     .join(' · ')
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={arquivo.nomeOriginal} className="fixed inset-0 z-[80] flex flex-col bg-[#0b0f17] text-white">
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-0 backdrop-blur-sm sm:p-5 lg:p-8 animate-[visuFundo_150ms_ease-out]"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onFechar() // clique fora do modal fecha
+      }}
+    >
+    <style>{'@keyframes visuFundo{from{opacity:0}}@keyframes visuModal{from{opacity:0;transform:scale(.97)}}'}</style>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={arquivo.nomeOriginal}
+      className="flex h-full w-full max-w-[1680px] flex-col overflow-hidden bg-[#0b0f17] text-white shadow-[0_24px_80px_rgba(0,0,0,0.6)] sm:rounded-2xl animate-[visuModal_180ms_ease-out]"
+    >
       {/* Barra superior */}
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-2 sm:h-16 sm:px-4">
         <span className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-btn bg-white/10 sm:flex">
@@ -339,6 +352,7 @@ function Visualizador({ lista, indiceInicial, onFechar }) {
           </div>
         </footer>
       )}
+    </div>
     </div>
   )
 }

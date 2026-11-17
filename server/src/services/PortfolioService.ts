@@ -17,9 +17,10 @@ import {
 } from '../models/PortfolioItem.js'
 import type { ArquivoComUrl } from '../models/Arquivo.js'
 import { PortfolioRepository } from '../repositories/PortfolioRepository.js'
+import { PortfolioTemaRepository } from '../repositories/PortfolioTemaRepository.js'
 import { ArquivoService } from './ArquivoService.js'
 import type { ArmazenamentoObjetos } from '../utils/armazenamento-objetos.js'
-import { ErroNaoEncontrado } from '../errors/AppError.js'
+import { ErroConflito, ErroNaoEncontrado } from '../errors/AppError.js'
 import { logger } from '../utils/logger.js'
 
 const textoOpcional = (max: number) =>
@@ -48,14 +49,17 @@ const schemaCriar = schemaDados.extend({ tipo: z.enum(TIPOS_PORTFOLIO) })
 const schemaTipo = z.enum(TIPOS_PORTFOLIO)
 const nomeTema = z.string().trim().max(80).transform((v) => (v === '' ? null : v)).nullable()
 const schemaRenomearTema = z.object({ de: nomeTema, para: nomeTema })
+const schemaNovoTema = z.object({ nome: z.string().trim().min(1, 'Informe o nome do tema.').max(80) })
 
 export class PortfolioService {
   private readonly itens: PortfolioRepository
   private readonly arquivos: ArquivoService
+  private readonly temas: PortfolioTemaRepository
 
   constructor(client: Cliente, armazenamento?: ArmazenamentoObjetos) {
     this.itens = new PortfolioRepository(client)
     this.arquivos = new ArquivoService(client, armazenamento)
+    this.temas = new PortfolioTemaRepository(client)
   }
 
   /** Itens (de um tipo, ou todos) com fotos e PDFs. Ordem: ativos primeiro, depois por nome. */
@@ -111,8 +115,31 @@ export class PortfolioService {
   /** Renomeia um tema dos materiais prontos de uma aba (`de` null = os sem tema; `para` null = tira o tema). */
   async renomearTema(contaId: string, tipo: unknown, dados: unknown): Promise<{ atualizados: number }> {
     const { de, para } = schemaRenomearTema.parse(dados)
-    const atualizados = de === para ? 0 : await this.arquivos.renomearTema(contaId, entidadeMateriais(schemaTipo.parse(tipo) as TipoPortfolio), de, para)
+    const tipoValido = schemaTipo.parse(tipo) as TipoPortfolio
+    if (de === para) return { atualizados: 0 }
+    const atualizados = await this.arquivos.renomearTema(contaId, entidadeMateriais(tipoValido), de, para)
+    if (para !== null) await this.temas.garantir(contaId, tipoValido, para)
+    if (de !== null && de.toLocaleLowerCase('pt-BR') !== para?.toLocaleLowerCase('pt-BR')) await this.temas.remover(contaId, tipoValido, de)
     return { atualizados }
+  }
+
+  /** Temas salvos de uma aba (inclusive os que ainda não têm arquivo), na ordem em que foram criados. */
+  async listarTemas(contaId: string, tipo: unknown): Promise<string[]> {
+    return this.temas.listar(contaId, schemaTipo.parse(tipo) as TipoPortfolio)
+  }
+
+  async criarTema(contaId: string, tipo: unknown, dados: unknown): Promise<{ nome: string }> {
+    const { nome } = schemaNovoTema.parse(dados)
+    return { nome: await this.temas.garantir(contaId, schemaTipo.parse(tipo) as TipoPortfolio, nome) }
+  }
+
+  /** Apaga um tema vazio. Com arquivos, recusa: os arquivos precisam ser excluídos antes. */
+  async removerTema(contaId: string, tipo: unknown, nome: unknown): Promise<void> {
+    const tipoValido = schemaTipo.parse(tipo) as TipoPortfolio
+    const nomeValido = schemaNovoTema.parse({ nome }).nome
+    const arquivos = await this.arquivos.listar(contaId, { entidadeTipo: entidadeMateriais(tipoValido) })
+    if (arquivos.some((a) => a.tema === nomeValido)) throw new ErroConflito('Este tema ainda tem arquivos. Exclua os arquivos antes de apagar o tema.')
+    await this.temas.remover(contaId, tipoValido, nomeValido)
   }
 
   async buscarComMidia(contaId: string, itemId: string): Promise<PortfolioItemComMidia> {
