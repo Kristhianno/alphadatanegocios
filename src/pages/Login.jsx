@@ -19,6 +19,8 @@ import PasswordInput from '../components/ui/PasswordInput'
 import AlphaDataLogo from '../components/AlphaDataLogo'
 import SeletorNicho from '../components/SeletorNicho'
 import { destinoDoUsuario } from '../utils/destino'
+import { rodandoComoApp } from '../utils/appInstalado'
+import BotaoInstalarApp from '../components/BotaoInstalarApp'
 import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
 
 
@@ -510,13 +512,17 @@ export default function Login({ apenasCadastro = false }) {
     return (
       <FundoAzul>
         <div className="min-h-screen flex flex-col">
-          <div className="px-4 sm:px-8 pt-4 sm:pt-6">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1.5 rounded-btn px-2.5 py-1.5 text-label font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              <IconArrowLeft size={16} /> Voltar para o site
-            </Link>
+          {/* No app instalado não existe "site": nada de voltar pra landing. */}
+          <div className="px-4 sm:px-8 pt-4 sm:pt-6 flex items-center justify-between gap-2 min-h-[36px]">
+            {!rodandoComoApp() ? (
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 rounded-btn px-2.5 py-1.5 text-label font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <IconArrowLeft size={16} /> Voltar para o site
+              </Link>
+            ) : <span />}
+            <BotaoInstalarApp className="inline-flex items-center gap-1.5 rounded-btn px-2.5 py-1.5 text-label font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors" />
           </div>
           <main className="flex-1 flex items-center justify-center px-3 sm:px-6 py-6 sm:py-10">
             <div className="w-full max-w-[460px] rounded-[14px] bg-surface p-6 sm:p-10 shadow-[0_24px_60px_rgba(0,20,60,0.35)]">

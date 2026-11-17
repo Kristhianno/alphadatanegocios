@@ -13,6 +13,8 @@ import CheckoutSucesso from './pages/CheckoutSucesso'
 import EmConstrucao from './pages/EmConstrucao'
 import Privacidade from './pages/Privacidade'
 import PainelSuperadmin from './pages/Superadmin/Painel'
+import { destinoDoUsuario } from './utils/destino'
+import { rodandoComoApp } from './utils/appInstalado'
 
 import AdminDashboard from './pages/Admin/Dashboard'
 import AdminDashboardVertical from './pages/Admin/DashboardVertical'
@@ -67,7 +69,19 @@ function AdminDashboardRoteado() {
  * Antes, quem tinha sessão salva era redirecionado e não conseguia ver o site.
  */
 function RaizApp() {
+  // Aberto pelo ícone do app instalado (PC/celular): nunca mostra o site.
+  if (rodandoComoApp()) return <Navigate to="/app" replace />
   return <Landing />
+}
+
+/**
+ * Entrada do app instalado (start_url do manifest.webmanifest): abre
+ * direto no login — ou no painel, se a sessão já estiver salva.
+ */
+function EntradaApp() {
+  const { user } = useAuth()
+  const { para, state } = destinoDoUsuario(user)
+  return <Navigate to={para} state={state} replace />
 }
 
 export default function App() {
@@ -82,6 +96,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<RaizApp />} />
+      <Route path="/app" element={<EntradaApp />} />
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Login apenasCadastro />} />
       <Route path="/auth/callback" element={<CallbackSupabase />} />

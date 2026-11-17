@@ -13,6 +13,11 @@ import { PrestadoresProvider } from './hooks/usePrestadores'
 import { PedidosConfeitariaProvider } from './hooks/usePedidosConfeitaria'
 import { EventosSalaoProvider } from './hooks/useEventosSalao'
 import { SessoesFotografiaProvider } from './hooks/useSessoesFotografia'
+import { registrarServiceWorker, rodandoComoApp } from './utils/appInstalado'
+
+registrarServiceWorker()
+// No app instalado a barra da janela mostra só o nome do sistema, não o título do site.
+if (rodandoComoApp()) document.title = 'AlphaData'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

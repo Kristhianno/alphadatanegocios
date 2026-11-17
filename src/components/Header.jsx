@@ -3,6 +3,7 @@ import { IconMenu2, IconUserCircle, IconChevronDown, IconLogout, IconSettings, I
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import BrandMark from './BrandMark'
+import BotaoInstalarApp from './BotaoInstalarApp'
 
 export default function Header({ onToggleSidebar }) {
   const { user, logout } = useAuth()
@@ -29,6 +30,11 @@ export default function Header({ onToggleSidebar }) {
           <BrandMark textClassName="text-logo font-bold tracking-tight whitespace-nowrap" />
         </div>
 
+        <div className="flex items-center gap-1 sm:gap-2">
+        <BotaoInstalarApp
+          className="flex items-center gap-1.5 rounded-btn px-2 py-1.5 text-label font-medium hover:bg-white/10"
+          classeTexto="hidden sm:inline"
+        />
         <div className="relative">
           <button
             onClick={() => setMenuAberto((v) => !v)}
@@ -63,6 +69,7 @@ export default function Header({ onToggleSidebar }) {
               </div>
             </>
           )}
+        </div>
         </div>
       </div>
     </header>
