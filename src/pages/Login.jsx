@@ -21,7 +21,10 @@ import SeletorNicho from '../components/SeletorNicho'
 import { destinoDoUsuario } from '../utils/destino'
 import { rodandoComoApp } from '../utils/appInstalado'
 import BotaoInstalarApp from '../components/BotaoInstalarApp'
-import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
+import { CICLO_PADRAO, NOME_MARKETING_PLANO, OPCOES_CICLO } from '../data/planos'
+
+// Os preços não aparecem no site (vão na apresentação comercial); no cadastro, só o resumo do plano.
+const RESUMO_PLANO = { startup: 'IA no WhatsApp + sistema', profissional: 'Tudo + CRM e follow-up' }
 
 
 const inputComIconeClasse =
@@ -409,7 +412,7 @@ export default function Login({ apenasCadastro = false }) {
                     }`}
                   >
                     <span className="block text-body font-semibold text-[#1a1a1a]">{p.nomeMarketing}</span>
-                    <span className="block text-label text-[#777]">{formatarPreco(precoMensalDoCiclo(p, cicloForm))}/mês</span>
+                    <span className="block text-label text-[#777]">{RESUMO_PLANO[p.plano] ?? ''}</span>
                   </button>
                 ))}
               </div>

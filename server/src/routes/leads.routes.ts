@@ -8,9 +8,9 @@ const router = new Hono<AppEnv>()
 function leadService() { return new LeadService(getSupabase()) }
 
 router.post('/', async (c) => {
-  const { nome, email, origem } = (await c.req.json()) as Record<string, unknown>
-  const lead = await leadService().criar(nome as string, email as string, origem as string | undefined)
-  return c.json(lead, 201)
+  const lead = await leadService().criar(await c.req.json())
+  // Spam barrado pela armadilha recebe o mesmo "ok" — não ensina o robô a contornar.
+  return c.json(lead ? { id: lead.id } : { id: null }, 201)
 })
 
 export default router

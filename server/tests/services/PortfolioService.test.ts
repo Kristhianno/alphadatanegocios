@@ -53,6 +53,7 @@ describe('PortfolioService', () => {
     const c = cenario()
     const kit = await c.portfolio.criar(c.conta.id, { tipo: 'kit', nome: 'Kit Unicórnio' })
     const primeira = await anexar(c, 'image/jpeg', 'portfolio_item', kit.id)
+    await new Promise((r) => setTimeout(r, 5)) // criado_em distinto: sem empate na ordenação
     await anexar(c, 'image/png', 'portfolio_item', kit.id)
     await anexar(c, 'application/pdf', 'portfolio_item', kit.id)
 

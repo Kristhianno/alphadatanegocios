@@ -12,6 +12,8 @@ export class LeadRepository extends Repository<Lead> {
       id: linha['id'] as string,
       nome: linha['nome'] as string,
       email: linha['email'] as string,
+      telefone: (linha['telefone'] as string) ?? null,
+      mensagem: (linha['mensagem'] as string) ?? null,
       origem: linha['origem'] as string,
       criadoEm: new Date(linha['criado_em'] as string),
     }
@@ -22,6 +24,8 @@ export class LeadRepository extends Repository<Lead> {
     if (dados.nome !== undefined) linha['nome'] = dados.nome
     if (dados.email !== undefined) linha['email'] = dados.email
     if (dados.origem !== undefined) linha['origem'] = dados.origem
+    if (dados.telefone) linha['telefone'] = dados.telefone
+    if (dados.mensagem) linha['mensagem'] = dados.mensagem
     return linha
   }
 }

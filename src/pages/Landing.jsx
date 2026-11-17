@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   IconArrowRight, IconBrandFacebook, IconBrandInstagram, IconBrandLinkedin, IconBrandWhatsapp, IconCake,
@@ -11,6 +11,7 @@ import { useAuth } from '../hooks/useAuth'
 import { destinoDoUsuario } from '../utils/destino'
 import { api } from '../services/api'
 import AlphaDataLogo from '../components/AlphaDataLogo'
+import ConhecerPlanosModal from '../components/ConhecerPlanosModal'
 import { CICLO_PADRAO, OPCOES_CICLO, ROTULO_CICLO, formatarPreco, precoMensalDoCiclo } from '../data/planos'
 import { NICHOS } from '../data/nichos'
 import heroLaptop from '../assets/landing/hero-mockup-laptop.png'
@@ -259,7 +260,7 @@ const FAQ = [
   },
   {
     pergunta: 'O que está incluso na implementação?',
-    resposta: 'A gente configura a IA no WhatsApp com os seus pacotes / kits e preços e integra tudo ao sistema. É um investimento único de R$ 1.997, cobrado junto da primeira mensalidade.',
+    resposta: 'A gente configura a IA no WhatsApp com os seus pacotes / kits e preços e integra tudo ao sistema. É um investimento único, cobrado junto da primeira mensalidade. Os valores estão na apresentação dos planos.',
   },
   {
     pergunta: 'Qual a diferença entre o plano de 12 meses e o sem fidelidade?',
@@ -294,6 +295,13 @@ function FaqItem({ item, aberta, onToggle }) {
   )
 }
 
+/**
+ * Os preços ficam fora do site: quem quer saber os valores pede pelo
+ * "Conhecer planos" e recebe a apresentação com a proposta comercial.
+ * Para voltar a mostrar a tabela de preços, é só trocar para true.
+ */
+const MOSTRAR_PRECOS = false
+
 export default function Landing() {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -311,8 +319,12 @@ export default function Landing() {
 
   const [planos, setPlanos] = useState(null)
   const [ciclo, setCiclo] = useState(CICLO_PADRAO)
+  const [conhecerPlanosAberto, setConhecerPlanosAberto] = useState(false)
+  const abrirConhecerPlanos = () => setConhecerPlanosAberto(true)
+  const fecharConhecerPlanos = useCallback(() => setConhecerPlanosAberto(false), [])
 
   useEffect(() => {
+    if (!MOSTRAR_PRECOS) return
     api.get('/config/planos-disponiveis', { comAuth: false }).then(setPlanos).catch(() => setPlanos([]))
   }, [])
 
@@ -340,9 +352,15 @@ export default function Landing() {
       {/* 1. HEADER */}
       <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-[#E5E5E5]">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <AlphaDataLogo tagline={null} className="scale-75 origin-left" />
-          <nav className="flex items-center gap-4 sm:gap-6">
-            <a href="#precos" className="hidden sm:block text-base font-medium hover:opacity-70 transition-opacity">Preços</a>
+          {/* scale não encolhe o espaço do layout: a caixa externa fixa a largura visível */}
+          <div className="w-[120px] sm:w-[135px] shrink-0">
+            <AlphaDataLogo tagline={null} className="scale-[0.67] sm:scale-75 origin-left" />
+          </div>
+          <nav className="flex items-center gap-3 sm:gap-6">
+            <button type="button" onClick={abrirConhecerPlanos} className="whitespace-nowrap text-sm sm:text-base font-medium hover:opacity-70 transition-opacity">
+              <span className="sm:hidden">Planos</span>
+              <span className="hidden sm:inline">Conhecer planos</span>
+            </button>
             <a href="#contato" className="hidden sm:block text-base font-medium hover:opacity-70 transition-opacity">Fale com a gente</a>
             {!isAuthenticated && (
               <button type="button" onClick={() => navigate('/login')} className="text-base font-medium hover:opacity-70 transition-opacity">
@@ -352,7 +370,7 @@ export default function Landing() {
             <button
               type="button"
               onClick={isAuthenticated ? irParaPainel : () => irParaCadastro('startup')}
-              className="whitespace-nowrap rounded-[8px] text-white px-3.5 sm:px-5 py-2.5 text-sm sm:text-base font-semibold transition-colors duration-300"
+              className="whitespace-nowrap rounded-[8px] text-white px-3 sm:px-5 py-2.5 text-sm sm:text-base font-semibold transition-colors duration-300"
               style={{ backgroundColor: AZUL }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = AZUL_HOVER)}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = AZUL)}
@@ -430,9 +448,9 @@ export default function Landing() {
               </button>
               <p className="text-sm" style={{ color: '#9FC1FA' }}>7 dias grátis no sistema, sem cartão de crédito.</p>
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-1">
-                <a href="#precos" className="text-base font-semibold text-white underline underline-offset-2 hover:opacity-80">
-                  Ver planos e preços
-                </a>
+                <button type="button" onClick={abrirConhecerPlanos} className="text-base font-semibold text-white underline underline-offset-2 hover:opacity-80">
+                  Conhecer os planos
+                </button>
                 <a href="#contato" className="text-base font-semibold text-white/80 underline underline-offset-2 hover:opacity-80">
                   Falar com um especialista
                 </a>
@@ -557,7 +575,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* 8. PLANOS & PRICING */}
+      {/* 8. PLANOS & PRICING (oculto: ver MOSTRAR_PRECOS) */}
+      {MOSTRAR_PRECOS && (
       <section id="precos" className="bg-muted py-16 sm:py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h2 className="text-h1 text-center text-[#1a1a1a] mb-2">Escolha o seu plano</h2>
@@ -623,6 +642,7 @@ export default function Landing() {
           )}
         </div>
       </section>
+      )}
 
       {/* 9. FAQ */}
       <section className="max-w-[800px] mx-auto px-4 sm:px-6 py-16 sm:py-24">
@@ -698,7 +718,7 @@ export default function Landing() {
 
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
             <a href="#como-funciona" className="hover:opacity-70 transition-opacity">Produto</a>
-            <a href="#precos" className="hover:opacity-70 transition-opacity">Preços</a>
+            <button type="button" onClick={abrirConhecerPlanos} className="hover:opacity-70 transition-opacity">Planos</button>
             <a href="/privacidade" className="hover:opacity-70 transition-opacity">Segurança</a>
             <a href="#" className="hover:opacity-70 transition-opacity">Blog</a>
             <a href="#contato" className="hover:opacity-70 transition-opacity">Contato</a>
@@ -715,6 +735,8 @@ export default function Landing() {
           </p>
         </div>
       </footer>
+
+      {conhecerPlanosAberto && <ConhecerPlanosModal onFechar={fecharConhecerPlanos} />}
     </div>
   )
 }

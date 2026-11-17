@@ -249,6 +249,8 @@ export default function PainelSuperadmin() {
                 <tr className="text-left text-label uppercase tracking-wide text-[#999] border-b border-muted-dark">
                   <th className="px-4 py-3 font-semibold">Nome</th>
                   <th className="px-4 py-3 font-semibold">Email</th>
+                  <th className="px-4 py-3 font-semibold">WhatsApp</th>
+                  <th className="px-4 py-3 font-semibold">Mensagem</th>
                   <th className="px-4 py-3 font-semibold">Origem</th>
                   <th className="px-4 py-3 font-semibold">Recebido em</th>
                 </tr>
@@ -260,13 +262,21 @@ export default function PainelSuperadmin() {
                     <td className="px-4 py-3">
                       <a href={`mailto:${l.email}`} className="text-primary hover:underline">{l.email}</a>
                     </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {l.telefone ? (
+                        <a href={`https://wa.me/${l.telefone.replace(/\D/g, '').replace(/^(?!55)(\d{10,11})$/, '55$1')}`} target="_blank" rel="noreferrer" className="text-primary hover:underline">{l.telefone}</a>
+                      ) : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-[#333] min-w-[220px] max-w-[360px]">
+                      {l.mensagem ? <span className="line-clamp-3" title={l.mensagem}>{l.mensagem}</span> : '—'}
+                    </td>
                     <td className="px-4 py-3 text-[#333]">{l.origem ?? '—'}</td>
                     <td className="px-4 py-3 text-[#333] whitespace-nowrap">{formatarData(l.criadoEm)}</td>
                   </tr>
                 ))}
                 {!carregando && leads.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-10 text-center text-[#999]">Nenhum lead ainda.</td>
+                    <td colSpan={6} className="px-4 py-10 text-center text-[#999]">Nenhum lead ainda.</td>
                   </tr>
                 )}
               </tbody>
