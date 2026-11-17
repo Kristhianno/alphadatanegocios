@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IconAlertTriangle, IconBuildingStore, IconCalendarEvent, IconLayoutKanban, IconLock, IconTrophy, IconUsers } from '@tabler/icons-react'
+import { IconAlertTriangle, IconCalendarEvent, IconLayoutKanban, IconLock, IconTrophy, IconUsers } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
 import { temCrm } from '../../data/planos'
 import { useClientes } from '../../hooks/useClientes'
 import { api } from '../../services/api'
 import KpiCard from '../../components/ui/KpiCard'
+import LogoEmpresa from '../../components/LogoEmpresa'
 
 /** Etapas do CRM em kanban — mesmas de Admin/CrmLeads.jsx. */
 const ETAPAS_CRM = [
@@ -49,10 +50,12 @@ export default function DashboardVertical() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <IconBuildingStore size={28} className="text-primary" />
+        <LogoEmpresa tamanho={56} />
         <div>
           <h1 className="text-h1 text-primary">{user?.nomeEmpresa ?? 'Dashboard'}</h1>
-          <p className="text-label text-[#999]">Dados reais desta conta, direto da API</p>
+          <p className="text-label text-[#999]">
+            {!user?.logoUrl && user?.userType === 'admin' ? 'Clique no quadrado ao lado para adicionar o logotipo da sua empresa.' : 'Dados reais desta conta, direto da API'}
+          </p>
         </div>
       </div>
 

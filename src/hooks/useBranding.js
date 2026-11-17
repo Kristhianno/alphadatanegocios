@@ -5,9 +5,6 @@ import { useAuth } from './useAuth'
 // personalizou nome fantasia/logo.
 export const NOME_PLATAFORMA_PADRAO = 'ALPHADATA'
 
-// Cabe folgado no jsonb da conta como data URL — usado em qualquer tela que faça upload de logo.
-export const TAMANHO_MAX_LOGO_BYTES = 300 * 1024
-
 /** Nome fantasia e logo da conta logada, já com fallback pra marca padrão. */
 export function useBranding() {
   const { user } = useAuth()

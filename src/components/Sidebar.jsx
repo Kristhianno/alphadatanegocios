@@ -193,7 +193,7 @@ export default function Sidebar({ userType, aberta, onClose, recolhida = false, 
         aria-label="Menu principal"
       >
         <div className="flex items-center justify-between p-4 md:hidden">
-          <BrandMark textClassName="text-logo font-bold text-primary" />
+          <BrandMark tamanho={36} textClassName="text-logo font-bold text-primary" />
           <button onClick={onClose} aria-label="Fechar menu"><IconX size={22} /></button>
         </div>
         <nav className={`flex flex-col gap-1 p-3 ${recolhida ? 'md:px-3' : ''}`}>

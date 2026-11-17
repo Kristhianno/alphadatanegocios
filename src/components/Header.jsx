@@ -22,15 +22,15 @@ export default function Header({ onToggleSidebar }) {
 
   return (
     <header className="bg-primary text-white sticky top-0 z-30 shadow-card">
-      <div className="flex items-center justify-between px-4 sm:px-6 h-16">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3 px-4 sm:px-6 h-16">
+        <div className="flex min-w-0 items-center gap-3">
           <button className="md:hidden p-1" onClick={onToggleSidebar} aria-label="Abrir menu">
             <IconMenu2 size={24} />
           </button>
-          <BrandMark textClassName="text-logo font-bold tracking-tight whitespace-nowrap" />
+          <BrandMark variante="claro" tamanho={40} textClassName="text-logo font-bold tracking-tight whitespace-nowrap" />
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <BotaoInstalarApp
           className="flex items-center gap-1.5 rounded-btn px-2 py-1.5 text-label font-medium hover:bg-white/10"
           classeTexto="hidden sm:inline"

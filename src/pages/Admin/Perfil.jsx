@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconLock, IconLogout, IconEdit } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
-import { NOME_PLATAFORMA_PADRAO, TAMANHO_MAX_LOGO_BYTES } from '../../hooks/useBranding'
+import { NOME_PLATAFORMA_PADRAO } from '../../hooks/useBranding'
+import { prepararLogo } from '../../utils/logo'
 import { useToast } from '../../hooks/useToast'
 import Modal from '../../components/ui/Modal'
 import PasswordInput from '../../components/ui/PasswordInput'
@@ -48,21 +49,15 @@ export default function Perfil() {
     showToast('Perfil atualizado com sucesso!')
   }
 
-  function selecionarLogo(e) {
+  async function selecionarLogo(e) {
     const arquivo = e.target.files?.[0]
     e.target.value = ''
     if (!arquivo) return
-    if (!arquivo.type.startsWith('image/')) {
-      showToast('Escolha um arquivo de imagem.', 'erro')
-      return
+    try {
+      setLogoPreview(await prepararLogo(arquivo))
+    } catch (erro) {
+      showToast(erro.message, 'erro')
     }
-    if (arquivo.size > TAMANHO_MAX_LOGO_BYTES) {
-      showToast('Imagem muito grande. Escolha um arquivo de até 300KB.', 'erro')
-      return
-    }
-    const leitor = new FileReader()
-    leitor.onload = () => setLogoPreview(leitor.result)
-    leitor.readAsDataURL(arquivo)
   }
 
   async function salvarMarca(e) {
@@ -169,7 +164,7 @@ export default function Perfil() {
           <label className="text-label text-[#666] block mb-2">Logotipo (foto de perfil da conta)</label>
           <div className="flex items-center gap-4">
             {logoPreview ? (
-              <img src={logoPreview} alt="Logotipo" className="h-16 w-16 rounded-card object-cover border border-muted-dark" />
+              <img src={logoPreview} alt="Logotipo" className="h-16 w-16 rounded-card object-contain bg-white p-1 border border-muted-dark" />
             ) : (
               <div className="h-16 w-16 rounded-card border border-dashed border-muted-dark flex items-center justify-center text-label text-[#999] text-center px-1">
                 sem logo

@@ -12,7 +12,7 @@ import {
 } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
-import { TAMANHO_MAX_LOGO_BYTES } from '../hooks/useBranding'
+import { prepararLogo } from '../utils/logo'
 import { api } from '../services/api'
 import { supabase } from '../services/supabase'
 import PasswordInput from '../components/ui/PasswordInput'
@@ -225,22 +225,16 @@ export default function Login({ apenasCadastro = false }) {
     handleEscolherNegocio(opcao.id, opcao.tipoNegocio, undefined, opcao.nome)
   }
 
-  function selecionarLogo(e) {
+  async function selecionarLogo(e) {
     const arquivo = e.target.files?.[0]
     e.target.value = ''
     if (!arquivo) return
-    if (!arquivo.type.startsWith('image/')) {
-      setErro('Escolha um arquivo de imagem.')
-      return
+    try {
+      setLogoPreview(await prepararLogo(arquivo))
+      setErro('')
+    } catch (falha) {
+      setErro(falha.message)
     }
-    if (arquivo.size > TAMANHO_MAX_LOGO_BYTES) {
-      setErro('Imagem muito grande. Escolha um arquivo de até 300KB.')
-      return
-    }
-    setErro('')
-    const leitor = new FileReader()
-    leitor.onload = () => setLogoPreview(leitor.result)
-    leitor.readAsDataURL(arquivo)
   }
 
   async function confirmarLogo() {
@@ -583,7 +577,7 @@ export default function Login({ apenasCadastro = false }) {
                 )}
                 <span className="min-w-0">
                   <span className="block text-body font-semibold text-[#1a1a1a]">{logoPreview ? 'Trocar imagem' : 'Escolher imagem'}</span>
-                  <span className="block text-label text-[#999]">PNG ou JPG, até 300KB. Quadrada fica melhor.</span>
+                  <span className="block text-label text-[#999]">PNG, JPG ou SVG. Quadrada fica melhor.</span>
                 </span>
                 <input type="file" accept="image/*" className="sr-only" onChange={selecionarLogo} />
               </label>

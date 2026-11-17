@@ -1,14 +1,15 @@
 import { useBranding } from '../hooks/useBranding'
+import LogoEmpresa from './LogoEmpresa'
 
-/** Nome fantasia + logo da conta (ou a marca padrão, se ainda não personalizado) — usado no Header e no Sidebar. */
-export default function BrandMark({ textClassName = '', imgClassName = 'h-8 w-8 rounded-btn object-cover shrink-0' }) {
-  const { nomeExibido, logoUrl } = useBranding()
-
-  if (!logoUrl) return <span className={textClassName}>{nomeExibido}</span>
-
+/**
+ * Logotipo + nome fantasia da conta — usado no Header e no Sidebar.
+ * O admin clica no logo para adicionar/trocar (ver LogoEmpresa).
+ */
+export default function BrandMark({ textClassName = '', variante = 'padrao', tamanho = 40 }) {
+  const { nomeExibido } = useBranding()
   return (
-    <span className="flex items-center gap-2 min-w-0">
-      <img src={logoUrl} alt={nomeExibido} className={imgClassName} />
+    <span className="flex min-w-0 items-center gap-2.5">
+      <LogoEmpresa variante={variante} tamanho={tamanho} />
       <span className={`${textClassName} truncate`}>{nomeExibido}</span>
     </span>
   )
