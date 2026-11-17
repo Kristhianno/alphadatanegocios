@@ -32,6 +32,10 @@ router.post('/leads/:id/mover', validarUuidParam('id'), async (c) =>
   c.json(await crmService().mover(c.get('conta').id, c.req.param('id') as string, await c.req.json()), 200),
 )
 
+router.post('/leads/:id/marco', validarUuidParam('id'), async (c) =>
+  c.json(await crmService().marcar(c.get('conta').id, c.req.param('id') as string, await c.req.json()), 200),
+)
+
 router.post('/leads/:id/contato', validarUuidParam('id'), async (c) =>
   c.json(await crmService().registrarContato(c.get('conta').id, c.req.param('id') as string), 200),
 )

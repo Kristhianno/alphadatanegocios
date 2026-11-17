@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react'
-import { IconPlus, IconTrash, IconMapPin, IconList, IconCalendar } from '@tabler/icons-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { IconPlus, IconTrash, IconMapPin, IconList, IconCalendar, IconLock } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
 import { usePersisted } from '../../hooks/usePersisted'
 import { useToast } from '../../hooks/useToast'
+import { api } from '../../services/api'
+import { temCrm } from '../../data/planos'
 import {
   AGENDAMENTOS_CONFEITARIA, AGENDAMENTOS_SALAO, AGENDAMENTOS_FOTOGRAFIA,
   CLIENTES_CONFEITARIA, CLIENTES_SALAO, CLIENTES_FOTOGRAFIA,
@@ -14,6 +17,17 @@ import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import CalendarioMensal from '../../components/ui/CalendarioMensal'
 import Selecao from '../../components/ui/Selecao'
+
+// Festa fechada no CRM (contrato assinado + sinal pago): entra no calendário travada.
+const STATUS_FESTA_FECHADA = 'Festa fechada'
+const CORES_STATUS = { ...STATUS_AGENDAMENTO_CORES, [STATUS_FESTA_FECHADA]: { bg: 'bg-emerald-600', text: 'text-white', dot: 'bg-emerald-600' } }
+
+function festaFechadaDoLead(lead) {
+  return {
+    id: `crm-${lead.id}`, fechada: true, clienteNome: lead.nome, tipoServico: lead.tipoEvento || 'Festa fechada',
+    data: lead.dataEvento, hora: '', endereco: null, status: STATUS_FESTA_FECHADA,
+  }
+}
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -42,6 +56,21 @@ export default function AgendamentosVertical() {
 
   const [agendamentos, setAgendamentos] = usePersisted(config.storageKey, config.mock)
   const { showToast } = useToast()
+  const [festasFechadas, setFestasFechadas] = useState([])
+
+  useEffect(() => {
+    if (!temCrm(user)) return
+    let cancelado = false
+    api
+      .get('/crm/leads')
+      .then((leads) => {
+        if (!cancelado) setFestasFechadas(leads.filter((l) => l.etapa === 'concluido' && l.dataEvento).map(festaFechadaDoLead))
+      })
+      .catch(() => {})
+    return () => {
+      cancelado = true
+    }
+  }, [user])
 
   const [busca, setBusca] = useState('')
   const [filtroStatus, setFiltroStatus] = useState('')
@@ -57,10 +86,10 @@ export default function AgendamentosVertical() {
   const [endereco, setEndereco] = useState('')
 
   const filtrados = useMemo(() => {
-    let lista = agendamentos.filter((a) => a.clienteNome.toLowerCase().includes(busca.toLowerCase()))
+    let lista = [...festasFechadas, ...agendamentos].filter((a) => a.clienteNome.toLowerCase().includes(busca.toLowerCase()))
     if (filtroStatus) lista = lista.filter((a) => a.status === filtroStatus)
     return [...lista].sort((a, b) => (b.data + b.hora).localeCompare(a.data + a.hora))
-  }, [agendamentos, busca, filtroStatus])
+  }, [agendamentos, festasFechadas, busca, filtroStatus])
 
   function handleCriar(e) {
     e.preventDefault()
@@ -94,7 +123,9 @@ export default function AgendamentosVertical() {
     { header: 'Data', accessorKey: 'data' },
     { header: 'Hora', accessorKey: 'hora' },
     {
-      header: 'Status', accessorKey: 'status', cell: (info) => (
+      header: 'Status', accessorKey: 'status', cell: (info) => info.row.original.fechada ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-label font-semibold text-emerald-700"><IconLock size={13} /> Festa fechada</span>
+      ) : (
         <Selecao
           value={info.getValue()}
           onChange={(e) => alterarStatus(info.row.original.id, e.target.value)}
@@ -105,7 +136,9 @@ export default function AgendamentosVertical() {
       ),
     },
     {
-      header: 'Ações', id: 'acoes', cell: (info) => (
+      header: 'Ações', id: 'acoes', cell: (info) => info.row.original.fechada ? (
+        <Link to="/admin/crm" className="text-label font-medium text-primary hover:underline">Ver no CRM</Link>
+      ) : (
         <button onClick={() => setParaDeletar(info.row.original)} className="p-1.5 rounded-btn hover:bg-red-50 text-danger" aria-label="Remover">
           <IconTrash size={18} />
         </button>
@@ -132,6 +165,7 @@ export default function AgendamentosVertical() {
           <Selecao className={inputClasse} value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
             <option value="">Todos</option>
             {STATUS_AGENDAMENTO.map((s) => <option key={s} value={s}>{s}</option>)}
+            {festasFechadas.length > 0 && <option value={STATUS_FESTA_FECHADA}>{STATUS_FESTA_FECHADA}</option>}
           </Selecao>
         </div>
         <div className="flex items-center rounded-btn border border-muted-dark overflow-hidden self-end">
@@ -151,7 +185,7 @@ export default function AgendamentosVertical() {
       </div>
 
       {visualizacao === 'calendario' ? (
-        <CalendarioMensal eventos={filtrados} corStatus={STATUS_AGENDAMENTO_CORES} onSelecionarEvento={setDetalhe} />
+        <CalendarioMensal eventos={filtrados} corStatus={CORES_STATUS} onSelecionarEvento={setDetalhe} />
       ) : (
         <div className="bg-surface rounded-card shadow-card p-5">
           <DataTable data={filtrados} columns={colunas} />
@@ -198,10 +232,18 @@ export default function AgendamentosVertical() {
         {detalhe && (
           <div className="flex flex-col gap-4">
             <p className="text-body"><span className="text-[#666]">Cliente:</span> {detalhe.clienteNome}</p>
-            <p className="text-body"><span className="text-[#666]">Data:</span> {detalhe.data} às {detalhe.hora}</p>
+            <p className="text-body"><span className="text-[#666]">Data:</span> {detalhe.data.split('-').reverse().join('/')}{detalhe.hora ? ` às ${detalhe.hora}` : ''}</p>
             {detalhe.endereco && (
               <p className="text-body"><IconMapPin size={13} className="inline mr-1 text-[#666]" />{detalhe.endereco}</p>
             )}
+            {detalhe.fechada ? (
+              <div className="rounded-card border border-emerald-200 bg-emerald-50 p-3 text-body text-emerald-800">
+                <p className="flex items-center gap-1.5 font-semibold"><IconLock size={16} /> Festa fechada</p>
+                <p className="mt-1 text-label">Contrato assinado e sinal pago. A data está travada: para mudar, reabra o lead no CRM.</p>
+                <Link to="/admin/crm" className="mt-2 inline-block text-label font-semibold text-primary hover:underline">Abrir o CRM de Leads</Link>
+              </div>
+            ) : (
+            <>
             <div>
               <label className={labelClasse}>Status</label>
               <Selecao
@@ -226,6 +268,8 @@ export default function AgendamentosVertical() {
                 <IconTrash size={16} /> Remover agendamento
               </button>
             </div>
+            </>
+            )}
           </div>
         )}
       </Modal>

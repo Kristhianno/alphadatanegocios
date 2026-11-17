@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import {
-  IconAlertTriangle, IconBrandInstagram, IconBrandWhatsapp, IconCalendar, IconCheck, IconClock, IconLayoutKanban,
-  IconLock, IconMoodSad, IconPhone, IconPhoneCall, IconPlus, IconSearch, IconTrash, IconTrophy, IconUserShare,
+  IconAlertTriangle, IconArrowRight, IconBrandInstagram, IconBrandWhatsapp, IconCalendar, IconCalendarCheck, IconCheck, IconClock,
+  IconLayoutKanban, IconLock, IconPhone, IconPhoneCall, IconPlus, IconSearch, IconTrash, IconTrophy, IconUserShare,
   IconUsersGroup, IconWorld,
 } from '@tabler/icons-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -16,11 +16,44 @@ import ConfirmModal from '../../components/ui/ConfirmModal'
 import Selecao from '../../components/ui/Selecao'
 
 const ETAPAS = [
-  { id: 'novo', titulo: 'Novo lead', descricao: 'Chegou e ainda não foi atendido', cor: 'bg-blue-500', claro: 'bg-blue-50 text-blue-700' },
-  { id: 'primeiro_contato', titulo: 'Primeiro contato', descricao: 'Já conversou, passou orçamento', cor: 'bg-violet-500', claro: 'bg-violet-50 text-violet-700' },
-  { id: 'follow_up', titulo: 'Follow-up', descricao: 'Aguardando resposta do cliente', cor: 'bg-orange-500', claro: 'bg-orange-50 text-orange-700' },
-  { id: 'concluido', titulo: 'Concluído', descricao: 'Fechou ou não fechou', cor: 'bg-emerald-500', claro: 'bg-emerald-50 text-emerald-700' },
+  { id: 'primeiro_contato', titulo: 'Primeiro contato', descricao: 'Conversando e montando o orçamento', cor: 'bg-violet-500', claro: 'bg-violet-50 text-violet-700' },
+  { id: 'follow_up', titulo: 'Follow-up', descricao: 'Orçamento enviado, aguardando o cliente', cor: 'bg-orange-500', claro: 'bg-orange-50 text-orange-700' },
+  { id: 'concluido', titulo: 'Concluído', descricao: 'Contrato assinado e sinal pago: festa fechada', cor: 'bg-emerald-500', claro: 'bg-emerald-50 text-emerald-700' },
 ]
+const ORDEM_ETAPA = Object.fromEntries(ETAPAS.map((e, i) => [e.id, i]))
+
+/**
+ * Marcos que liberam o avanço — mesma regra do backend (models/LeadCrm.ts,
+ * REQUISITOS_ETAPA): orçamento enviado → Follow-up; contrato enviado +
+ * assinado + sinal pago → Concluído.
+ */
+const MARCOS = [
+  { id: 'orcamentoEnviado', campo: 'orcamentoEnviadoEm', rotulo: 'Orçamento enviado', curto: 'orçamento enviado' },
+  { id: 'contratoEnviado', campo: 'contratoEnviadoEm', rotulo: 'Contrato enviado', curto: 'contrato enviado' },
+  { id: 'contratoAssinado', campo: 'contratoAssinadoEm', rotulo: 'Contrato assinado', curto: 'contrato assinado' },
+  { id: 'sinalPago', campo: 'sinalPagoEm', rotulo: 'Sinal da reserva pago', curto: 'sinal da reserva pago' },
+]
+const REQUISITOS_ETAPA = {
+  primeiro_contato: [],
+  follow_up: ['orcamentoEnviado'],
+  concluido: ['orcamentoEnviado', 'contratoEnviado', 'contratoAssinado', 'sinalPago'],
+}
+const MARCOS_PARA_CONCLUIR = ['contratoEnviado', 'contratoAssinado', 'sinalPago']
+
+function marcoFeito(lead, id) {
+  return Boolean(lead[MARCOS.find((m) => m.id === id).campo])
+}
+
+/** O que falta para o lead poder ir pra etapa (inclui a data da festa, pra concluir). */
+function pendenciasPara(lead, etapa) {
+  const faltam = REQUISITOS_ETAPA[etapa].filter((id) => !marcoFeito(lead, id)).map((id) => MARCOS.find((m) => m.id === id).curto)
+  if (etapa === 'concluido' && !lead.dataEvento) faltam.push('data da festa')
+  return faltam
+}
+
+function formatarDataMarco(iso) {
+  return iso ? new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : null
+}
 
 const ORIGENS = {
   whatsapp: { label: 'WhatsApp', icon: IconBrandWhatsapp },
@@ -154,17 +187,9 @@ function CardLead({ lead, indice, onAbrir }) {
             {lead.valorEstimado != null && (
               <span className="rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-semibold text-primary">{formatarDinheiro(lead.valorEstimado)}</span>
             )}
-            {lead.etapa === 'concluido' && lead.resultado === 'ganho' && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                <IconTrophy size={12} /> Fechou
-              </span>
-            )}
-            {lead.etapa === 'concluido' && lead.resultado === 'perdido' && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600">
-                <IconMoodSad size={12} /> Não fechou
-              </span>
-            )}
           </div>
+
+          <ProgressoCard lead={lead} />
 
           {parado && (
             <p className="mt-2 flex items-center gap-1 rounded-btn bg-orange-50 px-2 py-1 text-[11px] font-semibold text-orange-700">
@@ -174,6 +199,104 @@ function CardLead({ lead, indice, onAbrir }) {
         </div>
       )}
     </Draggable>
+  )
+}
+
+/** No card: o que já foi feito / o que falta pra próxima etapa. */
+function ProgressoCard({ lead }) {
+  if (lead.etapa === 'concluido') {
+    return (
+      <p className="mt-2 flex items-center gap-1 rounded-btn bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700">
+        <IconLock size={13} /> Festa fechada{lead.dataEvento ? ` · ${formatarDataEvento(lead.dataEvento)}` : ''}
+      </p>
+    )
+  }
+  if (lead.etapa === 'primeiro_contato') {
+    const enviado = marcoFeito(lead, 'orcamentoEnviado')
+    return (
+      <p className={`mt-2 flex items-center gap-1 text-[11px] font-semibold ${enviado ? 'text-emerald-700' : 'text-[#999]'}`}>
+        {enviado ? <IconCheck size={13} /> : <IconClock size={13} />}
+        {enviado ? 'Orçamento enviado: pode ir pro follow-up' : 'Falta enviar o orçamento'}
+      </p>
+    )
+  }
+  const feitos = MARCOS_PARA_CONCLUIR.filter((id) => marcoFeito(lead, id)).length
+  return (
+    <div className="mt-2">
+      <div className="flex items-center justify-between text-[11px] font-semibold text-[#666]">
+        <span>Para fechar: contrato e sinal</span>
+        <span className={feitos === 3 ? 'text-emerald-700' : ''}>{feitos}/3</span>
+      </div>
+      <div className="mt-1 flex gap-1" aria-hidden="true">
+        {MARCOS_PARA_CONCLUIR.map((id) => (
+          <span key={id} className={`h-1.5 flex-1 rounded-full ${marcoFeito(lead, id) ? 'bg-emerald-500' : 'bg-muted-dark'}`} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/** No modal: checklist dos marcos, agrupado pela etapa que cada um libera. */
+function ChecklistFechamento({ lead, onMarcar, onAvancar, ocupado }) {
+  const grupos = [
+    { titulo: 'Para ir ao Follow-up', marcos: ['orcamentoEnviado'], destino: 'follow_up', textoBotao: 'Mover para Follow-up' },
+    { titulo: 'Para concluir (fechar a festa)', marcos: MARCOS_PARA_CONCLUIR, destino: 'concluido', textoBotao: 'Concluir e fechar a data' },
+  ]
+  const bloqueadoPelaEtapa = (id) => REQUISITOS_ETAPA[lead.etapa].includes(id) && marcoFeito(lead, id)
+  return (
+    <div className="flex flex-col gap-3">
+      {grupos.map((grupo) => {
+        const proxima = ORDEM_ETAPA[grupo.destino] === ORDEM_ETAPA[lead.etapa] + 1
+        const faltam = pendenciasPara(lead, grupo.destino)
+        return (
+          <div key={grupo.destino} className="rounded-card border border-muted-dark bg-surface p-3">
+            <p className="mb-2 text-label font-semibold text-[#444]">{grupo.titulo}</p>
+            <div className="flex flex-col gap-1.5">
+              {grupo.marcos.map((id) => {
+                const marco = MARCOS.find((m) => m.id === id)
+                const feito = marcoFeito(lead, id)
+                const travado = bloqueadoPelaEtapa(id)
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={feito}
+                    disabled={ocupado || travado}
+                    onClick={() => onMarcar(id, !feito)}
+                    title={travado ? 'Exigido pela etapa atual. Volte o card de etapa para desmarcar.' : undefined}
+                    className={`flex items-center gap-2.5 rounded-btn border px-3 py-2 text-left text-body transition-colors disabled:cursor-not-allowed ${
+                      feito ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-muted-dark bg-white text-[#333] hover:border-primary'
+                    }`}
+                  >
+                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border-2 ${feito ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-[#C9CED8] bg-white'}`}>
+                      {feito && <IconCheck size={14} stroke={3} />}
+                    </span>
+                    <span className="flex-1 font-medium">{marco.rotulo}</span>
+                    {feito && <span className="text-[11px] text-emerald-700">{formatarDataMarco(lead[marco.campo])}</span>}
+                    {travado && <IconLock size={14} className="text-emerald-700" />}
+                  </button>
+                )
+              })}
+            </div>
+            {proxima && (
+              faltam.length === 0 ? (
+                <button
+                  type="button"
+                  disabled={ocupado}
+                  onClick={() => onAvancar(grupo.destino)}
+                  className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-btn bg-emerald-600 px-3 py-2 text-label font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                >
+                  {grupo.destino === 'concluido' ? <IconCalendarCheck size={16} /> : <IconArrowRight size={16} />} {grupo.textoBotao}
+                </button>
+              ) : (
+                <p className="mt-2 text-[11px] text-[#888]">Falta: {faltam.join(', ')}.</p>
+              )
+            )}
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -188,7 +311,8 @@ function ConviteCompleto({ user }) {
       <p className="mt-2 text-body text-[#666]">Acompanhe cada contato até fechar a festa, sem deixar nenhum cliente esfriar.</p>
       <ul className="mx-auto mt-6 flex max-w-md flex-col gap-2.5 text-left">
         {[
-          'Kanban com todos os leads: Novo, Primeiro contato, Follow-up e Concluído',
+          'Kanban com todos os leads: Primeiro contato, Follow-up e Concluído',
+          'Só avança com orçamento enviado; só fecha com contrato assinado e sinal pago',
           `Alerta de follow-up quando o cliente fica ${DIAS_ALERTA_FOLLOW_UP} dias sem resposta`,
           'Funil de vendas no dashboard, com quantos fecharam',
         ].map((texto) => (
@@ -224,10 +348,13 @@ export default function CrmLeads() {
   const [salvando, setSalvando] = useState(false)
   const [erroForm, setErroForm] = useState('')
   const [confirmarExclusao, setConfirmarExclusao] = useState(false)
+  const [reabrir, setReabrir] = useState(null) // { id, etapa, posicao } ao tirar um card de "Concluído"
+  const [ocupado, setOcupado] = useState(false)
 
   const carregar = useCallback(async () => {
     try {
-      setLeads(await api.get('/crm/leads'))
+      // 'novo' saiu do funil: lead antigo que ainda esteja nela aparece em Primeiro contato.
+      setLeads((await api.get('/crm/leads')).map((l) => (l.etapa === 'novo' ? { ...l, etapa: 'primeiro_contato' } : l)))
       setErro('')
     } catch (e) {
       if (e instanceof ApiError && e.codigo === 'PLANO_INSUFICIENTE') setBloqueado(true)
@@ -251,7 +378,7 @@ export default function CrmLeads() {
   const porEtapa = useMemo(() => Object.fromEntries(ETAPAS.map((e) => [e.id, visiveis.filter((l) => l.etapa === e.id)])), [visiveis])
   const emAndamento = leads.filter((l) => l.etapa !== 'concluido').length
   const parados = leads.filter(paradoNoFollowUp).length
-  const ganhos = leads.filter((l) => l.etapa === 'concluido' && l.resultado === 'ganho').length
+  const ganhos = leads.filter((l) => l.etapa === 'concluido').length
 
   if (bloqueado) return <ConviteCompleto user={user} />
 
@@ -262,15 +389,64 @@ export default function CrmLeads() {
     const destino = porEtapa[destination.droppableId].filter((l) => l.id !== draggableId)
     const posicao = posicaoEntre(destino, destination.index)
     const etapa = destination.droppableId
-    const anterior = leads
+    const lead = leads.find((l) => l.id === draggableId)
 
-    setLeads((lista) => lista.map((l) => (l.id === draggableId ? { ...l, etapa, posicao, ...(etapa !== 'concluido' && { resultado: null }) } : l)))
+    // Avançar só com os marcos cumpridos: avisa o que falta e abre o lead no checklist.
+    if (ORDEM_ETAPA[etapa] > ORDEM_ETAPA[lead.etapa]) {
+      const faltam = pendenciasPara(lead, etapa)
+      if (faltam.length) {
+        showToast(`Para ir para ${ETAPAS[ORDEM_ETAPA[etapa]].titulo}, falta: ${faltam.join(', ')}.`, 'erro')
+        abrir(lead)
+        return
+      }
+    }
+    // Tirar de "Concluído" reabre a festa: pede confirmação.
+    if (lead.etapa === 'concluido' && etapa !== 'concluido') {
+      setReabrir({ id: draggableId, etapa, posicao })
+      return
+    }
+    await mover(draggableId, etapa, posicao)
+  }
+
+  async function mover(id, etapa, posicao) {
+    const anterior = leads
+    setLeads((lista) => lista.map((l) => (l.id === id ? { ...l, etapa, posicao } : l)))
     try {
-      const atualizado = await api.post(`/crm/leads/${draggableId}/mover`, { etapa, posicao })
+      const atualizado = await api.post(`/crm/leads/${id}/mover`, { etapa, posicao })
       setLeads((lista) => lista.map((l) => (l.id === atualizado.id ? atualizado : l)))
+      if (etapa === 'concluido' && atualizado.etapa === 'concluido') showToast(`Festa fechada! Data ${formatarDataEvento(atualizado.dataEvento)} travada no calendário.`)
+      return atualizado
     } catch (e) {
       setLeads(anterior)
       showToast(e instanceof ApiError ? e.message : 'Não foi possível mover o lead.', 'erro')
+      return null
+    }
+  }
+
+  /** Marca/desmarca um marco no modal. */
+  async function marcar(marco, feito) {
+    setOcupado(true)
+    try {
+      const atualizado = await api.post(`/crm/leads/${editando.id}/marco`, { marco, feito })
+      setLeads((lista) => lista.map((l) => (l.id === atualizado.id ? atualizado : l)))
+      setEditando(atualizado)
+    } catch (erro) {
+      showToast(erro instanceof ApiError ? erro.message : 'Não foi possível salvar.', 'erro')
+    } finally {
+      setOcupado(false)
+    }
+  }
+
+  /** Botão "Mover para Follow-up" / "Concluir" do modal: vai pro topo da coluna. */
+  async function avancar(etapa) {
+    const topo = porEtapa[etapa][0]?.posicao
+    setOcupado(true)
+    const atualizado = await mover(editando.id, etapa, topo == null ? 0 : topo - 1)
+    setOcupado(false)
+    if (atualizado) {
+      setEditando(atualizado)
+      setForm(paraForm(atualizado))
+      if (etapa === 'follow_up') showToast('Lead foi para o Follow-up.')
     }
   }
 
@@ -297,7 +473,7 @@ export default function CrmLeads() {
       } else {
         const criado = await api.post('/crm/leads', paraApi(form))
         setLeads((lista) => [criado, ...lista])
-        showToast('Lead adicionado em "Novo lead".')
+        showToast('Lead adicionado em "Primeiro contato".')
       }
       fechar()
     } catch (erro) {
@@ -418,7 +594,7 @@ export default function CrmLeads() {
                           {provided.placeholder}
                           {cards.length === 0 && !snapshot.isDraggingOver && (
                             <p className="px-2 py-6 text-center text-label text-[#999]">
-                              {etapa.id === 'novo' && !busca ? 'Nenhum lead novo. Clique em "Novo lead" para adicionar.' : 'Arraste um card pra cá'}
+                              {etapa.id === 'primeiro_contato' && !busca ? 'Nenhum lead aqui. Clique em "Novo lead" para adicionar.' : 'Arraste um card pra cá'}
                             </p>
                           )}
                         </div>
@@ -491,29 +667,7 @@ export default function CrmLeads() {
                 </a>
               )}
             </div>
-            {leadAberto.etapa === 'concluido' && (
-              <div>
-                <p className="mb-1.5 text-label font-medium text-[#444]">Resultado</p>
-                <div className="flex gap-2">
-                  {[
-                    ['ganho', 'Fechou', IconTrophy, 'border-emerald-500 bg-emerald-50 text-emerald-700'],
-                    ['perdido', 'Não fechou', IconMoodSad, 'border-gray-400 bg-gray-100 text-gray-700'],
-                  ].map(([valor, rotulo, Icone, ativo]) => (
-                    <button
-                      key={valor}
-                      type="button"
-                      aria-pressed={leadAberto.resultado === valor}
-                      onClick={() => acaoNoLead(`/crm/leads/${leadAberto.id}`, { resultado: leadAberto.resultado === valor ? null : valor }, 'Resultado salvo.')}
-                      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-btn border px-3 py-2 text-label font-semibold ${
-                        leadAberto.resultado === valor ? ativo : 'border-muted-dark bg-surface text-[#666] hover:bg-muted'
-                      }`}
-                    >
-                      <Icone size={15} /> {rotulo}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <ChecklistFechamento lead={leadAberto} onMarcar={marcar} onAvancar={avancar} ocupado={ocupado} />
           </div>
         )}
 
@@ -536,7 +690,17 @@ export default function CrmLeads() {
           </div>
           <div>
             <label htmlFor="lead-data" className={rotuloClasse}>Data do evento</label>
-            <input id="lead-data" type="date" value={form.dataEvento} onChange={alterar('dataEvento')} className={campoClasse} />
+            <input
+              id="lead-data"
+              type="date"
+              value={form.dataEvento}
+              onChange={alterar('dataEvento')}
+              disabled={leadAberto?.etapa === 'concluido'}
+              className={`${campoClasse} disabled:bg-emerald-50 disabled:text-emerald-800`}
+            />
+            {leadAberto?.etapa === 'concluido' && (
+              <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-700"><IconLock size={12} /> Data fechada. Para mudar, volte o card para Follow-up.</p>
+            )}
           </div>
           <div>
             <label htmlFor="lead-convidados" className={rotuloClasse}>Convidados</label>
@@ -559,6 +723,20 @@ export default function CrmLeads() {
           {erroForm && <p role="alert" className="sm:col-span-2 rounded-btn border border-red-100 bg-red-50 px-3 py-2 text-label text-danger">{erroForm}</p>}
         </form>
       </Modal>
+
+      <ConfirmModal
+        open={reabrir !== null}
+        onClose={() => setReabrir(null)}
+        onConfirm={async () => {
+          const pedido = reabrir
+          setReabrir(null)
+          await mover(pedido.id, pedido.etapa, pedido.posicao)
+        }}
+        titulo="Reabrir esta festa?"
+        mensagem="Ela sai de Concluído e a data deixa de ficar fechada no calendário."
+        textoConfirmar="Reabrir"
+        corConfirmar="bg-orange-600 hover:bg-orange-700"
+      />
 
       <ConfirmModal
         open={confirmarExclusao}

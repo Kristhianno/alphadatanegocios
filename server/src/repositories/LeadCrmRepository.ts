@@ -17,6 +17,10 @@ const CAMPOS: Record<string, string> = {
   observacoes: 'observacoes',
   posicao: 'posicao',
   ultimoContatoEm: 'ultimo_contato_em',
+  orcamentoEnviadoEm: 'orcamento_enviado_em',
+  contratoEnviadoEm: 'contrato_enviado_em',
+  contratoAssinadoEm: 'contrato_assinado_em',
+  sinalPagoEm: 'sinal_pago_em',
 }
 
 export class LeadCrmRepository extends Repository<LeadCrm> {
@@ -26,6 +30,7 @@ export class LeadCrmRepository extends Repository<LeadCrm> {
 
   protected paraDominio(linha: LinhaBanco): LeadCrm {
     const numero = (v: unknown) => (v === null || v === undefined ? null : Number(v))
+    const data = (v: unknown) => (v ? new Date(v as string) : null)
     return {
       id: linha['id'] as string,
       contaId: linha['conta_id'] as string,
@@ -41,7 +46,11 @@ export class LeadCrmRepository extends Repository<LeadCrm> {
       resultado: (linha['resultado'] as LeadCrm['resultado']) ?? null,
       observacoes: (linha['observacoes'] as string) ?? null,
       posicao: Number(linha['posicao'] ?? 0),
-      ultimoContatoEm: linha['ultimo_contato_em'] ? new Date(linha['ultimo_contato_em'] as string) : null,
+      ultimoContatoEm: data(linha['ultimo_contato_em']),
+      orcamentoEnviadoEm: data(linha['orcamento_enviado_em']),
+      contratoEnviadoEm: data(linha['contrato_enviado_em']),
+      contratoAssinadoEm: data(linha['contrato_assinado_em']),
+      sinalPagoEm: data(linha['sinal_pago_em']),
       criadoEm: new Date(linha['criado_em'] as string),
       atualizadoEm: new Date(linha['atualizado_em'] as string),
     }

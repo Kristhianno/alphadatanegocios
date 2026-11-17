@@ -1,6 +1,9 @@
 /**
  * CRM em kanban (plano Completo): leads de uma conta passando por
- * Novo lead → Primeiro contato → Follow-up → Concluído.
+ * Primeiro contato → Follow-up → Concluído. Avançar exige marcos do
+ * negócio (REQUISITOS_ETAPA): orçamento enviado pra ir ao follow-up;
+ * contrato enviado + assinado + sinal pago pra concluir. Concluído =
+ * festa fechada: a data fica travada.
  *
  * Todo método recebe o `contaId` já resolvido pela rota (carregarContexto)
  * e confere que o lead é dessa conta — um id de outra conta responde
@@ -12,10 +15,13 @@
  */
 import { z } from 'zod'
 import type { Cliente } from '../config/database.config.js'
-import { ETAPAS_LEAD, ORIGENS_LEAD, type EtapaLead, type LeadCrm } from '../models/LeadCrm.js'
+import {
+  CAMPO_MARCO, ETAPAS_LEAD, MARCOS_LEAD, ORIGENS_LEAD, REQUISITOS_ETAPA, ROTULO_ETAPA, ROTULO_MARCO,
+  marcosPendentes, type EtapaLead, type LeadCrm,
+} from '../models/LeadCrm.js'
 import { LeadCrmRepository } from '../repositories/LeadCrmRepository.js'
 import { validarTelefoneBr } from '../utils/validadores.js'
-import { ErroNaoEncontrado, ErroPersistencia } from '../errors/AppError.js'
+import { ErroConflito, ErroNaoEncontrado, ErroPersistencia } from '../errors/AppError.js'
 import { logger } from '../utils/logger.js'
 
 export const DIAS_ALERTA_FOLLOW_UP = 3
@@ -57,11 +63,12 @@ const schemaDadosLead = z.object({
   valorEstimado: z.number().min(0).max(100_000_000).nullable().optional(),
   origem: z.enum(ORIGENS_LEAD).optional(),
   observacoes: textoOpcional(2000),
-  resultado: z.enum(['ganho', 'perdido']).nullable().optional(),
 })
 
-const schemaCriar = schemaDadosLead.extend({ etapa: z.enum(ETAPAS_LEAD).optional() })
+// 'novo' ainda é aceito na criação (integrações antigas) e vira "Primeiro contato".
+const schemaCriar = schemaDadosLead.extend({ etapa: z.enum([...ETAPAS_LEAD, 'novo']).optional() })
 const schemaAtualizar = schemaDadosLead.partial()
+const schemaMarco = z.object({ marco: z.enum(MARCOS_LEAD), feito: z.boolean() })
 const schemaMover = z.object({
   etapa: z.enum(ETAPAS_LEAD),
   posicao: z.number().finite(),
@@ -93,10 +100,13 @@ export class CrmService {
     return this.leads.listar({ conta_id: contaId }, { ordenarPor: 'posicao', ascendente: true })
   }
 
-  /** Lead novo entra no TOPO da coluna (posição menor que a de todos os outros dela). */
+  /** Lead novo entra em "Primeiro contato", no TOPO da coluna. */
   async criar(contaId: string, dados: unknown): Promise<LeadCrm> {
-    const validado = schemaCriar.parse(dados)
-    const etapa = validado.etapa ?? 'novo'
+    const { etapa: etapaPedida, ...validado } = schemaCriar.parse(dados)
+    const etapa: EtapaLead = !etapaPedida || etapaPedida === 'novo' ? 'primeiro_contato' : etapaPedida
+    if (etapa !== 'primeiro_contato') {
+      throw new ErroConflito('Todo lead começa em "Primeiro contato". Ele avança quando o orçamento é enviado.')
+    }
     const daColuna = (await this.listar(contaId)).filter((l) => l.etapa === etapa)
     const posicao = daColuna.length ? Math.min(...daColuna.map((l) => l.posicao)) - 1 : 0
 
@@ -106,8 +116,8 @@ export class CrmService {
       etapa,
       posicao,
       origem: validado.origem ?? 'whatsapp',
-      resultado: etapa === 'concluido' ? (validado.resultado ?? null) : null,
-      ultimoContatoEm: etapa === 'novo' ? null : new Date(),
+      resultado: null,
+      ultimoContatoEm: new Date(),
     })
     logger.info({ contaId, leadId: lead.id }, 'Lead criado no CRM.')
     return lead
@@ -116,28 +126,68 @@ export class CrmService {
   async atualizar(contaId: string, leadId: string, dados: unknown): Promise<LeadCrm> {
     const lead = await this.buscarDaConta(contaId, leadId)
     const validado = schemaAtualizar.parse(dados)
-    // Resultado (ganho/perdido) só vale pra lead concluído.
-    if (validado.resultado !== undefined && lead.etapa !== 'concluido') validado.resultado = null
+    if (lead.etapa === 'concluido' && validado.dataEvento !== undefined && validado.dataEvento !== lead.dataEvento) {
+      throw new ErroConflito('A data desta festa está fechada. Para mudar, volte o card para Follow-up.')
+    }
     return this.leads.atualizar(leadId, validado)
   }
 
   /**
-   * Arrastar no kanban: troca etapa e/ou posição. Entrar em "Primeiro
-   * contato" ou "Follow-up" conta como um contato agora (zera o alerta);
-   * sair de "Concluído" limpa o ganho/perdido.
+   * Arrastar no kanban: troca etapa e/ou posição. Avançar só com os
+   * marcos da etapa de destino cumpridos (e, pra concluir, data da festa
+   * definida). Voltar é livre — reabrir um concluído libera a data.
    */
   async mover(contaId: string, leadId: string, dados: unknown): Promise<LeadCrm> {
     const lead = await this.buscarDaConta(contaId, leadId)
     const { etapa, posicao } = schemaMover.parse(dados)
 
+    const avancando = ETAPAS_LEAD.indexOf(etapa) > ETAPAS_LEAD.indexOf(lead.etapa)
+    if (avancando) {
+      const pendentes = marcosPendentes(lead, etapa)
+      if (pendentes.length) {
+        throw new ErroConflito(`Para passar para ${ROTULO_ETAPA[etapa]}, falta: ${pendentes.map((m) => ROTULO_MARCO[m]).join(', ')}.`)
+      }
+      if (etapa === 'concluido' && !lead.dataEvento) {
+        throw new ErroConflito('Para concluir, informe a data da festa: ela fica fechada no calendário.')
+      }
+    }
+
     const atualizacao: Partial<LeadCrm> = { etapa, posicao }
     if (etapa !== lead.etapa) {
-      if (etapa === 'primeiro_contato' || etapa === 'follow_up') atualizacao.ultimoContatoEm = new Date()
-      if (etapa !== 'concluido') atualizacao.resultado = null
+      if (etapa === 'follow_up') atualizacao.ultimoContatoEm = new Date()
+      atualizacao.resultado = etapa === 'concluido' ? 'ganho' : null
     }
     const movido = await this.leads.atualizar(leadId, atualizacao)
     if (etapa !== lead.etapa) logger.info({ contaId, leadId, de: lead.etapa, para: etapa }, 'Lead mudou de etapa.')
     return movido
+  }
+
+  /**
+   * Marca/desmarca um marco (orçamento enviado, contrato enviado/assinado,
+   * sinal pago). Não deixa desmarcar o que a etapa atual exige — pra isso,
+   * volte o card antes. Assinar implica ter enviado; desfazer o envio
+   * desfaz a assinatura.
+   */
+  async marcar(contaId: string, leadId: string, dados: unknown): Promise<LeadCrm> {
+    const lead = await this.buscarDaConta(contaId, leadId)
+    const { marco, feito } = schemaMarco.parse(dados)
+    const atualizacao: Partial<LeadCrm> = {}
+
+    if (feito) {
+      if (!lead[CAMPO_MARCO[marco]]) atualizacao[CAMPO_MARCO[marco]] = new Date()
+      if (marco === 'contratoAssinado' && !lead.contratoEnviadoEm) atualizacao.contratoEnviadoEm = new Date()
+      atualizacao.ultimoContatoEm = new Date()
+    } else {
+      const desfeitos = marco === 'contratoEnviado' ? (['contratoEnviado', 'contratoAssinado'] as const) : ([marco] as const)
+      const exigido = desfeitos.find((m) => REQUISITOS_ETAPA[lead.etapa].includes(m) && lead[CAMPO_MARCO[m]])
+      if (exigido) {
+        throw new ErroConflito(`"${ROTULO_MARCO[exigido]}" é exigido em ${ROTULO_ETAPA[lead.etapa]}. Volte o card de etapa antes de desmarcar.`)
+      }
+      for (const m of desfeitos) atualizacao[CAMPO_MARCO[m]] = null
+    }
+    const atualizado = await this.leads.atualizar(leadId, atualizacao)
+    logger.info({ contaId, leadId, marco, feito }, 'Marco do lead atualizado.')
+    return atualizado
   }
 
   /** "Falei com o cliente agora" — reinicia a contagem do alerta de follow-up. */
@@ -160,8 +210,8 @@ export class CrmService {
       total: leads.length,
       porEtapa,
       paradosNoFollowUp: leads.filter((l) => estaParadoNoFollowUp(l)).length,
-      ganhos: leads.filter((l) => l.etapa === 'concluido' && l.resultado === 'ganho').length,
-      perdidos: leads.filter((l) => l.etapa === 'concluido' && l.resultado === 'perdido').length,
+      ganhos: leads.filter((l) => l.etapa === 'concluido').length,
+      perdidos: leads.filter((l) => l.resultado === 'perdido').length,
     }
   }
 

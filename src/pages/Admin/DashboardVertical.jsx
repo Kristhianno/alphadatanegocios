@@ -11,7 +11,6 @@ import NomeMarca from '../../components/NomeMarca'
 
 /** Etapas do CRM em kanban — mesmas de Admin/CrmLeads.jsx. */
 const ETAPAS_CRM = [
-  { id: 'novo', titulo: 'Novo lead', cor: 'bg-blue-500' },
   { id: 'primeiro_contato', titulo: 'Primeiro contato', cor: 'bg-violet-500' },
   { id: 'follow_up', titulo: 'Follow-up', cor: 'bg-orange-500' },
   { id: 'concluido', titulo: 'Concluído', cor: 'bg-emerald-500' },
