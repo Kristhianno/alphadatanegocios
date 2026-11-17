@@ -190,3 +190,28 @@ describe('UserService.selecionarTipoNegocio', () => {
     await expect(service.selecionarTipoNegocio(usuario.id, 'manutencao')).rejects.toBeInstanceOf(ErroConflito)
   })
 })
+
+describe('UserService.atualizarBranding', () => {
+  function cenario() {
+    const cliente = criarClienteFake()
+    const conta = cliente.semear('contas', [{ nome_empresa: 'Alpha Sonhos', tipo_negocio: null, plano: 'startup', status: 'ativo', configuracoes_gerais: { enderecoNegocio: 'Rua A' } }])[0]!
+    const usuario = cliente.semear('usuarios', [
+      { conta_id: conta['id'], email: 'adm@x.com', senha_hash: 'x', nome: 'Adm', papel: 'admin', cliente_id: null, status: 'ativo' },
+    ])[0]!
+    return { service: new UserService(paraTipado(cliente)), userId: String(usuario['id']) }
+  }
+
+  it('guarda logo (símbolo) e logotipo (nome em imagem) separados, sem apagar o resto da configuração', async () => {
+    const { service, userId } = cenario()
+    await service.atualizarBranding(userId, { logoUrl: 'data:image/webp;base64,AAA' })
+    const conta = await service.atualizarBranding(userId, { logotipoUrl: 'data:image/webp;base64,BBB' })
+    expect(conta.configuracoesGerais).toMatchObject({ logoUrl: 'data:image/webp;base64,AAA', logotipoUrl: 'data:image/webp;base64,BBB', enderecoNegocio: 'Rua A' })
+  })
+
+  it('remover o logotipo mantém a logo', async () => {
+    const { service, userId } = cenario()
+    await service.atualizarBranding(userId, { logoUrl: 'data:image/webp;base64,AAA', logotipoUrl: 'data:image/webp;base64,BBB' })
+    const conta = await service.atualizarBranding(userId, { logotipoUrl: null })
+    expect(conta.configuracoesGerais).toMatchObject({ logoUrl: 'data:image/webp;base64,AAA', logotipoUrl: null })
+  })
+})

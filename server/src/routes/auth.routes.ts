@@ -69,7 +69,7 @@ router.patch('/perfil', autenticar, async (c) => {
 
 /** Personalização de marca (nome fantasia + logo) — admin altera, reflete pra toda a equipe da conta. */
 router.patch('/conta', autenticar, requererPapel('admin'), async (c) => {
-  const dados = (await c.req.json()) as { nomeEmpresa?: string; logoUrl?: string | null }
+  const dados = (await c.req.json()) as { nomeEmpresa?: string; logoUrl?: string | null; logotipoUrl?: string | null }
   const conta = await userService().atualizarBranding(c.get('usuarioAutenticado').id, dados)
   return c.json(conta, 200)
 })

@@ -50,6 +50,8 @@ const schemaAtualizarPerfil = z.object({
 const schemaAtualizarBranding = z.object({
   nomeEmpresa: z.string().trim().min(2, 'Informe o nome da empresa.').optional(),
   logoUrl: z.string().trim().min(1).max(350_000, 'Imagem muito grande. Escolha um arquivo menor.').nullable().optional(),
+  /** Logotipo = o nome da marca em imagem; quando existe, aparece no lugar do nome fantasia em texto. */
+  logotipoUrl: z.string().trim().min(1).max(350_000, 'Imagem muito grande. Escolha um arquivo menor.').nullable().optional(),
 })
 
 const schemaTrocarSenha = z.object({
@@ -352,7 +354,7 @@ export class UserService {
    * salvo — por isso a checagem de presença usa `dados` (input bruto) e
    * não `validado` (zod omite chaves opcionais ausentes do resultado).
    */
-  async atualizarBranding(userId: string, dados: { nomeEmpresa?: string; logoUrl?: string | null }): Promise<Conta> {
+  async atualizarBranding(userId: string, dados: { nomeEmpresa?: string; logoUrl?: string | null; logotipoUrl?: string | null }): Promise<Conta> {
     const validado = schemaAtualizarBranding.parse(dados)
     const usuario = await this.buscarUsuarioOuFalhar(userId)
     if (usuario.papel !== 'admin') {
@@ -364,8 +366,11 @@ export class UserService {
 
     const atualizacao: Partial<Conta> = {}
     if (validado.nomeEmpresa !== undefined) atualizacao.nomeEmpresa = validado.nomeEmpresa
-    if ('logoUrl' in dados) {
-      atualizacao.configuracoesGerais = { ...conta.configuracoesGerais, logoUrl: validado.logoUrl ?? null }
+    // logo = símbolo (quadrado); logotipo = nome da marca em imagem (substitui o texto do nome fantasia).
+    for (const chave of ['logoUrl', 'logotipoUrl'] as const) {
+      if (chave in dados) {
+        atualizacao.configuracoesGerais = { ...conta.configuracoesGerais, ...atualizacao.configuracoesGerais, [chave]: validado[chave] ?? null }
+      }
     }
 
     const contaAtualizada = await this.contas.atualizar(conta.id, atualizacao)

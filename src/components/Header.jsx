@@ -27,7 +27,7 @@ export default function Header({ onToggleSidebar }) {
           <button className="md:hidden p-1" onClick={onToggleSidebar} aria-label="Abrir menu">
             <IconMenu2 size={24} />
           </button>
-          <BrandMark variante="claro" tamanho={40} textClassName="text-logo font-bold tracking-tight whitespace-nowrap" />
+          <BrandMark variante="claro" tamanho={40} larguraMaximaNome={260} textClassName="text-logo font-bold tracking-tight whitespace-nowrap" />
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">

@@ -11,5 +11,7 @@ export function useBranding() {
   return {
     nomeExibido: user?.nomeEmpresa?.trim() || NOME_PLATAFORMA_PADRAO,
     logoUrl: user?.logoUrl ?? null,
+    /** Nome da marca em imagem: quando existe, substitui o nome fantasia em texto. */
+    logotipoUrl: user?.logotipoUrl ?? null,
   }
 }

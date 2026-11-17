@@ -43,6 +43,7 @@ function montarSessao(usuario, conta) {
     tipoNegocio: conta?.tipoNegocio ?? null,
     nomeEmpresa: conta?.nomeEmpresa ?? null,
     logoUrl: conta?.configuracoesGerais?.logoUrl ?? null,
+    logotipoUrl: conta?.configuracoesGerais?.logotipoUrl ?? null,
     // Endereço fixo do espaço/salão, quando configurado — usado pra pré-preencher o local do agendamento em salão de festas (ver Cliente/Agendar.jsx).
     enderecoNegocio: conta?.configuracoesGerais?.enderecoNegocio ?? null,
     tecnicoId: ponte.tecnicoId ?? null,
@@ -135,7 +136,7 @@ export function AuthProvider({ children }) {
   async function atualizarBranding(dados) {
     try {
       const conta = await api.patch('/auth/conta', dados)
-      setUser((u) => (u ? { ...u, nomeEmpresa: conta.nomeEmpresa, logoUrl: conta.configuracoesGerais?.logoUrl ?? null } : u))
+      setUser((u) => (u ? { ...u, nomeEmpresa: conta.nomeEmpresa, logoUrl: conta.configuracoesGerais?.logoUrl ?? null, logotipoUrl: conta.configuracoesGerais?.logotipoUrl ?? null } : u))
       return { ok: true }
     } catch (erro) {
       return { ok: false, error: erro instanceof ApiError ? erro.message : 'Falha ao salvar a personalização.' }

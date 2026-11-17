@@ -7,6 +7,7 @@ import { useClientes } from '../../hooks/useClientes'
 import { api } from '../../services/api'
 import KpiCard from '../../components/ui/KpiCard'
 import LogoEmpresa from '../../components/LogoEmpresa'
+import NomeMarca from '../../components/NomeMarca'
 
 /** Etapas do CRM em kanban — mesmas de Admin/CrmLeads.jsx. */
 const ETAPAS_CRM = [
@@ -25,6 +26,15 @@ const ROTULOS_STATUS = {
 // (confeitaria, salão de festas, fotografia) — usa GET /dashboard e
 // GET /clientes de verdade, ao contrário de Admin/Dashboard.jsx (que é
 // específico de manutenção e usa o dataset mockado de Ordens de Serviço).
+/** Orienta o admin enquanto a marca não está completa: logo no quadrado, logotipo no lugar do nome. */
+function dicaMarca(user) {
+  if (user?.userType !== 'admin') return 'Dados reais desta conta, direto da API'
+  if (!user.logoUrl && !user.logotipoUrl) return 'Clique no quadrado para carregar a logo e no nome para carregar o logotipo.'
+  if (!user.logoUrl) return 'Clique no quadrado para carregar a logo (símbolo da marca).'
+  if (!user.logotipoUrl) return 'Clique no nome para carregar o logotipo (nome da marca em imagem).'
+  return 'Dados reais desta conta, direto da API'
+}
+
 export default function DashboardVertical() {
   const { user } = useAuth()
   const { clientes } = useClientes()
@@ -51,11 +61,9 @@ export default function DashboardVertical() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <LogoEmpresa tamanho={56} />
-        <div>
-          <h1 className="text-h1 text-primary">{user?.nomeEmpresa ?? 'Dashboard'}</h1>
-          <p className="text-label text-[#999]">
-            {!user?.logoUrl && user?.userType === 'admin' ? 'Clique no quadrado ao lado para adicionar o logotipo da sua empresa.' : 'Dados reais desta conta, direto da API'}
-          </p>
+        <div className="min-w-0">
+          <NomeMarca Tag="h1" altura={56} larguraMaxima={360} textClassName="text-h1 text-primary" />
+          <p className="text-label text-[#999]">{dicaMarca(user)}</p>
         </div>
       </div>
 
