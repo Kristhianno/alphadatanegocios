@@ -14,6 +14,7 @@ const CAMPOS: Record<string, string> = {
   categoria: 'categoria',
   entidadeTipo: 'entidade_tipo',
   entidadeId: 'entidade_id',
+  tema: 'tema',
   criadoPor: 'criado_por',
 }
 
@@ -35,6 +36,15 @@ export class ArquivoRepository extends Repository<Arquivo> {
     return new Set((data ?? []).map((linha) => (linha as LinhaBanco)['caminho'] as string))
   }
 
+  /** Troca o tema de todos os arquivos de uma entidade que estão em `de` (null = sem tema). Devolve quantos mudaram. */
+  async renomearTema(contaId: string, entidadeTipo: string, de: string | null, para: string | null): Promise<number> {
+    let query = this.client.from('arquivos').update({ tema: para }).eq('conta_id', contaId).eq('entidade_tipo', entidadeTipo)
+    query = de === null ? query.is('tema', null) : query.eq('tema', de)
+    const { data, error } = await query.select('id')
+    if (error) throw new ErroPersistencia('arquivos', 'renomearTema', error)
+    return (data ?? []).length
+  }
+
   protected paraDominio(linha: LinhaBanco): Arquivo {
     return {
       id: linha['id'] as string,
@@ -48,6 +58,7 @@ export class ArquivoRepository extends Repository<Arquivo> {
       categoria: linha['categoria'] as Arquivo['categoria'],
       entidadeTipo: (linha['entidade_tipo'] as string) ?? null,
       entidadeId: (linha['entidade_id'] as string) ?? null,
+      tema: (linha['tema'] as string) ?? null,
       criadoPor: (linha['criado_por'] as string) ?? null,
       criadoEm: new Date(linha['criado_em'] as string),
     }

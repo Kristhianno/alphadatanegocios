@@ -44,7 +44,7 @@ function enviarParaStorage(url, arquivo, onProgresso) {
  * (o backend valida tipo, tamanho e cota), envia direto pro Storage e
  * confirma. Devolve o arquivo registrado, com `url`.
  */
-export async function enviarArquivo(arquivoOriginal, { categoria, entidadeTipo, entidadeId } = {}, onProgresso) {
+export async function enviarArquivo(arquivoOriginal, { categoria, entidadeTipo, entidadeId, tema } = {}, onProgresso) {
   const arquivo = await comprimirImagem(arquivoOriginal)
   const { caminho, urlUpload } = await api.post('/arquivos/upload-url', {
     nome: arquivoOriginal.name,
@@ -53,5 +53,5 @@ export async function enviarArquivo(arquivoOriginal, { categoria, entidadeTipo, 
     categoria,
   })
   await enviarParaStorage(urlUpload, arquivo, onProgresso)
-  return api.post('/arquivos/confirmar', { caminho, nome: arquivoOriginal.name, categoria, entidadeTipo, entidadeId })
+  return api.post('/arquivos/confirmar', { caminho, nome: arquivoOriginal.name, categoria, entidadeTipo, entidadeId, tema })
 }

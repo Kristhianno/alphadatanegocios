@@ -14,6 +14,8 @@ export interface Arquivo {
   categoria: CategoriaArquivo
   entidadeTipo: string | null
   entidadeId: string | null
+  /** Rótulo livre que agrupa os materiais prontos do portfólio (null = sem tema). */
+  tema: string | null
   criadoPor: string | null
   criadoEm: Date
 }

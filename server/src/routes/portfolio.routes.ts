@@ -16,6 +16,10 @@ router.get('/', async (c) => c.json(await portfolioService().listar(c.get('conta
 
 router.get('/materiais/:tipo', async (c) => c.json(await portfolioService().materiais(c.get('conta').id, c.req.param('tipo')), 200))
 
+router.patch('/materiais/:tipo/tema', async (c) =>
+  c.json(await portfolioService().renomearTema(c.get('conta').id, c.req.param('tipo'), await c.req.json()), 200),
+)
+
 router.post('/', async (c) => c.json(await portfolioService().criar(c.get('conta').id, await c.req.json()), 201))
 
 router.get('/:id', validarUuidParam('id'), async (c) =>

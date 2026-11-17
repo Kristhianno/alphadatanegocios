@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  IconBox, IconCirclePlus, IconFileTypePdf, IconGift, IconLayoutGrid, IconPhoto, IconPhotoUp,
-  IconPlus, IconTrash, IconUsers, IconX,
+  IconBox, IconCheck, IconCirclePlus, IconFileTypePdf, IconFolder, IconFolderPlus, IconGift, IconLayoutGrid,
+  IconPencil, IconPhoto, IconPhotoUp, IconPhotoVideo, IconPlayerPlayFilled, IconPlus, IconTrash, IconUsers, IconX,
 } from '@tabler/icons-react'
 import { useToast } from '../../hooks/useToast'
 import { api, ApiError } from '../../services/api'
@@ -19,7 +19,9 @@ const ABAS = [
 ]
 
 const ACEITA_IMAGEM = 'image/jpeg,image/png,image/webp'
+const ACEITA_MIDIA = 'image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm'
 const ACEITA_PDF = 'application/pdf'
+const SEM_TEMA = '' // chave do grupo de arquivos sem tema (enviados antes dos temas existirem)
 
 function formatarPreco(valor) {
   if (valor == null) return null
@@ -114,9 +116,10 @@ function ListaEnvios({ envios, onDispensar }) {
   )
 }
 
-/** Miniatura de um arquivo (foto ou PDF): clique abre no visualizador do sistema; lixeira exclui. */
+/** Miniatura de um arquivo (foto, vídeo ou PDF): clique abre no visualizador do sistema; lixeira exclui. */
 function MiniaturaArquivo({ arquivo, destaque, onExcluir, onAbrir }) {
   const ehPdf = arquivo.tipo === 'documento'
+  const ehVideo = arquivo.tipo === 'video'
   return (
     <div className="group relative w-full overflow-hidden rounded-card border border-muted-dark bg-surface">
       <button
@@ -131,6 +134,15 @@ function MiniaturaArquivo({ arquivo, destaque, onExcluir, onAbrir }) {
             <IconFileTypePdf size={34} stroke={1.25} />
             <span className="line-clamp-2 text-[11px] text-[#666]">{arquivo.nomeOriginal}</span>
           </div>
+        ) : ehVideo ? (
+          <span className="relative block h-full w-full">
+            <video src={`${arquivo.url}#t=0.1`} muted playsInline preload="metadata" className="pointer-events-none h-full w-full bg-black object-cover" />
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="rounded-full bg-black/55 p-2 text-white">
+                <IconPlayerPlayFilled size={16} />
+              </span>
+            </span>
+          </span>
         ) : (
           <img src={arquivo.url} alt={arquivo.nomeOriginal} loading="lazy" className="h-full w-full object-cover" />
         )}
@@ -148,22 +160,198 @@ function MiniaturaArquivo({ arquivo, destaque, onExcluir, onAbrir }) {
   )
 }
 
+const temaDe = (arquivo) => arquivo.tema ?? SEM_TEMA
+
+function contarArquivos(lista) {
+  const n = { imagem: 0, video: 0, documento: 0 }
+  for (const a of lista) n[a.tipo] = (n[a.tipo] ?? 0) + 1
+  const partes = []
+  if (n.imagem) partes.push(`${n.imagem} ${n.imagem === 1 ? 'foto' : 'fotos'}`)
+  if (n.video) partes.push(`${n.video} ${n.video === 1 ? 'vídeo' : 'vídeos'}`)
+  if (n.documento) partes.push(`${n.documento} PDF`)
+  return partes.join(' · ')
+}
+
+/** Campo curto pra criar ou renomear um tema. */
+function CampoTema({ inicial = '', rotuloSalvar, onSalvar, onCancelar }) {
+  const [valor, setValor] = useState(inicial)
+  const [salvando, setSalvando] = useState(false)
+  async function salvar(e) {
+    e.preventDefault()
+    const nome = valor.trim()
+    if (!nome) return
+    setSalvando(true)
+    try {
+      await onSalvar(nome)
+    } finally {
+      setSalvando(false)
+    }
+  }
+  return (
+    <form onSubmit={salvar} className="flex w-full flex-wrap items-center gap-2">
+      <input
+        autoFocus
+        value={valor}
+        maxLength={80}
+        onChange={(e) => setValor(e.target.value)}
+        onKeyDown={(e) => e.key === 'Escape' && onCancelar()}
+        placeholder="Ex: Festa Unicórnio, Casamento rústico, Chá revelação"
+        className="min-w-0 flex-1 rounded-btn border border-muted-dark bg-surface px-3 py-2 text-body focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+      />
+      <button
+        type="submit"
+        disabled={salvando || !valor.trim()}
+        className="inline-flex items-center gap-1 rounded-btn bg-primary px-3.5 py-2 text-body font-medium text-white hover:bg-primary-dark disabled:opacity-50"
+      >
+        <IconCheck size={16} /> {rotuloSalvar}
+      </button>
+      <button type="button" onClick={onCancelar} className="rounded-btn px-3 py-2 text-body text-[#666] hover:bg-muted">
+        Cancelar
+      </button>
+    </form>
+  )
+}
+
+/** Um tema dos materiais prontos: título (renomeável), botões de envio e as miniaturas. */
+function GrupoTema({ tema, arquivos, entidadeTipo, novo, onEnviado, onRenomear, onDescartar, onAbrir, onExcluir }) {
+  const [editando, setEditando] = useState(false)
+  const { envios, enviar, dispensar } = useEnvios(onEnviado)
+  const semTema = tema === SEM_TEMA
+  const opcoes = { entidadeTipo, ...(semTema ? {} : { tema }) }
+
+  return (
+    <div className="rounded-card border border-muted-dark p-3 sm:p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {editando ? (
+          <CampoTema
+            inicial={tema}
+            rotuloSalvar="Salvar"
+            onCancelar={() => setEditando(false)}
+            onSalvar={async (nome) => {
+              if (await onRenomear(tema, nome)) setEditando(false)
+            }}
+          />
+        ) : (
+          <div className="flex min-w-0 items-center gap-2">
+            <IconFolder size={20} className="shrink-0 text-primary" />
+            <div className="min-w-0">
+              <h3 className={`truncate text-body font-semibold ${semTema ? 'text-[#777]' : 'text-[#1a1a1a]'}`}>{semTema ? 'Sem tema' : tema}</h3>
+              <p className="text-[12px] text-[#999]">{arquivos.length ? contarArquivos(arquivos) : 'Envie os arquivos para salvar este tema'}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditando(true)}
+              aria-label={semTema ? 'Dar um tema a estes arquivos' : `Renomear tema ${tema}`}
+              title={semTema ? 'Dar um tema' : 'Renomear tema'}
+              className="shrink-0 rounded-btn p-1.5 text-[#999] hover:bg-muted hover:text-primary"
+            >
+              <IconPencil size={16} />
+            </button>
+            {novo && arquivos.length === 0 && envios.length === 0 && (
+              <button
+                type="button"
+                onClick={onDescartar}
+                aria-label={`Descartar tema ${tema}`}
+                title="Descartar tema"
+                className="shrink-0 rounded-btn p-1.5 text-[#999] hover:bg-muted hover:text-danger"
+              >
+                <IconX size={16} />
+              </button>
+            )}
+          </div>
+        )}
+        {!editando && (
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <BotaoUpload aceita={ACEITA_MIDIA} onArquivos={(f) => enviar(f, opcoes)}>
+              <IconPhotoVideo size={18} /> Fotos e vídeos
+            </BotaoUpload>
+            <BotaoUpload aceita={ACEITA_PDF} onArquivos={(f) => enviar(f, opcoes)}>
+              <IconFileTypePdf size={18} /> PDF
+            </BotaoUpload>
+          </div>
+        )}
+      </div>
+      <ListaEnvios envios={envios} onDispensar={dispensar} />
+      {arquivos.length > 0 && (
+        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
+          {arquivos.map((m, indice) => (
+            <MiniaturaArquivo key={m.id} arquivo={m} onAbrir={() => onAbrir(arquivos, indice)} onExcluir={onExcluir} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
+  const { showToast } = useToast()
   const abrirVisualizador = useVisualizador()
   const [materiais, setMateriais] = useState(null)
+  const [temasNovos, setTemasNovos] = useState([]) // criados nesta sessão (ficam no topo; só vão pro banco com o 1º arquivo)
+  const [criando, setCriando] = useState(false)
   const adicionar = useCallback((a) => setMateriais((atuais) => [a, ...(atuais ?? [])]), [])
-  const { envios, enviar, dispensar } = useEnvios(adicionar)
+  const entidadeTipo = `portfolio_${aba.tipo}`
 
   useEffect(() => {
     let cancelado = false
     setMateriais(null)
+    setTemasNovos([])
+    setCriando(false)
     api.get(`/portfolio/materiais/${aba.tipo}`).then((lista) => !cancelado && setMateriais(lista)).catch(() => !cancelado && setMateriais([]))
     return () => {
       cancelado = true
     }
   }, [aba.tipo, versao])
 
-  const entidade = { entidadeTipo: `portfolio_${aba.tipo}` }
+  const grupos = useMemo(() => {
+    const porTema = new Map()
+    for (const a of materiais ?? []) porTema.set(temaDe(a), [...(porTema.get(temaDe(a)) ?? []), a])
+    const salvos = [...porTema.keys()]
+      .filter((t) => t !== SEM_TEMA && !temasNovos.includes(t))
+      .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }))
+    const ordem = [...temasNovos, ...salvos, ...(porTema.has(SEM_TEMA) ? [SEM_TEMA] : [])]
+    return ordem.map((tema) => ({ tema, arquivos: porTema.get(tema) ?? [], novo: temasNovos.includes(tema) }))
+  }, [materiais, temasNovos])
+
+  function existe(nome, ignorar) {
+    const chave = nome.toLocaleLowerCase('pt-BR')
+    return grupos.find((g) => g.tema !== ignorar && g.tema !== SEM_TEMA && g.tema.toLocaleLowerCase('pt-BR') === chave)
+  }
+
+  function criarTema(nome) {
+    const igual = existe(nome)
+    if (igual) {
+      showToast(`O tema "${igual.tema}" já existe.`, 'erro')
+    } else {
+      setTemasNovos((atuais) => [nome, ...atuais])
+    }
+    setCriando(false)
+  }
+
+  /** Renomeia no banco (se o tema já tem arquivos) e na tela. Devolve true se deu certo. */
+  async function renomearTema(de, para) {
+    if (para === de) return true
+    const igual = existe(para, de)
+    const destino = igual ? igual.tema : para // mesmo nome com outra caixa: junta no tema existente
+    const temArquivos = (materiais ?? []).some((a) => temaDe(a) === de)
+    try {
+      if (temArquivos) {
+        await api.patch(`/portfolio/materiais/${aba.tipo}/tema`, { de: de === SEM_TEMA ? null : de, para: destino })
+        setMateriais((atuais) => atuais.map((a) => (temaDe(a) === de ? { ...a, tema: destino } : a)))
+      }
+      setTemasNovos((atuais) => {
+        const semDe = atuais.filter((t) => t !== de)
+        return atuais.includes(de) && !igual ? [destino, ...semDe] : semDe
+      })
+      if (igual) showToast(`Arquivos juntados no tema "${destino}".`)
+      return true
+    } catch (erro) {
+      showToast(erro instanceof ApiError ? erro.message : 'Não foi possível renomear o tema.', 'erro')
+      return false
+    }
+  }
+
+  const vazio = materiais !== null && grupos.length === 0
 
   return (
     <section className="rounded-card bg-surface p-4 sm:p-5 shadow-card">
@@ -171,36 +359,51 @@ function MateriaisProntos({ aba, onExcluirArquivo, versao }) {
         <div>
           <h2 className="text-h2 text-[#1a1a1a]">Materiais prontos</h2>
           <p className="text-label text-[#777]">
-            Já tem as artes ou o catálogo de {aba.titulo.toLowerCase()} em PDF? Envie aqui. A IA do WhatsApp pode mandar esses arquivos para os clientes.
+            Já tem artes, vídeos ou o catálogo de {aba.titulo.toLowerCase()} em PDF? Organize por tema e envie aqui. A IA do WhatsApp pode mandar esses arquivos para os clientes.
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <BotaoUpload aceita={ACEITA_IMAGEM} onArquivos={(f) => enviar(f, entidade)}>
-            <IconPhotoUp size={18} /> Enviar imagens
-          </BotaoUpload>
-          <BotaoUpload aceita={ACEITA_PDF} onArquivos={(f) => enviar(f, entidade)}>
-            <IconFileTypePdf size={18} /> Enviar PDF
-          </BotaoUpload>
-        </div>
+        {!criando && !vazio && (
+          <button
+            type="button"
+            onClick={() => setCriando(true)}
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-btn border border-primary bg-surface px-3.5 py-2 text-body font-medium text-primary transition-colors hover:bg-primary-light"
+          >
+            <IconFolderPlus size={18} /> Novo tema
+          </button>
+        )}
       </div>
-      <ListaEnvios envios={envios} onDispensar={dispensar} />
+
+      {(criando || vazio) && (
+        <div className="mt-4 rounded-card border border-dashed border-primary bg-primary-light p-3 sm:p-4">
+          <p className="mb-2 text-label font-medium text-[#444]">{vazio ? 'Comece criando um tema' : 'Nome do novo tema'}</p>
+          <CampoTema rotuloSalvar="Criar tema" onSalvar={criarTema} onCancelar={() => setCriando(false)} />
+          {vazio && <p className="mt-2 text-[12px] text-[#999]">Depois é só enviar as fotos, vídeos ou o PDF daquele tema.</p>}
+        </div>
+      )}
+
       {materiais === null ? (
         <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="aspect-square animate-pulse rounded-card bg-muted" />)}
         </div>
-      ) : materiais.length === 0 ? (
-        envios.length === 0 && <p className="mt-4 rounded-btn bg-muted px-3 py-3 text-label text-[#999]">Nenhum material enviado nesta aba ainda.</p>
       ) : (
-        <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
-          {materiais.map((m, indice) => (
-            <MiniaturaArquivo
-              key={m.id}
-              arquivo={m}
-              onAbrir={() => abrirVisualizador(materiais, indice)}
-              onExcluir={(a) => onExcluirArquivo(a, () => setMateriais((atuais) => atuais.filter((x) => x.id !== a.id)))}
-            />
-          ))}
-        </div>
+        grupos.length > 0 && (
+          <div className="mt-4 flex flex-col gap-3">
+            {grupos.map((g) => (
+              <GrupoTema
+                key={g.tema || '__sem_tema__'}
+                tema={g.tema}
+                arquivos={g.arquivos}
+                novo={g.novo}
+                entidadeTipo={entidadeTipo}
+                onEnviado={adicionar}
+                onRenomear={renomearTema}
+                onDescartar={() => setTemasNovos((atuais) => atuais.filter((t) => t !== g.tema))}
+                onAbrir={abrirVisualizador}
+                onExcluir={(a) => onExcluirArquivo(a, () => setMateriais((atuais) => atuais.filter((x) => x.id !== a.id)))}
+              />
+            ))}
+          </div>
+        )
       )}
     </section>
   )

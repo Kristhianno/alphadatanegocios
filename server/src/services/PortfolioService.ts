@@ -46,6 +46,8 @@ const schemaDados = z.object({
 
 const schemaCriar = schemaDados.extend({ tipo: z.enum(TIPOS_PORTFOLIO) })
 const schemaTipo = z.enum(TIPOS_PORTFOLIO)
+const nomeTema = z.string().trim().max(80).transform((v) => (v === '' ? null : v)).nullable()
+const schemaRenomearTema = z.object({ de: nomeTema, para: nomeTema })
 
 export class PortfolioService {
   private readonly itens: PortfolioRepository
@@ -104,6 +106,13 @@ export class PortfolioService {
   /** "Materiais prontos" de uma aba: imagens e PDFs que a empresa já tinha (artes, catálogos). */
   async materiais(contaId: string, tipo: unknown): Promise<ArquivoComUrl[]> {
     return this.arquivos.listar(contaId, { entidadeTipo: entidadeMateriais(schemaTipo.parse(tipo) as TipoPortfolio) })
+  }
+
+  /** Renomeia um tema dos materiais prontos de uma aba (`de` null = os sem tema; `para` null = tira o tema). */
+  async renomearTema(contaId: string, tipo: unknown, dados: unknown): Promise<{ atualizados: number }> {
+    const { de, para } = schemaRenomearTema.parse(dados)
+    const atualizados = de === para ? 0 : await this.arquivos.renomearTema(contaId, entidadeMateriais(schemaTipo.parse(tipo) as TipoPortfolio), de, para)
+    return { atualizados }
   }
 
   async buscarComMidia(contaId: string, itemId: string): Promise<PortfolioItemComMidia> {

@@ -51,6 +51,7 @@ const schemaConfirmar = z.object({
   categoria: z.enum(CATEGORIAS_ARQUIVO),
   entidadeTipo: z.string().trim().min(1).max(40).optional(),
   entidadeId: z.string().uuid().optional(),
+  tema: z.string().trim().max(80).optional(),
 })
 
 const schemaFiltros = z.object({
@@ -157,6 +158,8 @@ export class ArquivoService {
       categoria: validado.categoria,
       entidadeTipo: validado.entidadeTipo ?? null,
       entidadeId: validado.entidadeId ?? null,
+      // Só grava a coluna quando veio tema (uploads sem tema seguem iguais).
+      tema: validado.tema ? validado.tema : undefined,
       criadoPor: usuarioId,
     })
     logger.info({ contaId: conta.id, arquivoId: arquivo.id, tipo, bytes: real.tamanhoBytes }, 'Arquivo enviado.')
@@ -181,6 +184,11 @@ export class ArquivoService {
     await this.armazenamento.remover(arquivo.bucket, [arquivo.caminho])
     await this.arquivos.deletar(arquivoId)
     logger.info({ contaId, arquivoId }, 'Arquivo excluído.')
+  }
+
+  /** Renomeia um tema (ou dá tema aos arquivos sem tema, com `de` = null) dentro de uma entidade. */
+  async renomearTema(contaId: string, entidadeTipo: string, de: string | null, para: string | null): Promise<number> {
+    return this.arquivos.renomearTema(contaId, entidadeTipo, de, para)
   }
 
   /** Apaga todos os arquivos ligados a um registro (ex: ao excluir um item do portfólio). */
