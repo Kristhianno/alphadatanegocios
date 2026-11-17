@@ -17,6 +17,7 @@ import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import CalendarioMensal from '../../components/ui/CalendarioMensal'
 import Selecao from '../../components/ui/Selecao'
+import SeletorStatus from '../../components/ui/SeletorStatus'
 
 // Festa fechada no CRM (contrato assinado + sinal pago): entra no calendário travada.
 const STATUS_FESTA_FECHADA = 'Festa fechada'
@@ -126,13 +127,11 @@ export default function AgendamentosVertical() {
       header: 'Status', accessorKey: 'status', cell: (info) => info.row.original.fechada ? (
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-label font-semibold text-emerald-700"><IconLock size={13} /> Festa fechada</span>
       ) : (
-        <Selecao
+        <SeletorStatus
           value={info.getValue()}
           onChange={(e) => alterarStatus(info.row.original.id, e.target.value)}
-          className="text-label border-none bg-transparent focus:outline-none cursor-pointer"
-        >
-          {STATUS_AGENDAMENTO.map((s) => <option key={s} value={s}>{s}</option>)}
-        </Selecao>
+          opcoes={STATUS_AGENDAMENTO}
+        />
       ),
     },
     {

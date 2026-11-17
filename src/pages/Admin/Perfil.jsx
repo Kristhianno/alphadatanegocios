@@ -22,6 +22,7 @@ export default function Perfil() {
 
   const [nomeFantasia, setNomeFantasia] = useState(user?.nomeEmpresa ?? '')
   const [logoPreview, setLogoPreview] = useState(user?.logoUrl ?? null)
+  const [logotipoPreview, setLogotipoPreview] = useState(user?.logotipoUrl ?? null)
   const [salvandoMarca, setSalvandoMarca] = useState(false)
 
   const [modalSenha, setModalSenha] = useState(false)
@@ -34,7 +35,8 @@ export default function Perfil() {
   useEffect(() => {
     setNomeFantasia(user?.nomeEmpresa ?? '')
     setLogoPreview(user?.logoUrl ?? null)
-  }, [user?.nomeEmpresa, user?.logoUrl])
+    setLogotipoPreview(user?.logotipoUrl ?? null)
+  }, [user?.nomeEmpresa, user?.logoUrl, user?.logotipoUrl])
 
   async function salvarDados(e) {
     e.preventDefault()
@@ -49,12 +51,15 @@ export default function Perfil() {
     showToast('Perfil atualizado com sucesso!')
   }
 
-  async function selecionarLogo(e) {
+  /** tipo 'logo' (símbolo, quadrado) ou 'logotipo' (nome da marca em imagem). */
+  const selecionarImagem = (tipo) => async (e) => {
     const arquivo = e.target.files?.[0]
     e.target.value = ''
     if (!arquivo) return
     try {
-      setLogoPreview(await prepararLogo(arquivo))
+      const imagem = await prepararLogo(arquivo, tipo)
+      if (tipo === 'logo') setLogoPreview(imagem)
+      else setLogotipoPreview(imagem)
     } catch (erro) {
       showToast(erro.message, 'erro')
     }
@@ -67,7 +72,7 @@ export default function Perfil() {
       return
     }
     setSalvandoMarca(true)
-    const resultado = await atualizarBranding({ nomeEmpresa: nomeFantasia.trim(), logoUrl: logoPreview })
+    const resultado = await atualizarBranding({ nomeEmpresa: nomeFantasia.trim(), logoUrl: logoPreview, logotipoUrl: logotipoPreview })
     setSalvandoMarca(false)
     showToast(resultado.ok ? 'Marca personalizada com sucesso!' : resultado.error, resultado.ok ? 'sucesso' : 'erro')
   }
@@ -150,6 +155,52 @@ export default function Perfil() {
           </p>
         </div>
 
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[auto_1fr]">
+          <div>
+            <p className="text-label text-[#666] mb-2">Logo (símbolo)</p>
+            <div className="flex items-center gap-3">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo" className="h-20 w-20 rounded-card object-contain bg-white p-1 border border-muted-dark" />
+              ) : (
+                <div className="h-20 w-20 rounded-card border border-dashed border-muted-dark flex items-center justify-center text-label text-[#999] text-center px-1">sem logo</div>
+              )}
+              <div className="flex flex-col gap-2">
+                <label className="cursor-pointer rounded-btn px-3 py-1.5 text-label font-medium bg-muted border border-muted-dark hover:bg-primary-light text-center">
+                  {logoPreview ? 'Trocar' : 'Carregar'}
+                  <input type="file" accept="image/*" className="hidden" onChange={selecionarImagem('logo')} />
+                </label>
+                {logoPreview && (
+                  <button type="button" onClick={() => setLogoPreview(null)} className="text-label text-danger hover:underline text-left">Remover</button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-label text-[#666] mb-2">Logotipo (nome da marca em imagem)</p>
+            <div className="flex flex-wrap items-center gap-3">
+              {logotipoPreview ? (
+                <div className="flex h-20 max-w-full items-center rounded-card border border-muted-dark bg-white px-4">
+                  <img src={logotipoPreview} alt="Logotipo" className="block h-14 w-auto max-w-full object-contain" />
+                </div>
+              ) : (
+                <div className="flex h-20 w-56 max-w-full items-center justify-center rounded-card border border-dashed border-muted-dark px-3 text-center text-label text-[#999]">
+                  sem logotipo: aparece o nome fantasia em texto
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <label className="cursor-pointer rounded-btn px-3 py-1.5 text-label font-medium bg-muted border border-muted-dark hover:bg-primary-light text-center">
+                  {logotipoPreview ? 'Trocar' : 'Carregar'}
+                  <input type="file" accept="image/*" className="hidden" onChange={selecionarImagem('logotipo')} />
+                </label>
+                {logotipoPreview && (
+                  <button type="button" onClick={() => setLogotipoPreview(null)} className="text-label text-danger hover:underline text-left">Remover</button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div>
           <label className={labelClasse}>Nome Fantasia</label>
           <input
@@ -158,30 +209,11 @@ export default function Perfil() {
             onChange={(e) => setNomeFantasia(e.target.value)}
             placeholder={NOME_PLATAFORMA_PADRAO}
           />
-        </div>
-
-        <div>
-          <label className="text-label text-[#666] block mb-2">Logotipo (foto de perfil da conta)</label>
-          <div className="flex items-center gap-4">
-            {logoPreview ? (
-              <img src={logoPreview} alt="Logotipo" className="h-16 w-16 rounded-card object-contain bg-white p-1 border border-muted-dark" />
-            ) : (
-              <div className="h-16 w-16 rounded-card border border-dashed border-muted-dark flex items-center justify-center text-label text-[#999] text-center px-1">
-                sem logo
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <label className="cursor-pointer rounded-btn px-3 py-1.5 text-label font-medium bg-muted border border-muted-dark hover:bg-primary-light text-center">
-                Escolher imagem
-                <input type="file" accept="image/*" className="hidden" onChange={selecionarLogo} />
-              </label>
-              {logoPreview && (
-                <button type="button" onClick={() => setLogoPreview(null)} className="text-label text-danger hover:underline text-left">
-                  Remover logo
-                </button>
-              )}
-            </div>
-          </div>
+          <p className="mt-1 text-label text-[#999]">
+            {logotipoPreview
+              ? 'Na plataforma aparece o logotipo no lugar deste nome. O nome continua sendo usado em contratos, orçamentos e mensagens.'
+              : 'Aparece no topo da plataforma enquanto não houver logotipo. Também vai em contratos, orçamentos e mensagens.'}
+          </p>
         </div>
 
         <button type="submit" disabled={salvandoMarca} className="self-end rounded-btn px-4 py-2 text-body font-medium bg-primary text-white hover:bg-primary-dark disabled:opacity-60">

@@ -7,6 +7,7 @@ import DataTable from '../../components/ui/DataTable'
 import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import Selecao from '../../components/ui/Selecao'
+import SeletorStatus from '../../components/ui/SeletorStatus'
 
 const inputClasse = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 const labelClasse = 'text-label text-[#666] block mb-1'
@@ -61,13 +62,11 @@ export default function ProducoesVideoFotografia() {
     { header: 'Editor', accessorKey: 'editor' },
     {
       header: 'Status', accessorKey: 'status', cell: (info) => (
-        <Selecao
+        <SeletorStatus
           value={info.getValue()}
           onChange={(e) => alterarStatus(info.row.original.id, e.target.value)}
-          className="text-label border-none bg-transparent focus:outline-none cursor-pointer"
-        >
-          {STATUS_PRODUCAO_VIDEO.map((s) => <option key={s} value={s}>{s}</option>)}
-        </Selecao>
+          opcoes={STATUS_PRODUCAO_VIDEO}
+        />
       ),
     },
     {

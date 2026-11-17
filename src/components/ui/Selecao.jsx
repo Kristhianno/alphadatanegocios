@@ -16,6 +16,11 @@ import { IconCheck, IconChevronDown } from '@tabler/icons-react'
  * o próprio texto (como o nativo). Teclado: setas, Home/End, Enter/Espaço,
  * Esc, Tab e digitar a letra inicial. Renderizado num portal (position:
  * fixed), então não é cortado por modais com rolagem.
+ *
+ * A lista tem pelo menos a largura do campo, mas cresce até caber o maior
+ * texto (nunca corta com "..."), sem passar da borda da tela.
+ * `indicador(valor)` opcional desenha algo antes do texto (ex.: bolinha de
+ * cor do status) no campo e em cada opção.
  */
 
 const ALTURA_MAXIMA = 288
@@ -46,7 +51,7 @@ function extrairOpcoes(children) {
 
 const CLASSE_PADRAO = 'w-full rounded-input border border-muted-dark px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary'
 
-export default function Selecao({ value, onChange, children, className, required, disabled, id, name, placeholder, ...resto }) {
+export default function Selecao({ value, onChange, children, className, required, disabled, id, name, placeholder, indicador, ...resto }) {
   const opcoes = extrairOpcoes(children)
   const valorAtual = value == null ? '' : String(value)
   const indiceSelecionado = opcoes.findIndex((o) => o.value === valorAtual)
@@ -69,8 +74,9 @@ export default function Selecao({ value, onChange, children, className, required
     const alturaDesejada = Math.min(ALTURA_MAXIMA, opcoes.length * 40 + 8)
     const paraCima = abaixo < Math.min(alturaDesejada, 180) && acima > abaixo
     setPosicao({
-      left: Math.max(MARGEM, Math.min(r.left, window.innerWidth - r.width - MARGEM)),
-      width: r.width,
+      left: Math.max(MARGEM, r.left),
+      minWidth: r.width,
+      maxWidth: window.innerWidth - MARGEM * 2,
       ...(paraCima ? { bottom: window.innerHeight - r.top + 4 } : { top: r.bottom + 4 }),
       maxHeight: Math.max(120, Math.min(ALTURA_MAXIMA, paraCima ? acima : abaixo)),
     })
@@ -125,6 +131,15 @@ export default function Selecao({ value, onChange, children, className, required
       window.removeEventListener('resize', posicionar)
     }
   }, [aberto, posicionar])
+
+  // A lista pode ser mais larga que o campo: se passar da borda direita da tela, puxa pra esquerda.
+  useLayoutEffect(() => {
+    const lista = listaRef.current
+    if (!aberto || !posicao || !lista) return
+    const largura = lista.getBoundingClientRect().width
+    const limite = window.innerWidth - MARGEM
+    if (posicao.left + largura > limite) lista.style.left = `${Math.max(MARGEM, limite - largura)}px`
+  }, [aberto, posicao])
 
   // Mantém a opção ativa visível ao navegar pelo teclado.
   useLayoutEffect(() => {
@@ -181,6 +196,9 @@ export default function Selecao({ value, onChange, children, className, required
   const classesContainer = tokens.filter((t) => LAYOUT.test(t) && t !== 'w-full')
   const larguraTotal = tokens.includes('w-full') || tokens.some((t) => /^(?:[a-z0-9]+:)?(?:w-|flex-1|grow)/.test(t))
   const classesGatilho = tokens.filter((t) => !LAYOUT.test(t)).join(' ')
+  // Quem chama pode pintar o campo (ex.: etiqueta de status colorida) — aí não força fundo branco nem texto escuro.
+  const temFundo = tokens.some((t) => /^bg-/.test(t))
+  const temCorTexto = tokens.some((t) => /^text-(?:\[#|[a-z]+-\d{2,3}$|primary$|danger$|success$|white$|inherit$|current$)/.test(t))
 
   return (
     <div className={`relative min-w-0 ${larguraTotal ? '' : 'inline-block'} ${tokens.includes('w-full') ? 'w-full' : ''} ${classesContainer.join(' ')}`}>
@@ -197,11 +215,14 @@ export default function Selecao({ value, onChange, children, className, required
         disabled={disabled}
         onClick={() => (aberto ? fechar() : abrir())}
         onKeyDown={aoTeclar}
-        className={`${classesGatilho} flex w-full items-center justify-between gap-2 bg-surface text-left disabled:cursor-not-allowed disabled:opacity-60`}
+        className={`${classesGatilho} flex w-full items-center justify-between gap-2 ${temFundo ? '' : 'bg-surface'} ${temCorTexto ? '' : 'text-[#1a1a1a]'} text-left disabled:cursor-not-allowed disabled:opacity-60`}
         {...resto}
       >
-        <span className={`min-w-0 truncate ${ehVazio ? 'text-[#999]' : 'text-[#1a1a1a]'}`}>{rotulo || ' '}</span>
-        <IconChevronDown size={16} className={`shrink-0 text-[#888] transition-transform ${aberto ? 'rotate-180' : ''}`} aria-hidden="true" />
+        <span className={`flex min-w-0 items-center gap-2 ${ehVazio ? 'text-[#999]' : ''}`}>
+          {indicador && !ehVazio && indicador(selecionada.value)}
+          <span className="min-w-0 truncate">{rotulo || ' '}</span>
+        </span>
+        <IconChevronDown size={16} className={`shrink-0 opacity-60 transition-transform ${aberto ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
 
       {/* Validação nativa de "obrigatório" (o balão do navegador aparece aqui quando vazio). */}
@@ -226,7 +247,7 @@ export default function Selecao({ value, onChange, children, className, required
             id={idLista}
             role="listbox"
             aria-labelledby={id}
-            style={{ position: 'fixed', ...posicao }}
+            style={{ position: 'fixed', width: 'max-content', ...posicao }}
             className="z-[70] overflow-y-auto overscroll-contain rounded-card border border-muted-dark bg-white py-1 shadow-[0_12px_32px_rgba(15,23,42,0.14)]"
           >
             {opcoes.map((opcao, i) => {
@@ -241,12 +262,15 @@ export default function Selecao({ value, onChange, children, className, required
                   aria-disabled={opcao.disabled || undefined}
                   onPointerEnter={() => !opcao.disabled && setAtivo(i)}
                   onClick={() => selecionar(i)}
-                  className={`flex min-h-[40px] cursor-pointer items-center justify-between gap-3 px-3 py-2 text-body ${
+                  className={`flex min-h-[40px] cursor-pointer items-center justify-between gap-4 px-3 py-2 text-body ${
                     opcao.disabled ? 'cursor-not-allowed text-[#bbb]' : i === ativo ? 'bg-primary-light text-[#1a1a1a]' : 'text-[#333]'
                   } ${marcada ? 'font-semibold text-primary' : ''} ${opcao.value === '' && !marcada ? 'text-[#999]' : ''}`}
                 >
-                  <span className="min-w-0 truncate">{opcao.label}</span>
-                  {marcada && <IconCheck size={16} className="shrink-0 text-primary" aria-hidden="true" />}
+                  <span className="flex min-w-0 items-center gap-2">
+                    {indicador && opcao.value !== '' && indicador(opcao.value)}
+                    <span className="min-w-0 break-words">{opcao.label}</span>
+                  </span>
+                  <IconCheck size={16} className={`shrink-0 text-primary ${marcada ? '' : 'invisible'}`} aria-hidden="true" />
                 </li>
               )
             })}

@@ -14,6 +14,7 @@ import Modal from '../../components/ui/Modal'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import CameraCapture from '../../components/CameraCapture'
 import Selecao from '../../components/ui/Selecao'
+import SeletorStatus from '../../components/ui/SeletorStatus'
 import ModeloContratoModal from '../../components/ModeloContratoModal'
 import { api } from '../../services/api'
 
@@ -140,13 +141,11 @@ export default function ContratosVertical() {
     { header: 'Valor', accessorKey: 'valorTotal', cell: (info) => `R$ ${Number(info.getValue() ?? 0).toLocaleString('pt-BR')}` },
     {
       header: 'Status', accessorKey: 'status', cell: (info) => (
-        <Selecao
+        <SeletorStatus
           value={info.getValue()}
           onChange={(e) => alterarStatus(info.row.original.id, e.target.value)}
-          className="text-label border-none bg-transparent focus:outline-none cursor-pointer"
-        >
-          {STATUS_CONTRATO.map((s) => <option key={s} value={s}>{s}</option>)}
-        </Selecao>
+          opcoes={STATUS_CONTRATO}
+        />
       ),
     },
     {

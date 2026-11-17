@@ -4,9 +4,19 @@ import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import BrandMark from './BrandMark'
 import BotaoInstalarApp from './BotaoInstalarApp'
+import { useBranding } from '../hooks/useBranding'
+
+const normalizar = (texto) => (texto ?? '').trim().toLowerCase()
+const ROTULO_PAPEL = { admin: 'Administrador', gestor: 'Gestor', tecnico: 'Equipe', cliente: 'Cliente' }
 
 export default function Header({ onToggleSidebar }) {
   const { user, logout } = useAuth()
+  const { logoUrl, logotipoUrl } = useBranding()
+  // Login com o nome da própria empresa (o caso do dono): mostra a marca em vez do texto.
+  // Funcionário com nome próprio continua vendo o nome dele.
+  const loginDaEmpresa = normalizar(user?.nome) === normalizar(user?.nomeEmpresa)
+  const avatar = loginDaEmpresa && logoUrl
+  const logotipo = loginDaEmpresa && logotipoUrl
   const navigate = useNavigate()
   const [menuAberto, setMenuAberto] = useState(false)
 
@@ -40,8 +50,18 @@ export default function Header({ onToggleSidebar }) {
             onClick={() => setMenuAberto((v) => !v)}
             className="flex items-center gap-2 rounded-btn px-2 py-1.5 hover:bg-white/10"
           >
-            <IconUserCircle size={26} />
-            <span className="hidden sm:inline text-body font-medium">{user?.nome}</span>
+            {avatar ? (
+              <img src={logoUrl} alt="" className="h-7 w-7 rounded-full bg-white object-contain p-0.5" />
+            ) : (
+              <IconUserCircle size={26} />
+            )}
+            {logotipo ? (
+              <span className="hidden sm:flex h-7 items-center rounded-[6px] bg-white px-2">
+                <img src={logotipoUrl} alt={user?.nome} className="block h-5 w-auto max-w-[140px] object-contain" />
+              </span>
+            ) : (
+              <span className="hidden sm:inline text-body font-medium">{user?.nome}</span>
+            )}
             <IconChevronDown size={16} />
           </button>
           {menuAberto && (
@@ -49,8 +69,12 @@ export default function Header({ onToggleSidebar }) {
               <div className="fixed inset-0 z-10" onClick={() => setMenuAberto(false)} />
               <div className="absolute right-0 mt-2 w-52 bg-surface rounded-card shadow-cardHover text-[#333] z-20 overflow-hidden">
                 <div className="px-4 py-3 border-b border-muted-dark">
-                  <p className="text-body font-semibold truncate">{user?.nome}</p>
-                  <p className="text-label text-[#999] truncate">{user?.papel}</p>
+                  {logotipo ? (
+                    <img src={logotipoUrl} alt={user?.nome} className="block h-8 w-auto max-w-full object-contain" />
+                  ) : (
+                    <p className="text-body font-semibold truncate">{user?.nome}</p>
+                  )}
+                  <p className="mt-0.5 text-label text-[#999] truncate">{ROTULO_PAPEL[user?.papel] ?? user?.papel}</p>
                 </div>
                 <button onClick={() => irPara(`/${user?.userType}/perfil`)} className="w-full flex items-center gap-2 px-4 py-2.5 text-body hover:bg-primary-light text-left">
                   <IconUser size={18} /> Perfil
