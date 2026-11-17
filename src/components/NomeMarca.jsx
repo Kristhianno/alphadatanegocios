@@ -10,8 +10,9 @@ import MenuMarca from './MenuMarca'
  *
  * `variante` "claro" = fundo azul (header): o logotipo vai numa caixa branca
  * pra continuar legível mesmo se a arte for escura.
+ * `editavel={false}` só exibe (sem lápis/menu), ex: no header.
  */
-export default function NomeMarca({ textClassName = '', variante = 'padrao', altura = 40, larguraMaxima = 240, Tag = 'span' }) {
+export default function NomeMarca({ textClassName = '', variante = 'padrao', altura = 40, larguraMaxima = 240, Tag = 'span', editavel = true }) {
   const { nomeExibido, logotipoUrl } = useBranding()
   const { podeEditar, salvando, escolherArquivo, remover, inputProps } = useImagemMarca('logotipo')
   const [menuAberto, setMenuAberto] = useState(false)
@@ -26,7 +27,7 @@ export default function NomeMarca({ textClassName = '', variante = 'padrao', alt
     <Tag className={`${textClassName} truncate`}>{nomeExibido}</Tag>
   )
 
-  if (!podeEditar) return logotipoUrl ? <Tag className="min-w-0">{conteudo}</Tag> : conteudo
+  if (!podeEditar || !editavel) return logotipoUrl ? <Tag className="min-w-0">{conteudo}</Tag> : conteudo
 
   return (
     <div className="relative min-w-0">

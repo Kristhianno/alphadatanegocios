@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { IconMenu2, IconUserCircle, IconChevronDown, IconLogout, IconSettings, IconUser } from '@tabler/icons-react'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import BrandMark from './BrandMark'
+import NomeMarca from './NomeMarca'
 import BotaoInstalarApp from './BotaoInstalarApp'
 import { useBranding } from '../hooks/useBranding'
 
@@ -37,7 +37,8 @@ export default function Header({ onToggleSidebar }) {
           <button className="md:hidden p-1" onClick={onToggleSidebar} aria-label="Abrir menu">
             <IconMenu2 size={24} />
           </button>
-          <BrandMark variante="claro" tamanho={40} larguraMaximaNome={260} textClassName="text-logo font-bold tracking-tight whitespace-nowrap" />
+          {/* Só o logotipo (ou o nome); o símbolo fica no botão da conta, à direita. Troca/edição pelo Dashboard e Perfil. */}
+          <NomeMarca variante="claro" altura={40} larguraMaxima={260} editavel={false} textClassName="text-logo font-bold tracking-tight whitespace-nowrap" />
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -51,17 +52,12 @@ export default function Header({ onToggleSidebar }) {
             className="flex items-center gap-2 rounded-btn px-2 py-1.5 hover:bg-white/10"
           >
             {avatar ? (
-              <img src={logoUrl} alt="" className="h-7 w-7 rounded-full bg-white object-contain p-0.5" />
+              <img src={logoUrl} alt={user?.nome} className="h-9 w-9 rounded-full bg-white object-contain p-0.5" />
             ) : (
               <IconUserCircle size={26} />
             )}
-            {logotipo ? (
-              <span className="hidden sm:flex h-7 items-center rounded-[6px] bg-white px-2">
-                <img src={logotipoUrl} alt={user?.nome} className="block h-5 w-auto max-w-[140px] object-contain" />
-              </span>
-            ) : (
-              <span className="hidden sm:inline text-body font-medium">{user?.nome}</span>
-            )}
+            {/* Com o símbolo da empresa, ele basta (o logotipo já está à esquerda). */}
+            {!avatar && <span className="hidden sm:inline text-body font-medium">{user?.nome}</span>}
             <IconChevronDown size={16} />
           </button>
           {menuAberto && (
